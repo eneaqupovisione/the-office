@@ -1,0 +1,117 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Scura di base: il lampo arriva più spesso di sera che a mezzogiorno, e una
+   schermata bianca in mano al buio è una piccola punizione ogni volta.
+   Progettata a 375px. Tutto ciò che si tocca sta nella metà bassa dello
+   schermo, raggiungibile col pollice di una mano sola.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+:root{
+  --fondo:#14110f;
+  --carta:#1e1a18;
+  --ink:#f3ede4;
+  --tenue:#9a8e80;
+  --linea:#332d29;
+  --acc:#d9a441;          /* l'unica cosa colorata: ciò che si tocca */
+  --acc-scuro:#8a6620;
+  --ok:#5aa469;
+  --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+}
+
+*{ margin:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent }
+
+html,body{ height:100% }
+body{
+  background:var(--fondo); color:var(--ink);
+  font-family:var(--sans); font-size:17px; line-height:1.5;
+  display:flex; flex-direction:column;
+  padding:env(safe-area-inset-top) 16px env(safe-area-inset-bottom);
+  -webkit-font-smoothing:antialiased;
+}
+
+.nascosto{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0) }
+
+/* ── la barra ─────────────────────────────────────────────────────────── */
+.barra{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 2px 10px; border-bottom:1px solid var(--linea);
+}
+.marchio{ font:12px var(--mono); color:var(--tenue); letter-spacing:.1em; text-transform:uppercase }
+.contatore{ font:12px var(--mono); color:var(--tenue) }
+.contatore.pieno{ color:var(--acc) }
+
+/* ── il lampo ─────────────────────────────────────────────────────────── */
+main{ flex:1; display:flex; flex-direction:column; padding-top:14px; min-height:0 }
+
+textarea{
+  flex:1; min-height:120px; width:100%; resize:none;
+  background:transparent; border:0; color:var(--ink);
+  font-family:inherit; font-size:21px; line-height:1.45;
+  padding:6px 2px;
+}
+textarea:focus{ outline:none }
+textarea::placeholder{ color:var(--linea) }
+
+/* ── il tipo, in un tocco ─────────────────────────────────────────────── */
+.tipi{ display:flex; flex-wrap:wrap; gap:7px; padding:10px 0 }
+.tipo{
+  font:13px var(--mono); color:var(--tenue);
+  background:var(--carta); border:1px solid var(--linea); border-radius:999px;
+  padding:9px 13px; cursor:pointer; min-height:38px;
+}
+.tipo[aria-pressed="true"]{ background:var(--acc); border-color:var(--acc); color:var(--fondo); font-weight:600 }
+.tipo.prova::after{ content:' ·'; opacity:.5 }   /* in prova, non ancora nel metodo */
+
+.dove{
+  width:100%; background:var(--carta); border:1px solid var(--linea);
+  border-radius:10px; color:var(--ink); font:14px var(--mono);
+  padding:12px 14px; margin-bottom:12px;
+}
+.dove:focus{ outline:none; border-color:var(--acc-scuro) }
+.dove::placeholder{ color:var(--tenue) }
+
+/* ── il gesto che chiude ──────────────────────────────────────────────── */
+.salva{
+  width:100%; min-height:56px;              /* pollice, non puntatore */
+  background:var(--acc); color:var(--fondo);
+  border:0; border-radius:14px;
+  font-family:inherit; font-size:18px; font-weight:650;
+  cursor:pointer;
+}
+.salva:active{ transform:scale(.985) }
+.salva:disabled{ background:var(--carta); color:var(--linea); cursor:default; transform:none }
+.scorciatoia{ text-align:center; font:11px var(--mono); color:var(--linea); padding:8px 0 2px }
+
+/* ── il piede: roba che si usa una volta ogni tanto ───────────────────── */
+.piede{ display:flex; align-items:center; justify-content:center; gap:10px;
+        padding:10px 0 14px; border-top:1px solid var(--linea) }
+.minore{ background:none; border:0; color:var(--tenue); font:12px var(--mono);
+         cursor:pointer; padding:6px; text-decoration:underline; text-underline-offset:3px }
+.minore:hover{ color:var(--ink) }
+.sep{ color:var(--linea) }
+
+/* ── la conferma: l'unica animazione, e dura meno di un secondo ───────── */
+.conferma{
+  position:fixed; left:50%; bottom:calc(84px + env(safe-area-inset-bottom));
+  transform:translate(-50%,10px);
+  background:var(--ok); color:#0d1a10;
+  font:13px var(--mono); font-weight:600;
+  padding:9px 16px; border-radius:999px;
+  opacity:0; pointer-events:none;
+}
+.conferma.mostra{ animation:lampo 1.1s ease forwards }
+@keyframes lampo{
+  0%{ opacity:0; transform:translate(-50%,10px) }
+  14%{ opacity:1; transform:translate(-50%,0) }
+  76%{ opacity:1; transform:translate(-50%,0) }
+  100%{ opacity:0; transform:translate(-50%,-4px) }
+}
+@media (prefers-reduced-motion: reduce){
+  .conferma.mostra{ animation:none; opacity:1 }
+  .salva:active{ transform:none }
+}
+
+/* ── da tablet in su non si allarga: resta una colonna stretta ─────────── */
+@media (min-width:600px){
+  body{ max-width:520px; margin-inline:auto }
+}

@@ -1,50 +1,74 @@
-# CLAUDE.md — The Office
+# CLAUDE.md — planimetria di The Office
 
-> **Questa cartella è vuota di proposito.** Il codice non esiste ancora: il
-> progetto è in stato `idea`. Non c'è niente da leggere qui dentro.
+> Se una cosa qui contraddice il codice, **vince il codice**: aggiorna questo file.
 
-## Prima di proporre qualunque cosa, leggi il nodo
+> Questo file dice *dove sono le cose*. *Perché sono così* sta in [`decisioni/`](decisioni/).
+
+> Il **perché esiste** sta nel nodo: `~/the-knowledge/prodotti/the-office/README.md`.
+> **Leggilo prima di proporre scelte di impostazione.** Contiene le tre cose che
+> l'app deve fare, le tre che **non** deve fare, e un elenco di decisioni già
+> prese che sembrano domande aperte e non lo sono.
+
+## Cos'è
+
+La porta di [The Knowledge](https://github.com/eneaqupovisione/the-knowledge):
+cattura senza attrito, da telefono e da computer. Pagina web installabile,
+**nessuna dipendenza, nessun passo di costruzione, nessuna rete**: si apre
+`index.html` e funziona.
+
+**Cosa non è, oggi.** Delle tre funzioni previste dal nodo, è costruita solo la
+**prima**. La vista trasversale delle scadenze e il ritorno sulle idee vecchie
+non esistono — non sono a metà: non ci sono.
+
+**Cosa non deve diventare mai.** Un posto dove si scrive, si ragiona o si
+ristruttura. Su quel terreno Claude Code è più forte di qualunque interfaccia, e
+il nodo lo dichiara come limite del progetto, non come stato attuale.
+
+## La planimetria
+
+| File | Ruolo | Note operative |
+|---|---|---|
+| `index.html` | la schermata unica | non ce ne sono altre, ed è una scelta |
+| `app.js` | tutta la logica | 7 tipi, salvataggio, contatore, esportazione. Nessuna chiamata di rete |
+| `stile.css` | l'aspetto | scura di base, progettata a 375px, tutto ciò che si tocca sta in basso |
+| `sw.js` | il guscio offline | cache-first. Alzare `VERSIONE` a ogni cambio di file, o l'app non si aggiorna |
+| `manifest.webmanifest` · `icona.svg` | installabilità | |
+| `decisioni/` | perché è così | una decisione per file |
+| `trappole.md` | ciò che sembra vero e non lo è | |
+
+## Il flusso dei dati
 
 ```
-~/the-knowledge/prodotti/the-office/README.md
+lampo → textarea → localStorage['the-office.catture']   (immediato, sincrono)
+                        ↓
+                   «esporta» → un file .md con dentro tutti i blocchi
+                        ↓
+                   smistamento → ~/the-knowledge/_inbox/*.md
 ```
 
-**Non è facoltativo, ed è l'unica istruzione di questo file.** Lì dentro c'è già
-scritto — pensato a fondo e a caro prezzo:
+**Non c'è nessun server, nessun database, nessun account.** I dati vivono nel
+browser del dispositivo finché non vengono esportati.
 
-- cos'è The Office e **perché** esiste, con le parole di Enea;
-- **le tre cose che deve fare**, e solo quelle;
-- **le tre che non deve fare** — scrivere, ragionare, ristrutturare: su quel
-  terreno Claude Code è più forte di qualunque interfaccia, e l'app non deve
-  provare a competerci. È la riga che tiene in piedi il progetto;
-- le decisioni già prese sull'architettura, e le ipotesi ancora aperte, marcate
-  col loro livello di prova.
+## Dove NON mettere le mani
 
-Proporre da zero una cosa già decisa e scartata è il modo più veloce di far
-perdere tempo a tutti e due.
+1. **Non aggiungere campi obbligatori alla cattura.** Il testo è l'unica cosa
+   necessaria; tipo e appartenenza sono facoltativi e restano facoltativi. È il
+   primo principio del metodo, non una preferenza di interfaccia.
+2. **Non introdurre una chiamata di rete nel percorso del salvataggio.** Local-first
+   è una decisione scritta: se la scrittura aspetta la rete, i cinque secondi sono
+   già persi. La sincronizzazione, quando arriverà, sta *dopo* il salvataggio locale.
+3. **Nessun segreto in questo repo.** Il token GitHub vivrà in una funzione lato
+   server, mai nel dispositivo e mai nel bundle. Una chiave finita qui è pubblica
+   per sempre, anche dopo il commit che la toglie.
+4. **Non aggiungere una lista sfogliabile delle catture.** «Un canale di cattura
+   scrive solo»: dal telefono non si naviga, non si legge, non si modifica. È ciò
+   che tiene il problema piccolo. L'unica cosa che si vede è il **contatore**.
+5. **Il contatore è sacro** e sta sempre in vista. Senza, la fiducia crolla in due
+   settimane.
 
-## Cos'è, in tre righe
+## Se il lavoro riguarda…
 
-La porta di [The Knowledge](~/the-knowledge): cattura senza attrito da telefono e
-computer, vista trasversale delle scadenze, e il ritorno periodico sulle idee
-vecchie.
-
-**Non ha un database.** Scrive file veri in `~/the-knowledge/_inbox/` e legge
-dall'albero. Se qualcosa qui suggerisce di dargli uno stato proprio, quella è la
-cosa da discutere prima di scriverla, non da implementare.
-
-## Cosa c'è da fare, oggi
-
-- 🔲 `git init` e collegare il repo `eneaqupovisione/the-office`
-- 🔲 La prima riga di codice. Non è ancora stata scritta, e va bene: `idea` non
-  pesa e non conta nel limite dei cinque progetti attivi
-  (`~/the-knowledge/METODO.md` §5, §8)
-
-## Quando questo file cambia
-
-Il giorno in cui il codice esiste, questo smette di essere un cartello e diventa
-una **planimetria**: cos'è il progetto in tre righe, la tabella file → ruolo, il
-flusso dei dati, dove non mettere le mani. Le regole per scriverlo stanno in
-`~/the-knowledge/moduli/codice/SKILL.md` §1.
-
-Il nodo nell'albero resta comunque la fonte del *perché*. Qui ci va il *dove*.
+- **il metodo, dove va una cosa, una decisione** → `~/the-knowledge/METODO.md`
+- **l'ordine del repo** → skill `repo-in-ordine`
+- **il formato dei file dell'inbox** → `~/the-knowledge/METODO.md` §6, ed è la
+  sorgente di verità: se l'esportazione e il metodo divergono, **vince il metodo**

@@ -1,0 +1,16 @@
+{
+  "name": "The Office",
+  "short_name": "Office",
+  "description": "Dal pensiero al testo salvato in meno di cinque secondi.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#14110f",
+  "theme_color": "#14110f",
+  "lang": "it",
+  "icons": [
+    { "src": "icona.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icona.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}

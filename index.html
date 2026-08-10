@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>The Office — cattura</title>
+<meta name="description" content="Dal pensiero al testo salvato in meno di cinque secondi."/>
+<meta name="theme-color" content="#14110f"/>
+<link rel="manifest" href="manifest.webmanifest"/>
+<link rel="icon" href="icona.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="icona.svg"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<link rel="stylesheet" href="stile.css"/>
+</head>
+<body>
+
+<!-- ══ IL CONTATORE È SACRO ═══════════════════════════════════════════════
+     Sempre visibile. Se catturo e non vedo mai dove finisce, in due settimane
+     smetto di fidarmi e ricomincio a segnarmi le cose anche altrove — e da lì
+     il sistema è morto. (nodo → «Deciso») -->
+<header class="barra">
+  <span class="marchio">The Office</span>
+  <span class="contatore" id="contatore" aria-live="polite"></span>
+</header>
+
+<main>
+  <!-- ══ IL LAMPO ════════════════════════════════════════════════════════
+       Riceve il fuoco all'apertura. Nessun campo obbligatorio: si può salvare
+       con il solo testo. (METODO §2, principio 1: la cattura non chiede
+       permesso) -->
+  <label class="nascosto" for="testo">Cosa ti è venuto in mente</label>
+  <textarea id="testo" autofocus autocapitalize="sentences" autocorrect="on"
+            enterkeyhint="done" placeholder="…"></textarea>
+
+  <!-- ══ IL TIPO PRIMA DEL PROGETTO ══════════════════════════════════════
+       Nel momento del lampo so quasi sempre *che genere di cosa* è, non
+       ancora dove va. Facoltativo: nessuno di questi è obbligatorio. -->
+  <div class="tipi" id="tipi" role="group" aria-label="Che cosa è"></div>
+
+  <!-- L'appartenenza, alla precisione che ho in quel momento: niente, oppure
+       un dominio, oppure un progetto. Sta sotto perché quasi sempre si salta. -->
+  <input id="dove" class="dove" type="text" autocomplete="off" autocapitalize="none"
+         spellcheck="false" placeholder="di chi è  ·  facoltativo"/>
+
+  <button id="salva" class="salva">Salva</button>
+  <p class="scorciatoia">⌘ + invio</p>
+</main>
+
+<footer class="piede">
+  <button id="esporta" class="minore">esporta per l'inbox</button>
+  <span class="sep">·</span>
+  <button id="svuota" class="minore">svuota</button>
+</footer>
+
+<div class="conferma" id="conferma" role="status" aria-live="polite"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
