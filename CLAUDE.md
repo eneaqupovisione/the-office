@@ -28,9 +28,9 @@ funziona.
 
 **Cosa non è, oggi.** Delle tre funzioni previste dal nodo è costruita la
 **prima**, con intorno il minimo che la rende utilizzabile davvero: un archivio
-che si legge, i progetti, un ponte verso `_inbox`. La vista trasversale delle
-scadenze e il ritorno sulle idee vecchie non esistono — non sono a metà: non ci
-sono, e leggono l'albero, quindi arrivano dopo la sincronizzazione.
+che si legge, i progetti, e tre strade verso `_inbox`. La vista trasversale
+delle scadenze e il ritorno sulle idee vecchie non esistono — non sono a metà:
+non ci sono. Adesso che la sincronizzazione c'è, sono la cosa successiva.
 
 **Cosa non deve diventare mai.** Un posto dove si scrive, si ragiona o si
 ristruttura. Su quel terreno Claude Code è più forte di qualunque interfaccia, e
@@ -50,11 +50,12 @@ testo**.
 | `ponte.js` | come le catture escono di qui | si collega **la radice** `~/the-knowledge`: scrive in `_inbox/` e `_inbox/media/`, e legge la `forma:` dei progetti. Il formato lo comanda `METODO.md` §6 |
 | `cattura.js` | il lampo | la schermata che si apre e riceve il fuoco |
 | `archivio.js` | leggere e rietichettare | raggruppa per progetto; il testo non è modificabile |
-| `progetti.js` | i nomi dei progetti | **l'unico punto che tocca la rete**: legge i repo pubblici di GitHub, senza token |
-| `impostazioni.js` | ponte, tema, svuota | ci vive anche l'avviso su ciò che ancora non c'è |
+| `progetti.js` | i nomi dei progetti | li legge dall'albero (cartella collegata) o dai repo pubblici di GitHub, senza token |
+| `impostazioni.js` | sincronizzazione, ponte, tema, svuota | ci vive la chiave d'app, e l'avviso su ciò che ancora non c'è |
 | `app.js` | avvio, navigazione, contatore | `App.aggiorna()` è il solo punto da chiamare dopo un cambiamento |
 | `sw.js` | il guscio offline | cache-first. Alzare `VERSIONE` **e l'elenco dei file** a ogni cambio, o l'app non si aggiorna |
-| `manifest.webmanifest` · `icona.svg` | installabilità | |
+| `manifest.webmanifest` · `icona.svg` · `icona-*.png` | installabilità | i PNG servono a iOS, che ignora l'SVG. Si **rigenerano** dall'SVG, non si ridisegnano |
+| `netlify.toml` | dove sta la funzione | nessun `command`: non c'è costruzione |
 | `decisioni/` | perché è così | una decisione per file |
 | `trappole.md` | ciò che sembra vero e non lo è | |
 
@@ -66,37 +67,39 @@ Sono `<script>` normali, non moduli: i moduli non si caricano da `file://`, e
 ```
 lampo → textarea → localStorage['the-office.catture']   (immediato, sincrono)
                         ↓
-        ┌───────────────┼────────────────┐
-   sincronizzazione  cartella collegata  «esporta»
-   (ovunque, da sola)
-   (computer, Chromium,        (ovunque, telefono compreso)
-    https o localhost)                  │
-        │  un .md per cattura,     un .md con dentro tutti i blocchi
-        │  scritto da solo                │
-        └───────────────┬────────────────┘
+   ┌────────────────────┼────────────────────┐
+   │                    │                    │
+sincronizzazione   cartella collegata    «esporta»
+(ovunque, da sola)  (computer, Chromium,  (ovunque, a mano)
+   │                 https o localhost)       │
+   │  POST al portiere      │  un .md per      │  un .md con dentro
+   │  → API GitHub          │  cattura         │  tutti i blocchi
+   ↓                        ↓                  ↓
+        ~/the-knowledge/_inbox/<progetto>/*.md
                         ↓
-              ~/the-knowledge/_inbox/*.md
-                        ↓
-                  smistamento (Claude Code, su un branch)
+              smistamento (Claude Code, su un branch)
 ```
 
-**Non c'è nessun server, nessun database, nessun account.** I dati vivono nel
-browser del dispositivo finché non escono da una delle due strade. Una cattura
-che non è uscita è **una cattura a rischio**: è quello che conta il contatore.
+**Nessun database, nessun account, e un solo pezzo di server** — il portiere,
+che esiste per tenere il token e nient'altro. I dati vivono nel browser del
+dispositivo finché non escono da una delle tre strade. Una cattura che non è
+uscita è **una cattura a rischio**: è quello che conta il contatore.
 
 ## Dove NON mettere le mani
 
 1. **Non aggiungere campi obbligatori alla cattura.** Il testo è l'unica cosa
    necessaria; tipo e appartenenza sono facoltativi e restano facoltativi. È il
    primo principio del metodo, non una preferenza di interfaccia.
-2. **Non introdurre una chiamata di rete nel percorso del salvataggio.** La
-   scrittura nella cartella collegata è disco locale e viene **dopo** il
-   salvataggio: se fallisce, la cattura è già al sicuro. La sincronizzazione,
-   quando arriverà, sta anche lei dopo.
-3. **Nessun segreto in questo repo.** Il token GitHub vivrà in una funzione lato
-   server, mai nel dispositivo e mai nel bundle. Una chiave finita qui è pubblica
-   per sempre, anche dopo il commit che la toglie. La lettura dei repo pubblici
-   non ne usa nessuno, ed è l'unica cosa che l'app chiede alla rete.
+2. **Non introdurre una chiamata di rete nel percorso del salvataggio.** Vale
+   ancora adesso che una chiamata di rete esiste: la sincronizzazione parte
+   **dopo** che la cattura è in `localStorage`, e se fallisce la cattura resta
+   «in attesa» e riparte al giro dopo. Il salvataggio non aspetta mai la rete.
+3. **Nessun segreto in questo repo.** Il token GitHub vive **solo** in
+   `GITHUB_TOKEN` fra le variabili d'ambiente di Netlify: mai nel dispositivo,
+   mai nel bundle, mai in un commit. Una chiave finita qui è pubblica per
+   sempre, anche dopo il commit che la toglie. Sul dispositivo c'è soltanto la
+   `CHIAVE_APP`, che apre l'aggiunta di file in `_inbox/` e nient'altro — e si
+   cambia in dieci secondi.
 4. **L'apertura atterra sul lampo.** Sempre, col fuoco già nel testo. L'archivio
    esiste (→ `decisioni/2026-08-11-l-archivio-si-legge-e-si-riordina.md`, che
    rovescia il vecchio divieto) ma costa un gesto in più, e non deve mai
@@ -105,8 +108,8 @@ che non è uscita è **una cattura a rischio**: è quello che conta il contatore
    sì — correggerli *è* smistamento. Il corpo no: è il confine oltre il quale
    l'app comincia a competere con Claude Code.
 6. **Il contatore è sacro** e sta sempre in vista, in tutte e due le
-   impaginazioni. Conta ciò che **non è ancora uscito** dal dispositivo, non il
-   totale. Senza, la fiducia crolla in due settimane.
+   impaginazioni. Conta ciò che **non è ancora nell'albero** — non il totale, e
+   non «quante ne ho scritte». Senza, la fiducia crolla in due settimane.
 7. **Il colore dice il tipo, e nient'altro.** Le sette coppie `--c-*` / `--f-*`
    di `stile.css` — testo dell'etichetta e fondo del foglietto — non si usano
    per stati, progetti o decorazione. Se si aggiunge un tipo gli si dà una
