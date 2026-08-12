@@ -7,6 +7,17 @@ La più recente in alto.
 
 ---
 
+**«Cartella collegata» non vuol dire «collegata al mio account».** Sono due cose
+diverse e il nome trae in inganno: la cartella collegata è un permesso del
+browser su una cartella di **quel disco**, e su iOS Safari quell'API non esiste
+— non è un permesso da concedere, la funzione non c'è. Il collegamento
+all'account è un'altra cosa (la sincronizzazione, via API) e funziona ovunque.
+E non basta un pulsante «accedi con GitHub»: per un repo privato serve una
+credenziale, lo scambio finale di OAuth non è permesso da un browser, e un token
+utente sul telefono potrebbe molto più del necessario. **Da qualunque parte si
+giri serve la funzione lato server** — non è un giro largo, è l'unico modo di
+collegarsi senza portarsi le chiavi in tasca. *(2026-08-12)*
+
 **Le catture non seguono l'app da un indirizzo all'altro.** `localStorage` è
 legato all'**origine**: quello che hai catturato aprendo `index.html` come file
 non c'è aprendo `https://…netlify.app`, e viceversa. Non sono sparite — stanno
