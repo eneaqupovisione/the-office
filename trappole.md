@@ -85,9 +85,12 @@ Da quando i file JavaScript sono sette, c'è un secondo modo di sbagliare: **un
 file nuovo non aggiunto a `GUSCIO` non viene messo in cache**, e l'app si apre
 rotta appena manca la rete. *(2026-08-10, esteso il 2026-08-11)*
 
-**L'icona è solo SVG.** Chrome e Android la accettano; 🔲 su iOS l'aggiunta alla
-schermata home potrebbe volere un PNG — non verificato su un dispositivo vero.
-*(2026-08-10)*
+**L'icona voleva un PNG, e non era un forse.** iOS ignora un `apple-touch-icon`
+in SVG e mette una miniatura della pagina al posto dell'icona. Risolto il
+2026-08-12 generando `icona-180.png` e `icona-512.png` dal solo SVG, che resta
+la sorgente: se cambia il disegno si rigenerano con
+`rsvg-convert -w 180 -h 180 icona.svg -o icona-180.png`, non si ridisegnano.
+*(2026-08-10, chiusa il 2026-08-12)*
 
 **`contatto` è il settimo tipo, ed è in prova.** Sta nell'interfaccia (segnato
 con un punto) ma **non** in `METODO.md` §6, che di tipi ne ha sei. Non è una

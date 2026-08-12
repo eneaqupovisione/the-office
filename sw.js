@@ -10,7 +10,7 @@
 
 /* Questo numero sta in due posti: qui e nelle `?v=` di `index.html`.
    Devono coincidere, o il guscio in cache e il documento vanno fuori fase. */
-const VERSIONE = 'the-office-v6';
+const VERSIONE = 'the-office-v7';
 const GUSCIO = [
   './',
   './index.html',
@@ -24,6 +24,8 @@ const GUSCIO = [
   './impostazioni.js',
   './app.js',
   './icona.svg',
+  './icona-180.png',
+  './icona-512.png',
   './manifest.webmanifest'
 ];
 
