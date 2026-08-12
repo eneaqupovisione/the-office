@@ -17,9 +17,13 @@
       invece che a un nome scritto a mano. L'API dei file non permette di
       risalire alla cartella madre: se colleghi `_inbox` direttamente la
       scrittura funziona lo stesso, ma i progetti non si vedono.
-   2. **L'esportazione.** Ovunque, telefono compreso, ma con un gesto tuo. Un
-      file solo con dentro tutti i blocchi, perché i browser bloccano i
-      download multipli.
+   2. **La sincronizzazione.** Ovunque, telefono compreso, da sola. L'app manda
+      la cattura al portiere (`netlify/functions/cattura.js`), che ha il token e
+      scrive nel repo. Sta **dopo** il salvataggio locale e non lo blocca: se la
+      rete non c'è, la cattura resta «in attesa» e riparte al prossimo giro.
+   3. **L'esportazione.** Il ripiego che funziona sempre, anche senza niente
+      configurato. Un file solo con dentro tutti i blocchi, perché i browser
+      bloccano i download multipli.
 
    Il formato del file è quello di `METODO.md` §6, ed è **il metodo a comandare**:
    se un giorno i due divergono, si cambia questo file, non il metodo.
@@ -82,6 +86,92 @@ const Ponte = (() => {
     a.download = nomeFile;
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+
+  /* ── strada 2 · la sincronizzazione ──────────────────────────────────────
+     L'app non parla mai direttamente con GitHub: parla col portiere, che è
+     l'unico a conoscere il token. Qui dentro non c'è nessun segreto — la
+     chiave d'app la digita Enea una volta e vive solo su questo dispositivo,
+     e serve a impedire che chiunque trovi l'indirizzo scriva nel suo albero. */
+  const CHIAVE_LOCALE = 'the-office.chiave-app';
+  const INDIRIZZO = '/.netlify/functions/cattura';
+
+  const chiaveApp = () => localStorage.getItem(CHIAVE_LOCALE) || '';
+  const impostaChiave = (v) => {
+    v ? localStorage.setItem(CHIAVE_LOCALE, v.trim()) : localStorage.removeItem(CHIAVE_LOCALE);
+  };
+  /* Si sincronizza solo da dove l'app è servita davvero: da `file://` il
+     portiere non esiste, e provarci darebbe un errore ogni salvataggio. */
+  const sincronizzabile = () => location.protocol.startsWith('http') && !!chiaveApp();
+
+  const inBase64 = (testo) =>
+    btoa(String.fromCharCode(...new TextEncoder().encode(testo)));
+
+  async function inviaAlPortiere(percorso, contenutoBase64){
+    const r = await fetch(INDIRIZZO, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-chiave': chiaveApp() },
+      body: JSON.stringify({ percorso, contenuto: contenutoBase64 })
+    });
+    if (!r.ok){
+      let dettaglio = '';
+      try { dettaglio = (await r.json()).errore || ''; } catch (e) {}
+      const err = new Error(dettaglio || ('il portiere ha risposto ' + r.status));
+      err.stato = r.status;
+      throw err;
+    }
+    return r.json();
+  }
+
+  /* Il nome dentro `_inbox/`: la stessa casella per progetto della cartella
+     collegata, così le due strade producono lo stesso albero. */
+  const percorsoDi = (r, nome) => (nomeCasella(r.dove) ? nomeCasella(r.dove) + '/' : '') + nome + '.md';
+
+  async function sincronizzaUna(r){
+    if (!sincronizzabile()) return false;
+    let allegati = [];
+    try { if (typeof Media !== 'undefined') allegati = await Media.perCattura(r.id); }
+    catch (e) { allegati = []; }
+
+    /* Prima i file, poi la nota che li cita — come nella cartella collegata, e
+       per la stessa ragione: meglio un file orfano che una nota bugiarda. */
+    const scritti = [];
+    for (const v of allegati){
+      try{
+        const nomeF = Media.nomeFile(v, r.nome);
+        const casella = nomeCasella(r.dove);
+        const dati = await v.dato.arrayBuffer();
+        let bin = ''; const b = new Uint8Array(dati);
+        for (let i = 0; i < b.length; i++) bin += String.fromCharCode(b[i]);
+        await inviaAlPortiere((casella ? casella + '/' : '') + 'media/' + nomeF, btoa(bin));
+        scritti.push({ file: nomeF });
+        await Media.elimina(v.id);
+      } catch (e) { /* resta in transito: la nota non lo cita */ }
+    }
+
+    let nome = r.nome, tentativi = 0;
+    while (tentativi < 4){
+      try{
+        await inviaAlPortiere(percorsoDi(r, nome), inBase64(corpo(r, scritti)));
+        Dati.segnaUscite([r.id], 'albero');
+        return true;
+      } catch (e){
+        if (e.stato !== 409) throw e;          // solo il nome occupato si riprova
+        tentativi += 1; nome = r.nome + '-' + (tentativi + 1);
+      }
+    }
+    return false;
+  }
+
+  /* Tutte quelle che non sono ancora uscite. Si ferma al primo errore che non
+     sia «nome occupato»: se la rete è giù, insistere venti volte non aiuta. */
+  async function sincronizzaTutte(righe){
+    let fatte = 0, errori = 0, motivo = '';
+    for (const r of righe){
+      try { (await sincronizzaUna(r)) ? fatte++ : errori++; }
+      catch (e){ errori = righe.length - fatte; motivo = e.message || ''; break; }
+    }
+    return { fatte, errori, motivo };
   }
 
   /* ── strada 1 · la cartella collegata ────────────────────────────────────
@@ -292,6 +382,7 @@ const Ponte = (() => {
     corpo, componiEsportazione, scarica, nomiUnici,
     possibile, riprendi, collega, riprova, scollega, collegata, nomeCartella,
     scriviUna, scriviTutte, progettiVeri,
+    chiaveApp, impostaChiave, sincronizzabile, sincronizzaUna, sincronizzaTutte,
     vedeLAlbero: () => !!cartella && cartella.name !== '_inbox'
   };
 })();

@@ -46,6 +46,7 @@ testo**.
 | `stile.css` | l'aspetto | **impaginazione San Francisco, palette 06** (→ `decisioni/2026-08-12-la-via-di-mezzo.md`). Carattere di sistema, l'acido come unico accento. Chiaro di base, progettata a 375px; da 900px il menu resta fisso |
 | `dati.js` | il modello e il magazzino | 7 tipi, catture, progetti (con la loro `forma`), impostazioni. **Nessuna chiamata di rete** |
 | `media.js` | gli allegati, in transito | IndexedDB e non `localStorage`: una foto in base64 satura la quota e uccide la cattura |
+| `netlify/functions/cattura.js` | **il portiere** — l'unico pezzo che gira su un server | ci vive il token. Non conosce il formato di una cattura: riceve percorso e contenuto già composti. Senza dipendenze e corto, o muore il piano B |
 | `ponte.js` | come le catture escono di qui | si collega **la radice** `~/the-knowledge`: scrive in `_inbox/` e `_inbox/media/`, e legge la `forma:` dei progetti. Il formato lo comanda `METODO.md` §6 |
 | `cattura.js` | il lampo | la schermata che si apre e riceve il fuoco |
 | `archivio.js` | leggere e rietichettare | raggruppa per progetto; il testo non è modificabile |
@@ -65,8 +66,9 @@ Sono `<script>` normali, non moduli: i moduli non si caricano da `file://`, e
 ```
 lampo → textarea → localStorage['the-office.catture']   (immediato, sincrono)
                         ↓
-        ┌───────────────┴────────────────┐
-   cartella collegata               «esporta»
+        ┌───────────────┼────────────────┐
+   sincronizzazione  cartella collegata  «esporta»
+   (ovunque, da sola)
    (computer, Chromium,        (ovunque, telefono compreso)
     https o localhost)                  │
         │  un .md per cattura,     un .md con dentro tutti i blocchi

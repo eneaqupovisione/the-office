@@ -235,18 +235,29 @@ const Cattura = (() => {
     App.aggiorna();
     testo.focus();
 
-    /* La cartella, se c'è, viene **dopo** il salvataggio locale e non lo
-       blocca: se fallisce, la cattura è comunque al sicuro e resta «in attesa». */
-    if (Ponte.collegata()){
-      App.conferma('salvato');
+    /* Le due uscite vengono **dopo** il salvataggio locale e non lo bloccano:
+       se falliscono, la cattura è comunque al sicuro e resta «in attesa».
+       È la decisione «nessuna chiamata di rete nel percorso del salvataggio»,
+       e vale anche adesso che una chiamata di rete esiste. */
+    App.conferma('salvato');
+
+    if (Ponte.sincronizzabile()){
+      try{
+        if (await Ponte.sincronizzaUna(r)){
+          aggiornaFinestra('nell\'albero');
+          App.conferma('nell\'albero');
+        }
+      } catch (e){
+        aggiornaFinestra('salvata · in attesa');   // riparte al prossimo giro
+      }
+      App.aggiorna();
+    } else if (Ponte.collegata()){
       const fatto = await Ponte.scriviUna(r);
       App.aggiorna();
       if (fatto){
         aggiornaFinestra('scritta in ' + Ponte.nomeCartella());
         App.conferma('scritto in ' + Ponte.nomeCartella());
       }
-    } else {
-      App.conferma('salvato');
     }
   }
 

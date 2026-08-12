@@ -133,7 +133,8 @@ const App = (() => {
     $('conto-progetti').textContent = Dati.progetti().length || '';
 
     const ponte = $('stato-ponte');
-    if (Ponte.collegata()) ponte.textContent = '▸ ' + Ponte.nomeCartella();
+    if (Ponte.sincronizzabile()) ponte.textContent = '▸ nell\'albero, da sola';
+    else if (Ponte.collegata()) ponte.textContent = '▸ ' + Ponte.nomeCartella();
     else {
       const u = Dati.ultimaEsportazione();
       ponte.textContent = u ? 'ultima uscita ' + u.slice(0,10) : 'mai uscite di qui';
@@ -148,6 +149,7 @@ const App = (() => {
     Archivio.disegna();
     Progetti.disegna();
     Impostazioni.statoCartella();
+    Impostazioni.statoSincronia();
   }
 
   /* ── la conferma ─────────────────────────────────────────────────────── */

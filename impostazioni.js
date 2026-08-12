@@ -27,6 +27,64 @@ const Impostazioni = (() => {
       b.setAttribute('aria-pressed', String(b.dataset.tema === t)));
   }
 
+  /* ── la sincronizzazione ─────────────────────────────────────────────────
+     Qui si digita la chiave d'app, che è l'unico segreto che questo dispositivo
+     conosce — e non è il token: apre solo l'aggiunta di file in `_inbox/`. */
+  function statoSincronia(){
+    const el = $('stato-sincronia');
+    const attesa = Dati.inAttesa().length;
+    const haChiave = !!Ponte.chiaveApp();
+    $('chiave-app').placeholder = haChiave ? '•••••••• (salvata su questo dispositivo)' : 'chiave d\'app';
+
+    if (!location.protocol.startsWith('http')){
+      el.className = 'esito';
+      el.textContent = 'Da un file aperto sul disco il portiere non esiste. '
+        + 'La sincronizzazione funziona dal sito, ed è lì che va usata l\'app.';
+    } else if (!haChiave){
+      el.className = 'esito';
+      el.textContent = 'Non configurata. Serve la chiave d\'app — la stessa che sta '
+        + 'in CHIAVE_APP fra le variabili d\'ambiente di Netlify.';
+    } else {
+      el.className = 'esito bene';
+      el.textContent = 'Attiva: ogni cattura va in _inbox/ da sola.'
+        + (attesa ? ' ' + attesa + ' ancora da mandare.' : '');
+    }
+    $('sincronizza-ora').disabled = !Ponte.sincronizzabile() || attesa === 0;
+    $('prova-portiere').disabled = !location.protocol.startsWith('http');
+  }
+
+  async function provaPortiere(){
+    const el = $('stato-sincronia');
+    el.className = 'esito'; el.textContent = 'provo…';
+    try{
+      const r = await fetch('/.netlify/functions/cattura', {
+        method:'POST',
+        headers:{ 'content-type':'application/json', 'x-chiave': Ponte.chiaveApp() },
+        body: JSON.stringify({ percorso:'', contenuto:'' })
+      });
+      /* 400 «percorso non ammesso» è la risposta **giusta**: vuol dire che il
+         portiere c'è, è configurato e la chiave è passata. */
+      if (r.status === 400){ el.className='esito bene'; el.textContent = '▸ il portiere risponde e la chiave è giusta.'; }
+      else if (r.status === 401){ el.className='esito male'; el.textContent = 'la chiave non combacia con CHIAVE_APP su Netlify.'; }
+      else if (r.status === 500){ el.className='esito male'; el.textContent = 'il portiere c\'è ma gli mancano le variabili (CHIAVE_APP o GITHUB_TOKEN).'; }
+      else if (r.status === 404){ el.className='esito male'; el.textContent = 'il portiere non è pubblicato: manca il deploy della funzione.'; }
+      else { el.className='esito'; el.textContent = 'risposta inattesa: ' + r.status; }
+    } catch (e){
+      el.className = 'esito male';
+      el.textContent = 'non ci arrivo: rete assente, o il sito non è quello con la funzione.';
+    }
+  }
+
+  async function sincronizzaOra(){
+    const attesa = Dati.inAttesa();
+    if (!attesa.length){ App.conferma('niente da mandare'); return; }
+    $('sincronizza-ora').disabled = true;
+    const { fatte, errori, motivo } = await Ponte.sincronizzaTutte(attesa);
+    App.aggiorna();
+    App.conferma(errori ? (fatte + ' mandate, ' + errori + ' no' + (motivo ? ' · ' + motivo : ''))
+                        : (fatte + ' nell\'albero'), !!errori);
+  }
+
   /* ── la cartella collegata ───────────────────────────────────────────── */
   function statoCartella(){
     const el = $('stato-cartella');
@@ -149,6 +207,17 @@ const Impostazioni = (() => {
     window.matchMedia('(prefers-color-scheme: light)')
       .addEventListener('change', () => applicaTema(Dati.impostazioni().tema));
 
+    $('salva-chiave').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const campo = $('chiave-app');
+      Ponte.impostaChiave(campo.value);
+      campo.value = '';
+      App.aggiorna();
+      App.conferma(Ponte.chiaveApp() ? 'chiave salvata' : 'chiave tolta');
+    });
+    $('sincronizza-ora').addEventListener('click', sincronizzaOra);
+    $('prova-portiere').addEventListener('click', provaPortiere);
+
     $('collega-cartella').addEventListener('click', collega);
     $('scrivi-ora').addEventListener('click', scriviOra);
     $('scollega-cartella').addEventListener('click', async () => {
@@ -163,5 +232,5 @@ const Impostazioni = (() => {
     App.aggiorna();
   }
 
-  return { avvia, statoCartella, applicaTema };
+  return { avvia, statoCartella, statoSincronia, applicaTema };
 })();
