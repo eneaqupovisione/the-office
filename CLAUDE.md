@@ -33,7 +33,7 @@ testo**.
 | File | Ruolo | Note operative |
 |---|---|---|
 | `index.html` | le quattro schermate e il menu | è l'unico documento: le sezioni si mostrano e si nascondono |
-| `stile.css` | l'aspetto | scura di base (chiara a scelta), progettata a 375px; da 900px il menu resta fisso |
+| `stile.css` | l'aspetto | **impaginazione San Francisco, palette 06** (→ `decisioni/2026-08-12-la-via-di-mezzo.md`). Carattere di sistema, l'acido come unico accento. Chiaro di base, progettata a 375px; da 900px il menu resta fisso |
 | `dati.js` | il modello e il magazzino | 7 tipi, catture, progetti, impostazioni. **Nessuna chiamata di rete** |
 | `ponte.js` | come le catture escono di qui | cartella collegata + esportazione. Il formato lo comanda `METODO.md` §6 |
 | `cattura.js` | il lampo | la schermata che si apre e riceve il fuoco |
@@ -94,6 +94,18 @@ che non è uscita è **una cattura a rischio**: è quello che conta il contatore
 6. **Il contatore è sacro** e sta sempre in vista, in tutte e due le
    impaginazioni. Conta ciò che **non è ancora uscito** dal dispositivo, non il
    totale. Senza, la fiducia crolla in due settimane.
+7. **Il colore dice il tipo, e nient'altro.** Le sette coppie `--c-*` / `--f-*`
+   di `stile.css` — testo dell'etichetta e fondo del foglietto — non si usano
+   per stati, progetti o decorazione. Se si aggiunge un tipo gli si dà una
+   coppia lì; se si toglie una coppia, si toglie il tipo. L'acido è un'altra
+   cosa ancora: è **ciò che si tocca**, ed è l'unico accento. Il mono sta solo
+   dove c'è un dato — appena diventa la voce delle etichette, torna il tono da
+   rapporto tecnico che è stato tolto apposta.
+8. **Nessun webfont, e non è una svista.** I caratteri sono quelli di sistema:
+   un `@font-face` da un CDN sarebbe una dipendenza di rete e romperebbe
+   l'apertura da `file://`. La direzione chiede tipografia ordinaria proprio
+   per questo (→ `decisioni/2026-08-12-…`). Un carattere si aggiunge solo
+   mettendone il file nel repo.
 
 ## Se il lavoro riguarda…
 

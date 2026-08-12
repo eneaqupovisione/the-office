@@ -32,6 +32,7 @@ const Archivio = (() => {
     Dati.TIPI.forEach(t => {
       const b = document.createElement('button');
       b.type = 'button'; b.className = 'filtro'; b.textContent = t.id;
+      b.dataset.tipo = t.id;
       b.setAttribute('aria-pressed', String(tipiScelti.has(t.id)));
       b.addEventListener('click', () => {
         tipiScelti.has(t.id) ? tipiScelti.delete(t.id) : tipiScelti.add(t.id);
@@ -54,6 +55,10 @@ const Archivio = (() => {
   function scheda(r){
     const el = document.createElement('article');
     el.className = 'cattura';
+    /* Il tipo colora la sua etichetta, non la scheda: in un elenco lungo una
+       parete di riquadri colorati si legge peggio, non meglio. Senza tipo
+       l'etichetta non c'è, e si vede che è una cattura ancora da smistare. */
+    if (r.tipo) el.dataset.tipo = r.tipo;
 
     const t = document.createElement('div');
     t.className = 'cattura-testo';
@@ -79,7 +84,7 @@ const Archivio = (() => {
     meta.appendChild(stato);
 
     const apri = document.createElement('button');
-    apri.type = 'button'; apri.className = 'progetto-togli';
+    apri.type = 'button'; apri.className = 'azioni-apri';
     apri.textContent = '⋯'; apri.setAttribute('aria-label', 'Azioni');
     meta.appendChild(apri);
     el.appendChild(meta);

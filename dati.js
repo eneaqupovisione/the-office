@@ -33,7 +33,10 @@ const Dati = (() => {
     { id:'contatto',    prova:true,  cosa:'una persona (in prova, non nel metodo)' },
   ];
 
-  const IMPOST_DEFAULT = { tema:'scuro', utenteGitHub:'eneaqupovisione', scrivoDaSolo:true };
+  /* `chiaro` di base: la direzione 06 è un sistema su carta, e il grigio
+     dell'interfaccia — che lì è un colore, non un neutro di servizio — esiste
+     solo lì. La notte resta una scelta, non più il valore di partenza. */
+  const IMPOST_DEFAULT = { tema:'chiaro', utenteGitHub:'eneaqupovisione', scrivoDaSolo:true };
 
   /* ── lettura e scrittura grezze ──────────────────────────────────────── */
   function leggiChiave(chiave, ripiego){

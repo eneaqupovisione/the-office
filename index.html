@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
 <title>The Office</title>
 <meta name="description" content="Dal pensiero al testo salvato in meno di cinque secondi."/>
-<meta name="theme-color" content="#100f0e"/>
+<meta name="theme-color" content="#F6F6F8"/>
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="icon" href="icona.svg" type="image/svg+xml"/>
 <link rel="apple-touch-icon" href="icona.svg"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
 <link rel="stylesheet" href="stile.css"/>
 </head>
-<body data-tema="scuro">
+<body data-tema="chiaro">
 
 <!-- ══ IL MENU LATERALE ══════════════════════════════════════════════════════
      Da 900px in su sta lì, fisso. Sotto, è un pannello che entra da sinistra e
@@ -21,34 +21,48 @@
      schermata che si apre è sempre il lampo. -->
 <aside class="lato" id="lato" aria-label="Sezioni">
   <div class="lato-testa">
-    <span class="marchio">The&nbsp;Office</span>
+    <span class="marchio">The Office</span>
+    <span class="marchio-nota">la porta di The Knowledge</span>
   </div>
 
   <nav class="voci" id="voci">
-    <a class="voce" href="#cattura"      data-sez="cattura">
-      <span class="voce-segno" aria-hidden="true">✳</span>
+    <a class="voce" href="#cattura" data-sez="cattura">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M13.6 2.9a1.9 1.9 0 0 1 2.7 2.7L7.4 14.5l-3.6 1 1-3.6z"/>
+      </svg>
       <span class="voce-nome">Cattura</span>
     </a>
-    <a class="voce" href="#archivio"     data-sez="archivio">
-      <span class="voce-segno" aria-hidden="true">▤</span>
+    <a class="voce" href="#archivio" data-sez="archivio">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"
+           stroke-linecap="round" aria-hidden="true">
+        <path d="M3.2 5.5h13.6M3.2 10h13.6M3.2 14.5h9"/>
+      </svg>
       <span class="voce-nome">Archivio</span>
       <span class="voce-conto" id="conto-archivio"></span>
     </a>
-    <a class="voce" href="#progetti"     data-sez="progetti">
-      <span class="voce-segno" aria-hidden="true">◈</span>
+    <a class="voce" href="#progetti" data-sez="progetti">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M2.6 6.2a1.4 1.4 0 0 1 1.4-1.4h3l1.6 2h6a1.4 1.4 0 0 1 1.4 1.4v6a1.4 1.4 0 0 1-1.4 1.4H4a1.4 1.4 0 0 1-1.4-1.4z"/>
+      </svg>
       <span class="voce-nome">Progetti</span>
       <span class="voce-conto" id="conto-progetti"></span>
     </a>
     <a class="voce" href="#impostazioni" data-sez="impostazioni">
-      <span class="voce-segno" aria-hidden="true">⚙</span>
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"
+           stroke-linecap="round" aria-hidden="true">
+        <path d="M3 6h9M15 6h2M3 14h2M8 14h9"/>
+        <circle cx="13.5" cy="6" r="2"/><circle cx="6.5" cy="14" r="2"/>
+      </svg>
       <span class="voce-nome">Impostazioni</span>
     </a>
   </nav>
 
   <!-- ══ IL CONTATORE È SACRO ═══════════════════════════════════════════════
-       Sempre visibile, in tutte e due le impaginazioni: qui nel menu quando c'è
-       spazio, e nella testata quando non ce n'è. Se catturo e non vedo mai dove
-       finisce, in due settimane smetto di fidarmi. (nodo → «Deciso») -->
+       Sempre visibile, in tutte e due le impaginazioni. Se catturo e non vedo
+       mai dove finisce, in due settimane smetto di fidarmi e ricomincio a
+       segnarmi le cose anche altrove. (nodo → «Deciso») -->
   <div class="lato-piede">
     <div class="stato" id="stato-lato">
       <span class="stato-numero" id="stato-numero">0</span>
@@ -62,8 +76,6 @@
 
 <div class="palco">
 
-  <!-- La testata galleggia sopra il contenuto: materiale traslucido, non una
-       striscia opaca che mangia schermo. -->
   <header class="testata">
     <button class="apri-menu" id="apri-menu" aria-label="Sezioni" aria-expanded="false">
       <span></span><span></span>
@@ -74,26 +86,34 @@
 
   <main id="palco-main">
 
-    <!-- ══ 1 · IL LAMPO ═════════════════════════════════════════════════════
-         Riceve il fuoco all'apertura. Nessun campo obbligatorio: si salva col
-         solo testo. (METODO §2, principio 1: la cattura non chiede permesso) -->
+    <!-- ══ 01 · IL LAMPO ═════════════════════════════════════════════════════
+         Riceve il fuoco all'apertura. Nessun campo obbligatorio: si salva con
+         il solo testo. (METODO §2, principio 1: la cattura non chiede permesso) -->
     <section class="sez" id="sez-cattura" data-sez="cattura">
-      <label class="nascosto" for="testo">Cosa ti è venuto in mente</label>
-      <textarea id="testo" autofocus autocapitalize="sentences" autocorrect="on"
-                enterkeyhint="done" placeholder="…"></textarea>
+
+      <div class="foglio">
+        <label class="nascosto" for="testo">Cosa ti è venuto in mente</label>
+        <textarea id="testo" autofocus autocapitalize="sentences" autocorrect="on"
+                  enterkeyhint="done" placeholder="Scrivi…"></textarea>
+        <!-- Dove sta andando quello che stai scrivendo. È informazione, non
+             cornice: il nome è quello vero che avrà il file in `_inbox/`. -->
+        <div class="riga-file">
+          <span class="nome-file" id="nome-file">nuova cattura</span>
+          <span class="stato-file" id="stato-file">non salvata</span>
+        </div>
+      </div>
 
       <div class="sotto-lampo">
         <!-- Il tipo prima del progetto: nel momento del lampo so quasi sempre
              *che genere di cosa* è, non ancora dove va. -->
+        <span class="etichetta-campo">Che cosa è · facoltativo</span>
         <div class="tipi" id="tipi" role="group" aria-label="Che cosa è"></div>
 
-        <div class="riga-dove">
-          <label class="nascosto" for="dove">Di chi è</label>
-          <input id="dove" class="dove" type="text" list="elenco-progetti"
-                 autocomplete="off" autocapitalize="none" spellcheck="false"
-                 placeholder="di chi è  ·  facoltativo"/>
-          <datalist id="elenco-progetti"></datalist>
-        </div>
+        <label class="etichetta-campo" for="dove">Di chi è · facoltativo</label>
+        <input id="dove" class="dove" type="text" list="elenco-progetti"
+               autocomplete="off" autocapitalize="none" spellcheck="false"
+               placeholder="niente, un dominio, o un progetto"/>
+        <datalist id="elenco-progetti"></datalist>
         <div class="scorciatoie-progetto" id="progetti-recenti"></div>
 
         <button id="salva" class="salva">Salva</button>
@@ -101,7 +121,7 @@
       </div>
     </section>
 
-    <!-- ══ 2 · L'ARCHIVIO ═══════════════════════════════════════════════════
+    <!-- ══ 02 · L'ARCHIVIO ═══════════════════════════════════════════════════
          Si legge, si riordina, non si riscrive. Il testo di una cattura non è
          modificabile qui: «l'app non è un posto dove si scrive». -->
     <section class="sez" id="sez-archivio" data-sez="archivio" hidden>
@@ -113,8 +133,9 @@
       <div id="elenco-archivio" class="gruppi"></div>
     </section>
 
-    <!-- ══ 3 · I PROGETTI ═══════════════════════════════════════════════════ -->
+    <!-- ══ 03 · I PROGETTI ═══════════════════════════════════════════════════ -->
     <section class="sez" id="sez-progetti" data-sez="progetti" hidden>
+
       <div class="pannello">
         <h2>I tuoi progetti</h2>
         <p class="spiega">L'appartenenza resta facoltativa: questi sono suggerimenti
@@ -130,8 +151,8 @@
       <div class="pannello">
         <h2>Da GitHub</h2>
         <p class="spiega">Legge i <strong>repo pubblici</strong> di un account e te li
-           propone come progetti. Nessun token, nessun segreto: è una lettura, e
-           l'unica dell'app che tocca la rete — mai nel percorso del salvataggio.</p>
+           propone come progetti. Nessun token, nessun segreto: è una lettura, ed è
+           l'unica cosa dell'app che tocca la rete — mai nel percorso del salvataggio.</p>
         <form class="riga-aggiungi" id="carica-github">
           <input id="utente-github" type="text" placeholder="utente github"
                  autocomplete="off" autocapitalize="none" spellcheck="false"/>
@@ -140,9 +161,10 @@
         <div id="esito-github" class="esito"></div>
         <div id="elenco-repo" class="elenco-repo"></div>
       </div>
+
     </section>
 
-    <!-- ══ 4 · IMPOSTAZIONI E PONTE ═════════════════════════════════════════ -->
+    <!-- ══ 04 · IMPOSTAZIONI E PONTE ═════════════════════════════════════════ -->
     <section class="sez" id="sez-impostazioni" data-sez="impostazioni" hidden>
 
       <div class="pannello">
@@ -172,8 +194,8 @@
       <div class="pannello">
         <h2>Aspetto</h2>
         <div class="segmento" id="segmento-tema" role="group" aria-label="Tema">
-          <button data-tema="scuro">Scuro</button>
           <button data-tema="chiaro">Chiaro</button>
+          <button data-tema="scuro">Scuro</button>
           <button data-tema="sistema">Sistema</button>
         </div>
       </div>

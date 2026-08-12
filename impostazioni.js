@@ -14,15 +14,15 @@ const Impostazioni = (() => {
   let permessoScaduto = false;
 
   /* ── il tema ─────────────────────────────────────────────────────────────
-     Scuro di base per decisione scritta: il lampo arriva più spesso di sera, e
-     una schermata bianca in mano al buio è una piccola punizione ogni volta.
-     Il chiaro c'è e si sceglie; «sistema» segue il telefono. */
+     Carta di base: la direzione 06 vive su carta, e i suoi colori — acido,
+     cielo, menta, il grigio dell'interfaccia — sono calibrati lì. La notte
+     esiste e si sceglie; «sistema» segue il telefono. */
   function applicaTema(t){
     document.body.dataset.tema = t;
     const meta = document.querySelector('meta[name="theme-color"]');
     const chiaro = t === 'chiaro' ||
       (t === 'sistema' && window.matchMedia('(prefers-color-scheme: light)').matches);
-    if (meta) meta.setAttribute('content', chiaro ? '#faf8f5' : '#100f0e');
+    if (meta) meta.setAttribute('content', chiaro ? '#F4F3EE' : '#0C0C0E');
     document.querySelectorAll('#segmento-tema button').forEach(b =>
       b.setAttribute('aria-pressed', String(b.dataset.tema === t)));
   }

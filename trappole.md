@@ -7,6 +7,18 @@ La più recente in alto.
 
 ---
 
+**Il tema di partenza non è più scuro.** Dal 2026-08-12 l'app si apre chiara. Chi
+aveva già usato l'app se la ritrova chiara **anche se non ha toccato niente** —
+non è un bug, e «Notte» sta in Impostazioni. Il valore di partenza vive in
+`Dati.IMPOST_DEFAULT`, non nel CSS: cambiarlo nel CSS non sposta niente.
+*(2026-08-12)*
+
+**Il colore dice il tipo, e solo quello.** Se qualcuno colora una cattura per
+dire «già esportata», o dà a un progetto la sua tinta, la mappa si rompe in
+silenzio: da quel momento il colore non è più leggibile a colpo d'occhio e
+l'archivio torna da rileggere invece che da scorrere. Per stati e cornici ci
+sono i grigi; per ciò che si tocca c'è l'accento blu. *(2026-08-12)*
+
 **La cartella collegata non è la sincronizzazione, e il permesso scade.** Scrive
 i file sul dispositivo da cui stai catturando, non nel repo: se colleghi la
 cartella dal portatile, il telefono continua a non sapere niente. E il browser

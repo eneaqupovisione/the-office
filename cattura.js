@@ -15,6 +15,17 @@ const Cattura = (() => {
 
   let tipoScelto = null;
 
+  /* ── la riga di stato del foglio ─────────────────────────────────────────
+     Dice il nome che il file avrà in `_inbox/` e se è già uscito di qui: chi
+     scrive sa dove sta andando quello che sta scrivendo, prima di salvarlo. */
+  function aggiornaFinestra(stato){
+    const vuoto = testo.value.trim() === '';
+    $('nome-file').textContent = vuoto
+      ? 'nuova cattura'
+      : '_inbox/' + Dati.orario(new Date()) + '.md';
+    $('stato-file').textContent = stato || (vuoto ? 'vuota' : 'non salvata');
+  }
+
   /* ── le caselle del tipo ───────────────────────────────────────────────
      Il tipo prima del progetto: nel momento del lampo so quasi sempre *che
      genere di cosa* è, non ancora dove va. */
@@ -25,6 +36,7 @@ const Cattura = (() => {
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'tipo' + (t.prova ? ' prova' : '');
+      b.dataset.tipo = t.id;        // il colore del foglietto glielo dà il CSS
       b.textContent = t.id;
       b.title = t.cosa;
       b.setAttribute('aria-pressed', String(tipoScelto === t.id));
@@ -87,6 +99,7 @@ const Cattura = (() => {
        fila sullo stesso progetto, e ributtarli ogni volta è attrito che si paga
        a ogni singola cattura. */
     aggiornaSalva();
+    aggiornaFinestra('salvata · in attesa');
     App.aggiorna();
     testo.focus();
 
@@ -96,7 +109,10 @@ const Cattura = (() => {
       App.conferma('salvato');
       const fatto = await Ponte.scriviUna(r);
       App.aggiorna();
-      if (fatto) App.conferma('scritto in ' + Ponte.nomeCartella());
+      if (fatto){
+        aggiornaFinestra('scritta in ' + Ponte.nomeCartella());
+        App.conferma('scritto in ' + Ponte.nomeCartella());
+      }
     } else {
       App.conferma('salvato');
     }
@@ -108,8 +124,9 @@ const Cattura = (() => {
     disegnaTipi();
     disegnaProgetti();
     aggiornaSalva();
+    aggiornaFinestra();
 
-    testo.addEventListener('input', aggiornaSalva);
+    testo.addEventListener('input', () => { aggiornaSalva(); aggiornaFinestra(); });
     dove.addEventListener('input', () => disegnaProgetti());
     salva.addEventListener('click', salvaCattura);
 
