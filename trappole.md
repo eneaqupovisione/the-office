@@ -7,6 +7,20 @@ La più recente in alto.
 
 ---
 
+**Da adesso l'albero cambia anche quando tu non lo tocchi.** Con la
+sincronizzazione attiva, una cattura fatta dal telefono finisce nel repo **su
+GitHub** — non nel `~/the-knowledge` che hai sul Mac. Il locale non lo sa
+finché non fai `git pull`, e Claude Code lavora sul locale: **«smista l'inbox»
+non vedrebbe le catture di oggi.** Da qui in avanti l'inbox si smista così:
+
+```bash
+cd ~/the-knowledge && git pull      # prima di ogni smistamento
+```
+
+E vale anche al contrario: se il locale è avanti e non l'hai spinto, il portiere
+scrive su una base più vecchia della tua. **Prima di catturare per giorni, spingi
+il locale.** *(2026-08-12)*
+
 **«Cartella collegata» non vuol dire «collegata al mio account».** Sono due cose
 diverse e il nome trae in inganno: la cartella collegata è un permesso del
 browser su una cartella di **quel disco**, e su iOS Safari quell'API non esiste
