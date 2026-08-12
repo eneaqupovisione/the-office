@@ -58,15 +58,18 @@ const Ponte = (() => {
 
   /* ── strada 2 · l'esportazione ───────────────────────────────────────── */
   function componiEsportazione(righe){
-    const pezzi = nomiUnici(righe).map(({ r, nome }) =>
-      '=== _inbox/' + nome + '.md ===\n' + corpo(r));
+    const pezzi = nomiUnici(righe).map(({ r, nome }) => {
+      const casella = nomeCasella(r.dove);
+      return '=== _inbox/' + (casella ? casella + '/' : '') + nome + '.md ===\n' + corpo(r);
+    });
 
     return '# Catture da The Office\n'
          + '# ' + righe.length + ' oggetti · esportati il '
          + new Date().toISOString().slice(0,16).replace('T',' ') + '\n'
          + '#\n'
          + '# Ogni blocco delimitato da tre segni di uguale è un file separato.\n'
-         + '# Lo smistamento li spezza e li scrive in ~/the-knowledge/_inbox/.\n'
+         + '# Lo smistamento li spezza e li scrive in ~/the-knowledge/_inbox/,\n'
+         + '# ognuno nella casella del suo progetto, se ce l\'ha.\n'
          + '# (Qui sopra il separatore non è scritto per esteso di proposito:\n'
          + '#  comparirebbe come un blocco finto al primo che divide il file.)\n\n'
          + pezzi.join('\n');
@@ -122,10 +125,34 @@ const Ponte = (() => {
 
   /* Dove si scrive davvero. Se la cartella collegata è già `_inbox` si scrive
      lì; altrimenti è la radice dell'albero e `_inbox` sta dentro. */
-  async function cartellaScrittura(){
+  async function cartellaInbox(){
     if (!cartella) return null;
     if (cartella.name === '_inbox') return cartella;
     return await cartella.getDirectoryHandle('_inbox', { create:true });
+  }
+
+  /* ── la casella del progetto ─────────────────────────────────────────────
+     Una cattura con un'appartenenza atterra in `_inbox/<progetto>/`, non nel
+     mucchio. **Resta `da-smistare`**: la sottocartella divide, non promuove —
+     nei file strutturati ci si entra solo dopo lo smistamento (METODO §6, «la
+     casella non è la destinazione»).
+
+     Il vantaggio non è l'ordine per l'ordine: è che la **radice** di `_inbox/`
+     diventa da sola l'elenco di ciò che non ha ancora un'appartenenza, e che
+     uno smistamento si può restringere a un progetto solo. */
+  function nomeCasella(dove){
+    return (dove || '').trim().toLowerCase()
+      .replace(/[^a-z0-9._-]+/g, '-')      // niente barre: una casella, non un percorso
+      .replace(/^-+|-+$/g, '').slice(0, 60);
+  }
+
+  async function cartellaScrittura(r){
+    const inbox = await cartellaInbox();
+    if (!inbox) return null;
+    const casella = nomeCasella(r && r.dove);
+    if (!casella) return inbox;             // senza progetto resta in cima
+    try { return await inbox.getDirectoryHandle(casella, { create:true }); }
+    catch (e) { return inbox; }             // se il nome non è valido, meglio la radice
   }
 
   /* I progetti veri, letti dall'albero. Solo cartelle, niente file e niente
@@ -209,7 +236,7 @@ const Ponte = (() => {
   async function scriviUna(r){
     if (!cartella) return false;
     try{
-      const dir = await cartellaScrittura();
+      const dir = await cartellaScrittura(r);
       const nome = await nomeLibero(dir, r.nome);
 
       /* Prima i file, poi l'appunto che li nomina: se qualcosa va storto a
