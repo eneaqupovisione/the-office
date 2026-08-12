@@ -83,6 +83,18 @@ const Archivio = (() => {
       : 'in attesa';
     meta.appendChild(stato);
 
+    /* Se ha allegati lo dice: dopo il salvataggio sono invisibili, e un file
+       che non sai di avere è un file che non uscirà mai di qui. */
+    if (typeof Media !== 'undefined'){
+      Media.perCattura(r.id).then(a => {
+        if (!a.length) return;
+        const tag = document.createElement('span');
+        tag.className = 'tag-allegati';
+        tag.textContent = a.length === 1 ? '1 allegato' : a.length + ' allegati';
+        meta.insertBefore(tag, stato);
+      }).catch(() => {});
+    }
+
     const apri = document.createElement('button');
     apri.type = 'button'; apri.className = 'azioni-apri';
     apri.textContent = '⋯'; apri.setAttribute('aria-label', 'Azioni');

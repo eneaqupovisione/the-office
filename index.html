@@ -11,7 +11,9 @@
 <link rel="apple-touch-icon" href="icona.svg"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
-<link rel="stylesheet" href="stile.css"/>
+<!-- ?v= deve coincidere con VERSIONE in sw.js: e' l'unico modo
+     di non farsi servire un misto di file vecchi e nuovi da file:// -->
+<link rel="stylesheet" href="stile.css?v=6"/>
 </head>
 <body data-tema="chiaro">
 
@@ -98,21 +100,49 @@
         <!-- Dove sta andando quello che stai scrivendo. È informazione, non
              cornice: il nome è quello vero che avrà il file in `_inbox/`. -->
         <div class="riga-file">
+          <button type="button" class="allega" id="allega" title="Foto, audio, file">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M13 6.5 7.6 12a2.1 2.1 0 0 0 3 3l5.4-5.5a4 4 0 0 0-5.7-5.7L5 9.2a5.8 5.8 0 0 0 8.2 8.2l4.3-4.3"/>
+            </svg>
+            <span>allega</span>
+          </button>
+          <input type="file" id="scegli-file" accept="image/*,audio/*" multiple
+                 class="nascosto" aria-label="Allega foto, audio o file"/>
           <span class="nome-file" id="nome-file">nuova cattura</span>
           <span class="stato-file" id="stato-file">non salvata</span>
         </div>
       </div>
 
+        <!-- Gli allegati scelti, non ancora salvati. Il testo resta comunque
+             l'unica cosa necessaria: un allegato da solo non si salva. -->
+        <div class="allegati" id="allegati" hidden></div>
+
       <div class="sotto-lampo">
         <!-- Il tipo prima del progetto: nel momento del lampo so quasi sempre
              *che genere di cosa* è, non ancora dove va. -->
-        <span class="etichetta-campo">Che cosa è · facoltativo</span>
+        <div class="riga-etichetta">
+          <span class="etichetta-campo">Che cosa è · facoltativo</span>
+          <button type="button" class="chiedi" id="apri-legenda" aria-expanded="false"
+                  aria-controls="legenda">che differenza c'è?</button>
+        </div>
         <div class="tipi" id="tipi" role="group" aria-label="Che cosa è"></div>
+        <!-- La spiegazione del tipo scelto, una riga. Non è un aiuto nascosto in
+             un menu: al lampo si legge senza toccare niente, e insegna usando. -->
+        <p class="spiega-tipo" id="spiega-tipo" aria-live="polite"></p>
+        <div class="legenda" id="legenda" hidden></div>
 
-        <label class="etichetta-campo" for="dove">Di chi è · facoltativo</label>
+        <!-- Il primo dei due passi: che oggetto è. Compare solo se almeno un
+             progetto dichiara `forma:` nel suo nodo — e **filtra**, non
+             obbliga: si può scrivere il progetto direttamente e saltarlo. -->
+        <div class="forme" id="forme" role="group" aria-label="Che tipo di oggetto"></div>
+        <label class="etichetta-campo" for="dove">Di che progetto è · facoltativo</label>
         <input id="dove" class="dove" type="text" list="elenco-progetti"
                autocomplete="off" autocapitalize="none" spellcheck="false"
-               placeholder="niente, un dominio, o un progetto"/>
+               placeholder="cantera, the-office…"/>
+        <p class="nota-campo">Alla precisione che hai adesso: niente, un dominio
+           (<code>sistema</code>, <code>app</code>, <code>sito</code>,
+           <code>libero</code>), o un progetto.</p>
         <datalist id="elenco-progetti"></datalist>
         <div class="scorciatoie-progetto" id="progetti-recenti"></div>
 
@@ -146,6 +176,18 @@
                  autocomplete="off" autocapitalize="none" spellcheck="false"/>
           <button type="submit" class="bottone-min">Aggiungi</button>
         </form>
+      </div>
+
+      <div class="pannello">
+        <h2>Dall'albero</h2>
+        <p class="spiega">I progetti <strong>veri</strong>: le cartelle dentro
+           <code>prodotti/</code>, <code>clienti/</code>, <code>studio/</code>…
+           Serve la cartella collegata, e va collegata la radice
+           <code>~/the-knowledge</code> — da <code>_inbox</code> l'albero non si vede.</p>
+        <div class="riga-bottoni">
+          <button id="leggi-albero" class="bottone">Leggi i progetti dall'albero</button>
+        </div>
+        <div id="esito-albero" class="esito" style="padding-top:11px;padding-bottom:0"></div>
       </div>
 
       <div class="pannello">
@@ -227,12 +269,13 @@
 
 <div class="conferma" id="conferma" role="status" aria-live="polite"></div>
 
-<script src="dati.js"></script>
-<script src="ponte.js"></script>
-<script src="cattura.js"></script>
-<script src="archivio.js"></script>
-<script src="progetti.js"></script>
-<script src="impostazioni.js"></script>
-<script src="app.js"></script>
+<script src="dati.js?v=6"></script>
+<script src="media.js?v=6"></script>
+<script src="ponte.js?v=6"></script>
+<script src="cattura.js?v=6"></script>
+<script src="archivio.js?v=6"></script>
+<script src="progetti.js?v=6"></script>
+<script src="impostazioni.js?v=6"></script>
+<script src="app.js?v=6"></script>
 </body>
 </html>

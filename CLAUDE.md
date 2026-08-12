@@ -11,6 +11,16 @@
 
 ## Cos'è
 
+> **È uno strumento, non un prodotto** (nodo, 2026-08-12). Serve a Enea e non ha
+> compratori: prezzo, mercato e modello di ricavo **non sono domande aperte, non
+> sono pertinenti**. Il criterio con cui si giudica una scelta di aspetto o di
+> interazione non è il posizionamento — non esiste — ma la destinazione d'uso:
+>
+> **si apre molte volte al giorno, spesso di sera, con una mano sola, per meno
+> di cinque secondi alla volta.**
+>
+> Una proposta che non regge questa frase si scarta prima di costruirla.
+
 La porta di [The Knowledge](https://github.com/eneaqupovisione/the-knowledge):
 cattura senza attrito, da telefono e da computer. Pagina web installabile,
 **nessuna dipendenza, nessun passo di costruzione**: si apre `index.html` e
@@ -34,8 +44,9 @@ testo**.
 |---|---|---|
 | `index.html` | le quattro schermate e il menu | è l'unico documento: le sezioni si mostrano e si nascondono |
 | `stile.css` | l'aspetto | **impaginazione San Francisco, palette 06** (→ `decisioni/2026-08-12-la-via-di-mezzo.md`). Carattere di sistema, l'acido come unico accento. Chiaro di base, progettata a 375px; da 900px il menu resta fisso |
-| `dati.js` | il modello e il magazzino | 7 tipi, catture, progetti, impostazioni. **Nessuna chiamata di rete** |
-| `ponte.js` | come le catture escono di qui | cartella collegata + esportazione. Il formato lo comanda `METODO.md` §6 |
+| `dati.js` | il modello e il magazzino | 7 tipi, catture, progetti (con la loro `forma`), impostazioni. **Nessuna chiamata di rete** |
+| `media.js` | gli allegati, in transito | IndexedDB e non `localStorage`: una foto in base64 satura la quota e uccide la cattura |
+| `ponte.js` | come le catture escono di qui | si collega **la radice** `~/the-knowledge`: scrive in `_inbox/` e `_inbox/media/`, e legge la `forma:` dei progetti. Il formato lo comanda `METODO.md` §6 |
 | `cattura.js` | il lampo | la schermata che si apre e riceve il fuoco |
 | `archivio.js` | leggere e rietichettare | raggruppa per progetto; il testo non è modificabile |
 | `progetti.js` | i nomi dei progetti | **l'unico punto che tocca la rete**: legge i repo pubblici di GitHub, senza token |

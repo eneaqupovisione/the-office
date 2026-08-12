@@ -8,12 +8,15 @@
    sono dati remoti da tenere freschi, perché i dati stanno in locale.
    ═══════════════════════════════════════════════════════════════════════ */
 
-const VERSIONE = 'the-office-v5';
+/* Questo numero sta in due posti: qui e nelle `?v=` di `index.html`.
+   Devono coincidere, o il guscio in cache e il documento vanno fuori fase. */
+const VERSIONE = 'the-office-v6';
 const GUSCIO = [
   './',
   './index.html',
   './stile.css',
   './dati.js',
+  './media.js',
   './ponte.js',
   './cattura.js',
   './archivio.js',

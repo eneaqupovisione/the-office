@@ -3,12 +3,20 @@
 
    Due strade, e nessuna delle due è la sincronizzazione vera:
 
-   1. **La cartella collegata.** Sul computer: colleghi una volta la cartella
-      `_inbox` e da lì in poi ogni cattura ci finisce dentro come file `.md`
-      vero, da sola, senza gesti. È scrittura su disco locale, non rete: la
-      decisione «nessuna chiamata di rete nel percorso del salvataggio» resta
-      intatta. Vuole un contesto sicuro (`https` o `localhost`) e un browser
-      basato su Chromium — su Safari iPhone non esiste.
+   1. **La cartella collegata.** Sul computer: colleghi una volta
+      `~/the-knowledge` e da lì in poi ogni cattura finisce in `_inbox/` come
+      file `.md` vero, da sola, senza gesti. È scrittura su disco locale, non
+      rete: la decisione «nessuna chiamata di rete nel percorso del salvataggio»
+      resta intatta. Vuole un contesto sicuro (`https` o `localhost`) e un
+      browser basato su Chromium — su Safari iPhone non esiste.
+
+      **Si collega la radice dell'albero, non `_inbox`**, per una ragione che
+      vale più della scrittura: da lì l'app può **leggere i progetti veri** —
+      le cartelle dentro `prodotti/`, `clienti/`, `studio/`… — e proporli in
+      cattura. È così che un lampo si attacca a un progetto che esiste davvero
+      invece che a un nome scritto a mano. L'API dei file non permette di
+      risalire alla cartella madre: se colleghi `_inbox` direttamente la
+      scrittura funziona lo stesso, ma i progetti non si vedono.
    2. **L'esportazione.** Ovunque, telefono compreso, ma con un gesto tuo. Un
       file solo con dentro tutti i blocchi, perché i browser bloccano i
       download multipli.
@@ -20,17 +28,21 @@
 const Ponte = (() => {
 
   /* ── il formato dell'inbox (METODO §6) ───────────────────────────────── */
-  function testa(r){
+  function testa(r, allegati){
     const righe = ['---'];
     if (r.tipo) righe.push('tipo: ' + r.tipo);
     if (r.dove) righe.push('progetto: ' + r.dove);
     righe.push('origine: the-office');
     righe.push('stato: da-smistare');
+    /* Un allegato che il suo appunto non nomina è un file orfano dentro
+       `media/`: la riga qui sotto è ciò che tiene insieme i due. */
+    if (allegati && allegati.length)
+      righe.push('allegati: ' + allegati.map(a => 'media/' + a.file).join(', '));
     righe.push('---');
     return righe.join('\n');
   }
 
-  function corpo(r){ return testa(r) + '\n\n' + r.testo + '\n'; }
+  function corpo(r, allegati){ return testa(r, allegati) + '\n\n' + r.testo + '\n'; }
 
   /* Due lampi nello stesso minuto hanno lo stesso nome: il secondo prende un
      suffisso. Vale sia dentro un'esportazione sia dentro la cartella. */
@@ -104,6 +116,48 @@ const Ponte = (() => {
 
   const possibile = () => typeof window.showDirectoryPicker === 'function';
 
+  /* I domini dell'albero. Non è una lista di cartelle qualunque: sono i cinque
+     di `~/the-knowledge`, e se cambiano lì cambiano anche qui. */
+  const DOMINI = ['prodotti', 'clienti', 'studio', 'pratico', 'personale'];
+
+  /* Dove si scrive davvero. Se la cartella collegata è già `_inbox` si scrive
+     lì; altrimenti è la radice dell'albero e `_inbox` sta dentro. */
+  async function cartellaScrittura(){
+    if (!cartella) return null;
+    if (cartella.name === '_inbox') return cartella;
+    return await cartella.getDirectoryHandle('_inbox', { create:true });
+  }
+
+  /* I progetti veri, letti dall'albero. Solo cartelle, niente file e niente
+     nomi che iniziano per punto o underscore — `_inbox` non è un progetto. */
+  async function progettiVeri(){
+    if (!cartella || cartella.name === '_inbox') return null;
+    const trovati = [];
+    for (const dominio of DOMINI){
+      let dir;
+      try { dir = await cartella.getDirectoryHandle(dominio); }
+      catch (e) { continue; }                   // il dominio può non esistere
+      for await (const [nome, h] of dir.entries()){
+        if (h.kind !== 'directory') continue;
+        if (nome.startsWith('.') || nome.startsWith('_')) continue;
+        trovati.push({ nome, dominio, forma: await formaDi(h) });
+      }
+    }
+    return trovati;
+  }
+
+  /* Che oggetto è un progetto, letto dal campo `forma:` nella sua intestazione
+     (METODO §5). Non lo si indovina dal nome né dal dominio: se il nodo non lo
+     dichiara, il progetto non ha forma — ed è un'informazione, non un errore. */
+  async function formaDi(dirProgetto){
+    try{
+      const f = await dirProgetto.getFileHandle('README.md');
+      const testa = (await (await f.getFile()).text()).slice(0, 600);
+      const m = testa.match(/^forma:\s*([a-z-]+)/m);
+      return m ? m[1] : '';
+    } catch (e) { return ''; }
+  }
+
   /* Al riavvio la maniglia c'è ma il permesso può essere scaduto. Non lo si
      richiede qui: `requestPermission` vuole un gesto dell'utente, e chiederlo
      all'apertura significherebbe un pannello davanti al lampo. */
@@ -139,11 +193,11 @@ const Ponte = (() => {
   const collegata = () => !!cartella;
   const nomeCartella = () => cartella ? cartella.name : '';
 
-  async function nomeLibero(base){
+  async function nomeLibero(dir, base){
     let nome = base + '.md', n = 1;
     /* eslint-disable no-constant-condition */
     while (true){
-      try { await cartella.getFileHandle(nome); }
+      try { await dir.getFileHandle(nome); }
       catch (e) { return nome; }        // non esiste: è libero
       n += 1; nome = base + '-' + n + '.md';
       if (n > 50) return base + '-' + Date.now() + '.md';
@@ -155,14 +209,46 @@ const Ponte = (() => {
   async function scriviUna(r){
     if (!cartella) return false;
     try{
-      const nome = await nomeLibero(r.nome);
-      const f = await cartella.getFileHandle(nome, { create:true });
+      const dir = await cartellaScrittura();
+      const nome = await nomeLibero(dir, r.nome);
+
+      /* Prima i file, poi l'appunto che li nomina: se qualcosa va storto a
+         metà, restano dei file senza nota (rumore) invece di una nota che
+         promette file che non esistono (bugia). */
+      const scritti = await scriviAllegati(dir, r);
+
+      const f = await dir.getFileHandle(nome, { create:true });
       const w = await f.createWritable();
-      await w.write(corpo(r));
+      await w.write(corpo(r, scritti));
       await w.close();
       Dati.segnaUscite([r.id], 'cartella');
       return true;
     } catch (e) { return false; }
+  }
+
+  /* Gli allegati vanno in `_inbox/media/`, che è la destinazione che il metodo
+     prevede già per i riferimenti (METODO §6). Escono da IndexedDB e non ci
+     tornano: da quel momento vivono nell'albero, come devono. */
+  async function scriviAllegati(dir, r){
+    if (typeof Media === 'undefined') return [];
+    let allegati = [];
+    try { allegati = await Media.perCattura(r.id); } catch (e) { return []; }
+    if (!allegati.length) return [];
+
+    const media = await dir.getDirectoryHandle('media', { create:true });
+    const scritti = [];
+    for (const v of allegati){
+      try{
+        const nomeF = Media.nomeFile(v, r.nome);
+        const fh = await media.getFileHandle(nomeF, { create:true });
+        const w = await fh.createWritable();
+        await w.write(v.dato);
+        await w.close();
+        scritti.push({ file: nomeF, id: v.id });
+        await Media.elimina(v.id);
+      } catch (e) { /* questo allegato resta in attesa, la nota non lo cita */ }
+    }
+    return scritti;
   }
 
   async function scriviTutte(righe){
@@ -178,6 +264,7 @@ const Ponte = (() => {
   return {
     corpo, componiEsportazione, scarica, nomiUnici,
     possibile, riprendi, collega, riprova, scollega, collegata, nomeCartella,
-    scriviUna, scriviTutte
+    scriviUna, scriviTutte, progettiVeri,
+    vedeLAlbero: () => !!cartella && cartella.name !== '_inbox'
   };
 })();

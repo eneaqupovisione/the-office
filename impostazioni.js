@@ -46,7 +46,11 @@ const Impostazioni = (() => {
 
     if (Ponte.collegata()){
       el.className = 'esito bene';
-      el.textContent = '▸ ' + Ponte.nomeCartella() + ' — ogni cattura ci finisce dentro da sola.'
+      el.textContent = '▸ ' + Ponte.nomeCartella()
+        + (Ponte.vedeLAlbero()
+            ? ' — le catture finiscono in _inbox/ da sole, e l\'app vede i progetti dell\'albero.'
+            : ' — le catture ci finiscono dentro da sole. Da qui però l\'albero non si vede: '
+              + 'ricollega la radice ~/the-knowledge per avere anche i progetti veri.')
         + (attesa ? ' ' + attesa + ' in attesa di essere scritte.' : '');
       $('collega-cartella').textContent = 'Cambia cartella';
       $('scrivi-ora').disabled = attesa === 0;

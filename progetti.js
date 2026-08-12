@@ -41,9 +41,14 @@ const Progetti = (() => {
       nome.className = 'progetto-nome'; nome.textContent = p.id;
       riga.appendChild(nome);
 
-      if (p.fonte === 'github'){
+      if (p.forma){
+        const fo = document.createElement('span');
+        fo.className = 'progetto-forma'; fo.textContent = p.forma;
+        riga.appendChild(fo);
+      }
+      if (p.fonte && p.fonte !== 'locale'){
         const f = document.createElement('span');
-        f.className = 'progetto-fonte'; f.textContent = 'github';
+        f.className = 'progetto-fonte'; f.textContent = p.fonte;
         riga.appendChild(f);
       }
 
@@ -132,7 +137,37 @@ const Progetti = (() => {
     });
   }
 
+  /* I progetti veri, letti dalle cartelle di `~/the-knowledge`. È la fonte
+     giusta: GitHub sa dei repo, l'albero sa dei progetti — e non tutti i
+     progetti hanno un repo (i clienti, per dirne uno). */
+  async function leggiAlbero(){
+    const esito = $('esito-albero');
+    if (!Ponte.vedeLAlbero()){
+      esito.className = 'esito';
+      esito.textContent = Ponte.collegata()
+        ? 'La cartella collegata è _inbox: da lì non si vede l\'albero. Ricollega ~/the-knowledge in Impostazioni.'
+        : 'Serve la cartella collegata: si fa in Impostazioni, e vuole ~/the-knowledge.';
+      return;
+    }
+    esito.className = 'esito';
+    esito.textContent = 'leggo le cartelle dell\'albero…';
+    try{
+      const trovati = await Ponte.progettiVeri();
+      let nuovi = 0;
+      const gia = new Set(Dati.progetti().map(p => p.id));
+      trovati.forEach(t => { if (!gia.has(Dati.normalizza(t.nome))) nuovi++; Dati.ricorda(t.nome, 'albero', '', t.forma); });
+      App.aggiorna();
+      esito.className = 'esito bene';
+      esito.textContent = trovati.length + ' progetti nell\'albero'
+        + (nuovi ? ', ' + nuovi + ' nuovi' : ' — c\'erano già tutti') + '.';
+    } catch (e){
+      esito.className = 'esito male';
+      esito.textContent = 'non riesco a leggere le cartelle: ' + (e && e.message ? e.message : 'permesso negato');
+    }
+  }
+
   function avvia(){
+    $('leggi-albero').addEventListener('click', leggiAlbero);
     $('utente-github').value = Dati.impostazioni().utenteGitHub || '';
 
     $('aggiungi-progetto').addEventListener('submit', (e) => {

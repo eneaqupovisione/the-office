@@ -33,7 +33,7 @@ body{
   --carta-2:#EBE9E1;
   --ink:#14140F;
   --ink-2:#46453D;
-  --tenue:#87857B;
+  --tenue:#706E67;         /* 4,5:1 sul fondo: requisito 6 del dominio */
   --linea:rgba(20,20,15,.09);
   --linea-forte:rgba(20,20,15,.17);
   --acc:#EDE93C;            /* acido: ciò che si tocca */
@@ -42,7 +42,7 @@ body{
   --su-acc:#14140F;         /* sull'acido si scrive in inchiostro, mai in bianco */
   --acc-forte:#E2DD1C;      /* l'acido premuto si satura, non si scurisce */
   --male:#C2352A;
-  --ok:#3E8A57;
+  --ok:#2E7548;
   --ombra-1:0 1px 2px rgba(16,16,22,.05);
   --ombra-2:0 1px 3px rgba(16,16,22,.06), 0 10px 28px -14px rgba(16,16,22,.22);
   color-scheme:light;
@@ -280,16 +280,22 @@ textarea::placeholder{ color:var(--tenue); opacity:.6 }
 
 .sotto-lampo{ flex:none; padding-top:14px }
 .etichetta-campo{
-  display:block; font-size:12.5px; font-weight:500; color:var(--tenue);
-  padding:0 2px 7px;
+  display:block; font-size:13px; font-weight:500; color:var(--tenue);
+  padding:0 2px 8px;
 }
 
-.tipi{ display:flex; flex-wrap:wrap; gap:6px; padding-bottom:14px }
+/* Bersagli grandi e tutti della stessa misura: al lampo la casella si tocca
+   senza guardarla, e sette pillole di larghezza diversa che vanno a capo sono
+   sette bersagli che cambiano posto a ogni schermo. */
+.tipi{
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(102px,1fr));
+  gap:7px; padding-bottom:16px;
+}
 .tipo{
-  display:inline-flex; align-items:center; gap:6px;
-  font-family:inherit; font-size:13.5px; color:var(--ink-2); letter-spacing:-.008em;
-  background:var(--carta); border:1px solid var(--linea); border-radius:999px;
-  padding:7px 13px; min-height:36px; cursor:pointer;
+  display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  font-family:inherit; font-size:14px; color:var(--ink-2); letter-spacing:-.008em;
+  background:var(--carta); border:1px solid var(--linea); border-radius:12px;
+  padding:7px 10px; min-height:48px; cursor:pointer;
   transition:background .13s ease, border-color .13s ease, color .13s ease;
 }
 .tipo::before{
@@ -305,8 +311,8 @@ textarea::placeholder{ color:var(--tenue); opacity:.6 }
 
 .dove{
   width:100%; background:var(--carta); border:1px solid var(--linea);
-  border-radius:10px; color:var(--ink); font-family:inherit; font-size:15px;
-  padding:11px 13px; letter-spacing:-.008em;
+  border-radius:12px; color:var(--ink); font-family:inherit; font-size:16px;
+  padding:14px 14px; min-height:52px; letter-spacing:-.008em;
 }
 .dove:focus{ outline:none; border-color:var(--acc); box-shadow:0 0 0 3.5px var(--acc-tenue) }
 .dove::placeholder{ color:var(--tenue) }
@@ -316,17 +322,17 @@ textarea::placeholder{ color:var(--tenue); opacity:.6 }
 .scorciatoia-progetto{
   flex:none; font-family:inherit; font-size:13px; color:var(--ink-2); white-space:nowrap;
   background:var(--carta); border:1px solid var(--linea); border-radius:999px;
-  padding:6px 11px; cursor:pointer;
+  padding:9px 14px; min-height:40px; cursor:pointer;
 }
 .scorciatoia-progetto[aria-pressed="true"]{
   background:var(--acc-tenue); border-color:transparent; color:var(--acc-ink); font-weight:500;
 }
 
 .salva{
-  width:100%; min-height:50px; margin-top:16px;
+  width:100%; min-height:58px; margin-top:18px;
   background:var(--acc); color:var(--su-acc);
   border:0; border-radius:12px;
-  font-family:inherit; font-size:16px; font-weight:550; letter-spacing:-.012em;
+  font-family:inherit; font-size:17px; font-weight:600; letter-spacing:-.012em;
   cursor:pointer; box-shadow:var(--ombra-1);
   transition:transform .1s ease-out, opacity .15s ease, background .15s ease;
 }
@@ -335,6 +341,98 @@ textarea::placeholder{ color:var(--tenue); opacity:.6 }
 .salva:disabled{ background:var(--carta-2); color:var(--tenue); box-shadow:none;
                  transform:none; cursor:default }
 .scorciatoia{ text-align:center; font-size:12px; color:var(--tenue); padding:9px 0 2px }
+
+
+
+
+/* ── gli allegati ────────────────────────────────────────────────────────── */
+.allega{
+  display:inline-flex; align-items:center; gap:5px; flex:none;
+  background:none; border:0; padding:2px 6px 2px 0; margin-right:2px;
+  color:var(--acc-ink); font-family:inherit; font-size:12px; cursor:pointer;
+  border-radius:6px;
+}
+.allega svg{ width:14px; height:14px }
+.allega:hover{ color:var(--ink) }
+.allegati{ display:flex; flex-wrap:wrap; gap:6px; padding:12px 2px 0; flex:none }
+.allegati[hidden]{ display:none }
+.allegato{
+  display:inline-flex; align-items:center; gap:7px;
+  background:var(--carta); border:1px solid var(--linea); border-radius:999px;
+  padding:5px 6px 5px 12px; font-size:12.5px; max-width:100%;
+}
+.allegato-nome{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:14ch }
+.allegato-peso{ color:var(--tenue); font-size:11.5px; font-variant-numeric:tabular-nums }
+.allegato-togli{
+  background:none; border:0; color:var(--tenue); cursor:pointer;
+  font-size:15px; line-height:1; padding:2px 5px; border-radius:50%;
+}
+.allegato-togli:hover{ color:var(--male); background:var(--carta-2) }
+
+/* ── i due passi: che oggetto è, poi quale progetto ─────────────────────── */
+.forme[hidden]{ display:none }
+.forme-righe{ display:flex; flex-wrap:wrap; gap:6px; padding-bottom:16px }
+.forma{
+  font-family:inherit; font-size:13.5px; color:var(--ink-2); letter-spacing:-.008em;
+  background:var(--carta); border:1px solid var(--linea); border-radius:999px;
+  padding:8px 15px; min-height:40px; cursor:pointer;
+}
+.forma:hover{ border-color:var(--linea-forte) }
+.forma[aria-pressed="true"]{
+  background:var(--acc); border-color:transparent; color:var(--su-acc); font-weight:600;
+}
+.progetto-forma{
+  font-size:11px; color:var(--ink-2); background:var(--carta-2);
+  padding:2px 8px; border-radius:999px;
+}
+
+/* ── che differenza c'è fra i tipi ────────────────────────────────────────
+   La spiegazione del tipo scelto e la legenda completa. Sono l'unica parte
+   dell'app che *insegna*: il colore di ogni riga è quello del suo tipo, così
+   la mappa colore→tipo si impara qui e nell'archivio è già saputa. */
+.riga-etichetta{ display:flex; align-items:baseline; gap:10px }
+.riga-etichetta .etichetta-campo{ flex:1 }
+.chiedi{
+  background:none; border:0; padding:0 2px 8px; cursor:pointer;
+  font-family:inherit; font-size:13px; color:var(--acc-ink);
+  text-decoration:underline; text-underline-offset:3px;
+}
+.chiedi:hover{ color:var(--ink) }
+
+.spiega-tipo{
+  display:flex; flex-wrap:wrap; gap:4px 10px;
+  font-size:13.5px; color:var(--ink-2); line-height:1.45;
+  padding:0 2px 14px; min-height:1px;
+}
+.spiega-tipo:empty{ display:none }
+.spiega-tipo[data-tipo]{ color:var(--tinta) }
+.spiega-dove{ color:var(--tenue); font-family:var(--mono); font-size:12px }
+
+.legenda{
+  background:var(--carta); border:1px solid var(--linea); border-radius:12px;
+  padding:6px 14px 12px; margin-bottom:16px;
+}
+.legenda[hidden]{ display:none }
+.voce-legenda{
+  display:grid; grid-template-columns:104px 1fr; gap:2px 12px;
+  padding:11px 0; border-bottom:1px solid var(--linea);
+}
+.voce-legenda:last-of-type{ border-bottom:0 }
+.voce-legenda-nome{
+  grid-row:span 2; font-size:13.5px; font-weight:600; color:var(--tinta);
+  display:flex; align-items:center; gap:7px;
+}
+.voce-legenda-nome::before{
+  content:''; width:7px; height:7px; border-radius:50%; flex:none;
+  background:var(--tinta, var(--tenue));
+}
+.voce-legenda-cosa{ font-size:13.5px; color:var(--ink-2); line-height:1.4 }
+.voce-legenda-dove{ font:12px var(--mono); color:var(--tenue) }
+
+.nota-campo{
+  font-size:12.5px; line-height:1.45; color:var(--tenue); padding:8px 2px 0;
+}
+.nota-campo code{ font-size:.92em }
 
 /* ══ 02 · L'ARCHIVIO ═══════════════════════════════════════════════════════ */
 .barra-filtri{ flex:none; padding-bottom:12px; position:sticky; top:0; z-index:5;
@@ -401,6 +499,11 @@ textarea::placeholder{ color:var(--tenue); opacity:.6 }
 .cattura[data-tipo] .cattura-azioni select,
 .cattura[data-tipo] .cattura-azioni .bottone-min{ background:var(--carta) }
 .tag-tipo::before{ content:''; width:5px; height:5px; border-radius:50%; background:currentColor }
+.tag-allegati{
+  display:inline-flex; align-items:center; gap:5px;
+  color:var(--ink-2); background:var(--carta-2);
+  font-size:11.5px; padding:2.5px 8px; border-radius:999px;
+}
 .tag-stato{ margin-left:auto }
 .tag-stato.fuori{ color:var(--ok) }
 .cattura-azioni{

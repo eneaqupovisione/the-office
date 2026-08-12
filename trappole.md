@@ -7,6 +7,15 @@ La più recente in alto.
 
 ---
 
+**«Sembra buggato» quasi sempre è la cache, non il codice.** Aprendo l'app
+sempre dallo stesso `file://`, il browser può servirti `index.html` nuovo con
+`stile.css` e i `.js` vecchi — e col markup nuovo e il JS vecchio l'app **muore
+davvero**, non si imbruttisce soltanto. Dal 2026-08-12 ogni asset si carica con
+`?v=N` e quel numero deve **coincidere con `VERSIONE` in `sw.js`**: si alzano
+insieme, o il documento e il guscio in cache vanno fuori fase. Prima di cercare
+un bug, controlla che i due numeri siano uguali. *(2026-08-12)*
+
+
 **Il tema di partenza non è più scuro.** Dal 2026-08-12 l'app si apre chiara. Chi
 aveva già usato l'app se la ritrova chiara **anche se non ha toccato niente** —
 non è un bug, e «Notte» sta in Impostazioni. Il valore di partenza vive in

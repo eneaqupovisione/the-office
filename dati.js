@@ -23,14 +23,18 @@ const Dati = (() => {
      parlando, non ha ancora una casa (le persone attraversano più progetti) e
      non sale nel metodo finché non dimostra di pesare. Il punto dopo
      l'etichetta lo segnala — allinearlo «per coerenza» rompe una decisione. */
+  /* `cosa` e `dove` sono copiati da METODO.md §6 e **quello è la sorgente di
+     verità**: se i due divergono si cambia qui, mai il metodo. `dove` non è un
+     dettaglio da spiegazione — è ciò che distingue davvero due tipi, perché
+     dice in che file finiranno dopo lo smistamento. */
   const TIPI = [
-    { id:'idea',        prova:false, cosa:'da fare o esplorare, non ancora valutato' },
-    { id:'passo',       prova:false, cosa:'un\'azione concreta, definita' },
-    { id:'ipotesi',     prova:false, cosa:'una scommessa da verificare' },
-    { id:'appunto',     prova:false, cosa:'una riflessione, un\'osservazione' },
-    { id:'riferimento', prova:false, cosa:'un link, una foto, una fonte' },
-    { id:'decisione',   prova:false, cosa:'ho deciso, o devo decidere' },
-    { id:'contatto',    prova:true,  cosa:'una persona (in prova, non nel metodo)' },
+    { id:'idea',        prova:false, cosa:'qualcosa da fare o esplorare, non ancora valutato', dove:'note/, o promossa' },
+    { id:'passo',       prova:false, cosa:'un\'azione concreta, definita',                     dove:'prossimi-passi.md' },
+    { id:'ipotesi',     prova:false, cosa:'una scommessa da verificare',                       dove:'ipotesi.md' },
+    { id:'appunto',     prova:false, cosa:'una riflessione, un\'osservazione',                  dove:'note/' },
+    { id:'riferimento', prova:false, cosa:'un link, una foto, una fonte, una citazione',       dove:'riferimenti.md, o media/' },
+    { id:'decisione',   prova:false, cosa:'ho deciso, o devo decidere',                        dove:'decisioni/' },
+    { id:'contatto',    prova:true,  cosa:'una persona',                                       dove:'ancora nessuna casa — è in prova' },
   ];
 
   /* `chiaro` di base: la direzione 06 è un sistema su carta, e il grigio
@@ -119,17 +123,29 @@ const Dati = (() => {
     return (nome || '').trim().toLowerCase().replace(/\s+/g, '-');
   }
 
-  function ricorda(nome, fonte, url){
+  function ricorda(nome, fonte, url, forma){
     const id = normalizza(nome);
     if (!id) return;
     const p = progetti();
     const gia = p.find(x => x.id === id);
     if (gia){
-      if (fonte && gia.fonte !== fonte){ gia.fonte = fonte; gia.url = url || gia.url; scriviProgetti(p); }
+      let toccato = false;
+      if (fonte && gia.fonte !== fonte){ gia.fonte = fonte; gia.url = url || gia.url; toccato = true; }
+      if (forma && gia.forma !== forma){ gia.forma = forma; toccato = true; }
+      if (toccato) scriviProgetti(p);
       return;
     }
-    p.push({ id, nome:id, fonte: fonte || 'locale', url: url || '' });
+    p.push({ id, nome:id, fonte: fonte || 'locale', url: url || '', forma: forma || '' });
     scriviProgetti(p);
+  }
+
+  /* Le forme presenti fra i progetti conosciuti, in ordine di quante ne hanno.
+     Non è un elenco fisso: se nessun progetto dichiara una forma, l'elenco è
+     vuoto e la schermata di cattura non mostra il primo passo. */
+  function forme(){
+    const c = {};
+    progetti().forEach(p => { if (p.forma) c[p.forma] = (c[p.forma] || 0) + 1; });
+    return Object.keys(c).sort((a,b) => c[b] - c[a] || a.localeCompare(b));
   }
 
   function dimentica(id){ scriviProgetti(progetti().filter(p => p.id !== id)); }
@@ -165,7 +181,7 @@ const Dati = (() => {
   return {
     TIPI, orario,
     catture, aggiungi, elimina, rietichetta, segnaUscite, inAttesa, svuota,
-    progetti, ricorda, dimentica, normalizza, conteggi,
+    progetti, ricorda, dimentica, normalizza, conteggi, forme,
     impostazioni, imposta, travasa,
     ultimaEsportazione: () => localStorage.getItem(CHIAVE_EXPORT)
   };
