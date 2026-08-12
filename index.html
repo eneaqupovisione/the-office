@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-<title>The Office — cattura</title>
+<title>The Office</title>
 <meta name="description" content="Dal pensiero al testo salvato in meno di cinque secondi."/>
-<meta name="theme-color" content="#14110f"/>
+<meta name="theme-color" content="#100f0e"/>
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="icon" href="icona.svg" type="image/svg+xml"/>
 <link rel="apple-touch-icon" href="icona.svg"/>
@@ -13,48 +13,204 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <link rel="stylesheet" href="stile.css"/>
 </head>
-<body>
+<body data-tema="scuro">
 
-<!-- ══ IL CONTATORE È SACRO ═══════════════════════════════════════════════
-     Sempre visibile. Se catturo e non vedo mai dove finisce, in due settimane
-     smetto di fidarmi e ricomincio a segnarmi le cose anche altrove — e da lì
-     il sistema è morto. (nodo → «Deciso») -->
-<header class="barra">
-  <span class="marchio">The Office</span>
-  <span class="contatore" id="contatore" aria-live="polite"></span>
-</header>
+<!-- ══ IL MENU LATERALE ══════════════════════════════════════════════════════
+     Da 900px in su sta lì, fisso. Sotto, è un pannello che entra da sinistra e
+     si trascina via col dito. Non compare mai *davanti* alla cattura: la
+     schermata che si apre è sempre il lampo. -->
+<aside class="lato" id="lato" aria-label="Sezioni">
+  <div class="lato-testa">
+    <span class="marchio">The&nbsp;Office</span>
+  </div>
 
-<main>
-  <!-- ══ IL LAMPO ════════════════════════════════════════════════════════
-       Riceve il fuoco all'apertura. Nessun campo obbligatorio: si può salvare
-       con il solo testo. (METODO §2, principio 1: la cattura non chiede
-       permesso) -->
-  <label class="nascosto" for="testo">Cosa ti è venuto in mente</label>
-  <textarea id="testo" autofocus autocapitalize="sentences" autocorrect="on"
-            enterkeyhint="done" placeholder="…"></textarea>
+  <nav class="voci" id="voci">
+    <a class="voce" href="#cattura"      data-sez="cattura">
+      <span class="voce-segno" aria-hidden="true">✳</span>
+      <span class="voce-nome">Cattura</span>
+    </a>
+    <a class="voce" href="#archivio"     data-sez="archivio">
+      <span class="voce-segno" aria-hidden="true">▤</span>
+      <span class="voce-nome">Archivio</span>
+      <span class="voce-conto" id="conto-archivio"></span>
+    </a>
+    <a class="voce" href="#progetti"     data-sez="progetti">
+      <span class="voce-segno" aria-hidden="true">◈</span>
+      <span class="voce-nome">Progetti</span>
+      <span class="voce-conto" id="conto-progetti"></span>
+    </a>
+    <a class="voce" href="#impostazioni" data-sez="impostazioni">
+      <span class="voce-segno" aria-hidden="true">⚙</span>
+      <span class="voce-nome">Impostazioni</span>
+    </a>
+  </nav>
 
-  <!-- ══ IL TIPO PRIMA DEL PROGETTO ══════════════════════════════════════
-       Nel momento del lampo so quasi sempre *che genere di cosa* è, non
-       ancora dove va. Facoltativo: nessuno di questi è obbligatorio. -->
-  <div class="tipi" id="tipi" role="group" aria-label="Che cosa è"></div>
+  <!-- ══ IL CONTATORE È SACRO ═══════════════════════════════════════════════
+       Sempre visibile, in tutte e due le impaginazioni: qui nel menu quando c'è
+       spazio, e nella testata quando non ce n'è. Se catturo e non vedo mai dove
+       finisce, in due settimane smetto di fidarmi. (nodo → «Deciso») -->
+  <div class="lato-piede">
+    <div class="stato" id="stato-lato">
+      <span class="stato-numero" id="stato-numero">0</span>
+      <span class="stato-etichetta" id="stato-etichetta">in attesa</span>
+    </div>
+    <p class="stato-ponte" id="stato-ponte"></p>
+  </div>
+</aside>
 
-  <!-- L'appartenenza, alla precisione che ho in quel momento: niente, oppure
-       un dominio, oppure un progetto. Sta sotto perché quasi sempre si salta. -->
-  <input id="dove" class="dove" type="text" autocomplete="off" autocapitalize="none"
-         spellcheck="false" placeholder="di chi è  ·  facoltativo"/>
+<div class="velo" id="velo" hidden></div>
 
-  <button id="salva" class="salva">Salva</button>
-  <p class="scorciatoia">⌘ + invio</p>
-</main>
+<div class="palco">
 
-<footer class="piede">
-  <button id="esporta" class="minore">esporta per l'inbox</button>
-  <span class="sep">·</span>
-  <button id="svuota" class="minore">svuota</button>
-</footer>
+  <!-- La testata galleggia sopra il contenuto: materiale traslucido, non una
+       striscia opaca che mangia schermo. -->
+  <header class="testata">
+    <button class="apri-menu" id="apri-menu" aria-label="Sezioni" aria-expanded="false">
+      <span></span><span></span>
+    </button>
+    <h1 class="titolo-sez" id="titolo-sez">Cattura</h1>
+    <span class="contatore" id="contatore" aria-live="polite"></span>
+  </header>
+
+  <main id="palco-main">
+
+    <!-- ══ 1 · IL LAMPO ═════════════════════════════════════════════════════
+         Riceve il fuoco all'apertura. Nessun campo obbligatorio: si salva col
+         solo testo. (METODO §2, principio 1: la cattura non chiede permesso) -->
+    <section class="sez" id="sez-cattura" data-sez="cattura">
+      <label class="nascosto" for="testo">Cosa ti è venuto in mente</label>
+      <textarea id="testo" autofocus autocapitalize="sentences" autocorrect="on"
+                enterkeyhint="done" placeholder="…"></textarea>
+
+      <div class="sotto-lampo">
+        <!-- Il tipo prima del progetto: nel momento del lampo so quasi sempre
+             *che genere di cosa* è, non ancora dove va. -->
+        <div class="tipi" id="tipi" role="group" aria-label="Che cosa è"></div>
+
+        <div class="riga-dove">
+          <label class="nascosto" for="dove">Di chi è</label>
+          <input id="dove" class="dove" type="text" list="elenco-progetti"
+                 autocomplete="off" autocapitalize="none" spellcheck="false"
+                 placeholder="di chi è  ·  facoltativo"/>
+          <datalist id="elenco-progetti"></datalist>
+        </div>
+        <div class="scorciatoie-progetto" id="progetti-recenti"></div>
+
+        <button id="salva" class="salva">Salva</button>
+        <p class="scorciatoia">⌘ + invio</p>
+      </div>
+    </section>
+
+    <!-- ══ 2 · L'ARCHIVIO ═══════════════════════════════════════════════════
+         Si legge, si riordina, non si riscrive. Il testo di una cattura non è
+         modificabile qui: «l'app non è un posto dove si scrive». -->
+    <section class="sez" id="sez-archivio" data-sez="archivio" hidden>
+      <div class="barra-filtri">
+        <input id="cerca" class="cerca" type="search" placeholder="Cerca"
+               autocomplete="off" spellcheck="false"/>
+        <div class="filtri-tipo" id="filtri-tipo" role="group" aria-label="Filtra per tipo"></div>
+      </div>
+      <div id="elenco-archivio" class="gruppi"></div>
+    </section>
+
+    <!-- ══ 3 · I PROGETTI ═══════════════════════════════════════════════════ -->
+    <section class="sez" id="sez-progetti" data-sez="progetti" hidden>
+      <div class="pannello">
+        <h2>I tuoi progetti</h2>
+        <p class="spiega">L'appartenenza resta facoltativa: questi sono suggerimenti
+           per scrivere sempre lo stesso nome, non caselle da riempire.</p>
+        <div id="elenco-progetti-ui" class="elenco-progetti"></div>
+        <form class="riga-aggiungi" id="aggiungi-progetto">
+          <input id="nuovo-progetto" type="text" placeholder="nuovo progetto"
+                 autocomplete="off" autocapitalize="none" spellcheck="false"/>
+          <button type="submit" class="bottone-min">Aggiungi</button>
+        </form>
+      </div>
+
+      <div class="pannello">
+        <h2>Da GitHub</h2>
+        <p class="spiega">Legge i <strong>repo pubblici</strong> di un account e te li
+           propone come progetti. Nessun token, nessun segreto: è una lettura, e
+           l'unica dell'app che tocca la rete — mai nel percorso del salvataggio.</p>
+        <form class="riga-aggiungi" id="carica-github">
+          <input id="utente-github" type="text" placeholder="utente github"
+                 autocomplete="off" autocapitalize="none" spellcheck="false"/>
+          <button type="submit" class="bottone-min">Leggi</button>
+        </form>
+        <div id="esito-github" class="esito"></div>
+        <div id="elenco-repo" class="elenco-repo"></div>
+      </div>
+    </section>
+
+    <!-- ══ 4 · IMPOSTAZIONI E PONTE ═════════════════════════════════════════ -->
+    <section class="sez" id="sez-impostazioni" data-sez="impostazioni" hidden>
+
+      <div class="pannello">
+        <h2>Cartella collegata</h2>
+        <p class="spiega">Collega una volta <code>~/the-knowledge/_inbox</code> e da
+           lì in poi ogni cattura ci finisce dentro come file <code>.md</code> vero,
+           da sola. Claude Code lo legge senza che tu esporti niente.</p>
+        <div id="stato-cartella" class="esito"></div>
+        <div class="riga-bottoni">
+          <button id="collega-cartella" class="bottone">Collega la cartella</button>
+          <button id="scrivi-ora" class="bottone-min">Scrivi le catture in attesa</button>
+          <button id="scollega-cartella" class="bottone-min">Scollega</button>
+        </div>
+      </div>
+
+      <div class="pannello">
+        <h2>Esportazione</h2>
+        <p class="spiega">Il ponte che funziona ovunque, telefono compreso. Un file
+           per ogni cattura, impacchettati in un unico scarico perché i browser
+           bloccano i download multipli.</p>
+        <div class="riga-bottoni">
+          <button id="esporta" class="bottone">Esporta per l'inbox (.md)</button>
+          <button id="esporta-json" class="bottone-min">Esporta .json</button>
+        </div>
+      </div>
+
+      <div class="pannello">
+        <h2>Aspetto</h2>
+        <div class="segmento" id="segmento-tema" role="group" aria-label="Tema">
+          <button data-tema="scuro">Scuro</button>
+          <button data-tema="chiaro">Chiaro</button>
+          <button data-tema="sistema">Sistema</button>
+        </div>
+      </div>
+
+      <div class="pannello pannello-avviso">
+        <h2>Quello che ancora non c'è</h2>
+        <p class="spiega">Perché telefono e computer restano <strong>due mucchi
+           separati</strong> finché non esistono queste tre cose — e sono tue, non
+           dell'agente:</p>
+        <ol class="lista-passi">
+          <li>Il repo <code>eneaqupovisione/the-office</code>, pubblicato.</li>
+          <li>Un sito Netlify su quel repo, per avere l'<code>https</code>.</li>
+          <li>Un token GitHub con scrittura solo su <code>the-knowledge</code>,
+              nelle variabili d'ambiente di Netlify. Mai qui dentro.</li>
+        </ol>
+      </div>
+
+      <div class="pannello pannello-pericolo">
+        <h2>Dati di questo dispositivo</h2>
+        <p class="spiega">Le catture vivono nel browser di questo dispositivo finché
+           non escono di qui. Cancellare i dati del sito le porta via.</p>
+        <button id="svuota" class="bottone-pericolo">Svuota</button>
+      </div>
+
+    </section>
+
+  </main>
+</div>
 
 <div class="conferma" id="conferma" role="status" aria-live="polite"></div>
 
+<script src="dati.js"></script>
+<script src="ponte.js"></script>
+<script src="cattura.js"></script>
+<script src="archivio.js"></script>
+<script src="progetti.js"></script>
+<script src="impostazioni.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

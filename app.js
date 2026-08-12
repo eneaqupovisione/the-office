@@ -1,196 +1,192 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   THE OFFICE — la cattura.
-   Obiettivo unico: dal pensiero al testo salvato in meno di cinque secondi e
-   nessuna decisione obbligatoria (METODO.md §1).
+   THE OFFICE — l'avvio, la navigazione, il contatore.
 
-   Local-first per decisione scritta nel nodo: scrive subito in locale, la
-   sincronizzazione viene dopo. Se aspettasse la rete a ogni tasto, i cinque
-   secondi sarebbero già persi. Qui dentro non c'è nessuna chiamata di rete e
-   nessun segreto — e per ora non deve essercene.
+   Quattro sezioni, e una sola è il motivo per cui l'app esiste: **la cattura si
+   apre per prima e riceve il fuoco**. Archivio, progetti e impostazioni stanno
+   dietro il menu, dove non ci si finisce per sbaglio. Se un giorno l'apertura
+   non dovesse più atterrare sul lampo, sarebbe una regressione del progetto
+   intero, non un cambio di navigazione.
    ═══════════════════════════════════════════════════════════════════════ */
 
-const CHIAVE = 'the-office.catture';
-const CHIAVE_EXPORT = 'the-office.ultimo-export';
+const App = (() => {
 
-/* I sei tipi di METODO.md §6, più `contatto` che è in prova: introdotto
-   parlando, non ha ancora una casa (le persone attraversano più progetti) e
-   non sale nel metodo finché non dimostra di pesare. Il punto dopo l'etichetta
-   lo segnala. */
-const TIPI = [
-  { id:'idea',        prova:false },
-  { id:'passo',       prova:false },
-  { id:'ipotesi',     prova:false },
-  { id:'appunto',     prova:false },
-  { id:'riferimento', prova:false },
-  { id:'decisione',   prova:false },
-  { id:'contatto',    prova:true  },
-];
+  const $ = (id) => document.getElementById(id);
+  const SEZIONI = {
+    cattura:      'Cattura',
+    archivio:     'Archivio',
+    progetti:     'Progetti',
+    impostazioni: 'Impostazioni'
+  };
+  let sezione = 'cattura';
 
-const $ = (id) => document.getElementById(id);
-const testo = $('testo'), dove = $('dove'), salva = $('salva'),
-      contatore = $('contatore'), conferma = $('conferma');
+  /* ── navigazione ─────────────────────────────────────────────────────── */
+  function vaiA(nome, daHash){
+    if (!SEZIONI[nome]) nome = 'cattura';
+    sezione = nome;
 
-let tipoScelto = null;
+    document.querySelectorAll('.sez').forEach(s => { s.hidden = s.dataset.sez !== nome; });
+    document.querySelectorAll('.voce').forEach(v => {
+      v.dataset.sez === nome ? v.setAttribute('aria-current','page') : v.removeAttribute('aria-current');
+    });
+    $('titolo-sez').textContent = SEZIONI[nome];
 
-/* ── magazzino ─────────────────────────────────────────────────────────────
-   localStorage e non IndexedDB: sono righe di testo, la scrittura è sincrona
-   (quindi non può fallire a metà mentre chiudo l'app), e il costo di leggere
-   tutto a ogni salvataggio è irrilevante su questi volumi. Se un giorno le
-   catture diventassero migliaia, questa è la prima cosa da cambiare. */
-function leggi(){
-  try { return JSON.parse(localStorage.getItem(CHIAVE) || '[]'); }
-  catch (e) { return []; }          // meglio ripartire che perdere l'app
-}
-function scrivi(righe){ localStorage.setItem(CHIAVE, JSON.stringify(righe)); }
+    if (!daHash && location.hash.slice(1) !== nome) location.hash = nome;
+    chiudiMenu();
+    aggiorna();
 
-/* ── il contatore, che è sacro ───────────────────────────────────────────── */
-function aggiornaContatore(){
-  const n = leggi().length;
-  const ultimo = localStorage.getItem(CHIAVE_EXPORT);
-  contatore.textContent = n === 0
-    ? (ultimo ? 'inbox vuota' : 'niente ancora')
-    : n + (n === 1 ? ' in attesa' : ' in attesa');
-  contatore.classList.toggle('pieno', n > 0);
-}
-
-/* ── le caselle del tipo ─────────────────────────────────────────────────── */
-TIPI.forEach(t => {
-  const b = document.createElement('button');
-  b.type = 'button';
-  b.className = 'tipo' + (t.prova ? ' prova' : '');
-  b.textContent = t.id;
-  b.setAttribute('aria-pressed', 'false');
-  b.addEventListener('click', () => {
-    const gia = tipoScelto === t.id;
-    document.querySelectorAll('.tipo').forEach(x => x.setAttribute('aria-pressed','false'));
-    tipoScelto = gia ? null : t.id;            // ritoccarlo lo toglie: niente è obbligatorio
-    if (!gia) b.setAttribute('aria-pressed','true');
-    testo.focus();                              // il fuoco torna sempre al lampo
-  });
-  $('tipi').appendChild(b);
-});
-
-/* ── salvare ─────────────────────────────────────────────────────────────── */
-function orario(d){
-  const p = (n) => String(n).padStart(2,'0');
-  return d.getFullYear() + '-' + p(d.getMonth()+1) + '-' + p(d.getDate())
-       + '-' + p(d.getHours()) + p(d.getMinutes());
-}
-
-function salvaCattura(){
-  const corpo = testo.value.trim();
-  if (!corpo) return;                           // il testo è l'unica cosa necessaria
-
-  const righe = leggi();
-  righe.push({
-    id: Date.now() + '-' + Math.random().toString(36).slice(2,7),
-    quando: new Date().toISOString(),
-    nome: orario(new Date()),
-    tipo: tipoScelto || '',
-    dove: dove.value.trim(),
-    testo: corpo
-  });
-  scrivi(righe);
-
-  testo.value = '';
-  // il tipo e l'appartenenza RESTANO: catturo spesso due cose di seguito sullo
-  // stesso progetto, e ributtarli ogni volta è attrito che si paga sempre
-  aggiornaContatore();
-  aggiornaSalva();
-  mostraConferma('salvato');
-  testo.focus();
-}
-
-function mostraConferma(t){
-  conferma.textContent = t;
-  conferma.classList.remove('mostra');
-  void conferma.offsetWidth;                    // riavvia l'animazione
-  conferma.classList.add('mostra');
-}
-
-function aggiornaSalva(){ salva.disabled = testo.value.trim() === ''; }
-
-testo.addEventListener('input', aggiornaSalva);
-salva.addEventListener('click', salvaCattura);
-document.addEventListener('keydown', (e) => {
-  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); salvaCattura(); }
-});
-
-/* ── esportare ────────────────────────────────────────────────────────────
-   PONTE PROVVISORIO. Finché non esiste la sincronizzazione verso il repo, i
-   file arrivano nell'inbox passando da qui. Un solo file con dentro tutte le
-   catture, ognuna con la sua intestazione e un separatore riconoscibile: lo
-   smistamento lo spezza in file veri. Scaricarne uno per cattura non si può —
-   i browser bloccano i download multipli — e chiedere un gesto per riga
-   sarebbe peggio del problema. */
-function componiEsportazione(righe){
-  const visti = {};
-  const pezzi = righe.map(r => {
-    let nome = r.nome;
-    visti[nome] = (visti[nome] || 0) + 1;
-    if (visti[nome] > 1) nome += '-' + visti[nome];   // due lampi nello stesso minuto
-
-    const testa = ['---'];
-    if (r.tipo) testa.push('tipo: ' + r.tipo);
-    if (r.dove) testa.push('progetto: ' + r.dove);
-    testa.push('origine: the-office');
-    testa.push('stato: da-smistare');
-    testa.push('---');
-
-    return '=== _inbox/' + nome + '.md ===\n' + testa.join('\n') + '\n\n' + r.testo + '\n';
-  });
-
-  return '# Catture da The Office\n'
-       + '# ' + righe.length + ' oggetti · esportati il ' + new Date().toISOString().slice(0,16).replace('T',' ') + '\n'
-       + '#\n'
-       + '# Ogni blocco delimitato da tre segni di uguale è un file separato.\n'
-       + '# Lo smistamento li spezza e li scrive in ~/the-knowledge/_inbox/.\n'
-       + '# (Qui sopra il separatore non è scritto per esteso di proposito:\n'
-       + '#  comparirebbe come un blocco finto al primo che divide il file.)\n\n'
-       + pezzi.join('\n');
-}
-
-$('esporta').addEventListener('click', () => {
-  const righe = leggi();
-  if (!righe.length) { mostraConferma('niente da esportare'); return; }
-
-  const blob = new Blob([componiEsportazione(righe)], { type:'text/markdown' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'catture-' + orario(new Date()) + '.md';
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-
-  localStorage.setItem(CHIAVE_EXPORT, new Date().toISOString());
-  mostraConferma(righe.length + ' esportati');
-  aggiornaContatore();
-});
-
-/* ── svuotare ─────────────────────────────────────────────────────────────
-   L'unico gesto distruttivo dell'app, quindi: conferma esplicita, e un
-   avvertimento se c'è roba mai esportata. Perdere una cattura è la cosa che
-   questo sistema esiste per impedire. */
-$('svuota').addEventListener('click', () => {
-  const righe = leggi();
-  if (!righe.length) { mostraConferma('già vuota'); return; }
-
-  const ultimo = localStorage.getItem(CHIAVE_EXPORT);
-  const mai = !ultimo || righe.some(r => r.quando > ultimo);
-  const avviso = mai
-    ? '\n\n⚠️ Ci sono catture MAI esportate. Andrebbero perse per sempre.'
-    : '';
-
-  if (confirm('Cancellare ' + righe.length + ' catture da questo dispositivo?' + avviso)) {
-    scrivi([]);
-    aggiornaContatore();
-    mostraConferma('svuotata');
+    /* Il fuoco torna al lampo ogni volta che si atterra sulla cattura — su
+       telefono no: aprirebbe la tastiera addosso a chi sta solo navigando. */
+    if (nome === 'cattura' && window.innerWidth >= 900) Cattura.fuoco();
   }
-});
 
-/* ── funziona anche senza rete ───────────────────────────────────────────── */
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
-}
+  /* ── il menu laterale ────────────────────────────────────────────────────
+       Sotto i 900px è un pannello che entra da sinistra e si trascina via col
+       dito: 1:1 mentre il dito è giù, e alla fine decide con la velocità, non
+       con la posizione. Sopra i 900px non si apre e non si chiude: sta lì. */
+  const lato = $('lato'), velo = $('velo'), bottone = $('apri-menu');
+  let aperto = false;
 
-aggiornaContatore();
-aggiornaSalva();
+  function apriMenu(){
+    if (window.innerWidth >= 900) return;
+    aperto = true;
+    lato.classList.add('aperto');
+    bottone.setAttribute('aria-expanded','true');
+    velo.hidden = false;
+    requestAnimationFrame(() => velo.classList.add('mostra'));
+  }
+  function chiudiMenu(){
+    if (!aperto) return;
+    aperto = false;
+    lato.classList.remove('aperto');
+    lato.style.removeProperty('--trascina');
+    bottone.setAttribute('aria-expanded','false');
+    velo.classList.remove('mostra');
+    setTimeout(() => { if (!aperto) velo.hidden = true; }, 340);
+  }
+
+  /* Proiezione del punto di arrivo alla iOS: un colpetto veloce chiude anche se
+     il pannello si è mosso di pochi pixel, perché è dove il gesto *stava
+     andando* che conta, non dove si è fermato il dito. */
+  function proietta(velocita, decelerazione = 0.998){
+    return (velocita / 1000) * decelerazione / (1 - decelerazione);
+  }
+
+  function abilitaTrascinamento(){
+    let attivo = false, partenza = 0, ultimo = 0, ultimoT = 0, velocita = 0, largo = 0;
+
+    lato.addEventListener('pointerdown', (e) => {
+      if (!aperto || window.innerWidth >= 900) return;
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      attivo = true;
+      largo = lato.getBoundingClientRect().width;
+      partenza = ultimo = e.clientX; ultimoT = e.timeStamp; velocita = 0;
+      lato.classList.add('trascinato');
+      lato.setPointerCapture(e.pointerId);
+    });
+
+    lato.addEventListener('pointermove', (e) => {
+      if (!attivo) return;
+      const dt = e.timeStamp - ultimoT;
+      if (dt > 0) velocita = (e.clientX - ultimo) / dt * 1000;   // px al secondo
+      ultimo = e.clientX; ultimoT = e.timeStamp;
+
+      /* Verso destra non si va: il pannello è già a casa sua. Resistenza
+         progressiva invece di un muro, così resta vivo sotto il dito. */
+      let dx = e.clientX - partenza;
+      if (dx > 0) dx = (dx * largo * .55) / (largo + .55 * dx);
+      lato.style.setProperty('--trascina', dx + 'px');
+      velo.style.opacity = String(Math.max(0, 1 + Math.min(0, dx) / largo));
+    });
+
+    function rilascia(e){
+      if (!attivo) return;
+      attivo = false;
+      lato.classList.remove('trascinato');
+      lato.releasePointerCapture?.(e.pointerId);
+      velo.style.removeProperty('opacity');
+
+      const dx = Math.min(0, ultimo - partenza);
+      const arrivo = dx + proietta(velocita);
+      lato.style.removeProperty('--trascina');
+      if (arrivo < -largo / 2) chiudiMenu();
+    }
+    lato.addEventListener('pointerup', rilascia);
+    lato.addEventListener('pointercancel', rilascia);
+  }
+
+  /* ── il contatore, che è sacro ───────────────────────────────────────────
+     Quante ne aspettano di uscire da questo dispositivo. Sempre in vista: nel
+     menu quando c'è spazio, nella testata quando non ce n'è. Senza, la fiducia
+     crolla in due settimane e ricomincio a segnarmi le cose anche altrove. */
+  function aggiornaContatore(){
+    const attesa = Dati.inAttesa().length;
+    const tutte  = Dati.catture().length;
+
+    $('stato-numero').textContent = attesa;
+    $('stato-etichetta').textContent = attesa === 1 ? 'in attesa' : 'in attesa';
+    $('stato-lato').classList.toggle('pieno', attesa > 0);
+
+    $('contatore').textContent = attesa ? attesa + ' in attesa' : (tutte ? 'inbox vuota' : 'niente ancora');
+    $('contatore').classList.toggle('pieno', attesa > 0);
+
+    $('conto-archivio').textContent = tutte || '';
+    $('conto-progetti').textContent = Dati.progetti().length || '';
+
+    const ponte = $('stato-ponte');
+    if (Ponte.collegata()) ponte.textContent = '▸ ' + Ponte.nomeCartella();
+    else {
+      const u = Dati.ultimaEsportazione();
+      ponte.textContent = u ? 'ultima uscita ' + u.slice(0,10) : 'mai uscite di qui';
+    }
+  }
+
+  /* Un solo punto da chiamare dopo ogni cambiamento: le schermate nascoste si
+     ridisegnano lo stesso, costano niente e non c'è modo di dimenticarsene. */
+  function aggiorna(){
+    aggiornaContatore();
+    Cattura.disegnaProgetti();
+    Archivio.disegna();
+    Progetti.disegna();
+    Impostazioni.statoCartella();
+  }
+
+  /* ── la conferma ─────────────────────────────────────────────────────── */
+  const conferma_ = $('conferma');
+  function conferma(t, male){
+    conferma_.textContent = t;
+    conferma_.classList.toggle('male', !!male);
+    conferma_.classList.remove('mostra');
+    void conferma_.offsetWidth;                    // riavvia l'animazione
+    conferma_.classList.add('mostra');
+  }
+
+  /* ── avvio ───────────────────────────────────────────────────────────── */
+  function avvia(){
+    Dati.travasa();
+
+    Cattura.avvia();
+    Archivio.avvia();
+    Progetti.avvia();
+    Impostazioni.avvia();          // asincrona: chiama aggiorna() quando ha finito
+
+    bottone.addEventListener('click', () => aperto ? chiudiMenu() : apriMenu());
+    velo.addEventListener('click', chiudiMenu);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') chiudiMenu(); });
+    document.querySelectorAll('.voce').forEach(v =>
+      v.addEventListener('click', (e) => { e.preventDefault(); vaiA(v.dataset.sez); }));
+    window.addEventListener('hashchange', () => vaiA(location.hash.slice(1), true));
+    abilitaTrascinamento();
+
+    vaiA(location.hash.slice(1) || 'cattura', true);
+    if (window.innerWidth >= 900) Cattura.fuoco();
+
+    /* Funziona anche senza rete: il lampo arriva in ascensore e in metropolitana. */
+    if ('serviceWorker' in navigator && location.protocol !== 'file:'){
+      window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+    }
+  }
+
+  return { avvia, aggiorna, conferma, vaiA, sezioneCorrente: () => sezione };
+})();
+
+App.avvia();

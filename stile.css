@@ -1,21 +1,84 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   Scura di base: il lampo arriva più spesso di sera che a mezzogiorno, e una
-   schermata bianca in mano al buio è una piccola punizione ogni volta.
-   Progettata a 375px. Tutto ciò che si tocca sta nella metà bassa dello
-   schermo, raggiungibile col pollice di una mano sola.
+   THE OFFICE — l'aspetto.
+
+   Tre regole che tengono insieme tutto il file, e da cui non ci si scosta
+   senza scriverlo in decisioni/:
+
+   1. **Scura di base.** Il lampo arriva più spesso di sera che a mezzogiorno, e
+      una schermata bianca in mano al buio è una piccola punizione ogni volta.
+      Il chiaro esiste ed è curato, ma si sceglie: non si subisce.
+   2. **Progettata a 375px.** Nella schermata di cattura tutto ciò che si tocca
+      sta in basso, raggiungibile col pollice di una mano sola.
+   3. **Un solo colore.** L'oro è ciò che si tocca e ciò che è attivo. Tutto il
+      resto è inchiostro, carta e linee sottili.
+
+   La tipografia è quella di sistema: porta già con sé crenatura ottica e
+   tabelle di spaziatura fatte meglio di qualunque cosa scriveremmo qui.
    ═══════════════════════════════════════════════════════════════════════ */
 
+/* ── il tema ─────────────────────────────────────────────────────────────── */
+body{
+  --fondo:#100f0e;
+  --fondo-alto:rgba(16,15,14,.72);
+  --carta:#1a1917;
+  --carta-alta:#232120;
+  --ink:#f5f2ee;
+  --tenue:#948e86;
+  --tenue-forte:#b6afa6;
+  --linea:rgba(255,255,255,.09);
+  --linea-forte:rgba(255,255,255,.16);
+  --acc:#e0a736;
+  --acc-tenue:rgba(224,167,54,.14);
+  --su-acc:#191308;
+  --ok:#4fa96a;
+  --male:#d76a5a;
+  --ombra:0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.28);
+  color-scheme:dark;
+}
+body[data-tema="chiaro"]{
+  --fondo:#faf8f5;
+  --fondo-alto:rgba(250,248,245,.72);
+  --carta:#ffffff;
+  --carta-alta:#ffffff;
+  --ink:#191512;
+  --tenue:#726c64;
+  --tenue-forte:#544f49;
+  --linea:rgba(0,0,0,.09);
+  --linea-forte:rgba(0,0,0,.17);
+  --acc:#a8721b;
+  --acc-tenue:rgba(168,114,27,.11);
+  --su-acc:#fffaf0;
+  --ok:#2f7d4a;
+  --male:#b23f2c;
+  --ombra:0 1px 2px rgba(0,0,0,.05), 0 8px 24px rgba(0,0,0,.07);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: light){
+  body[data-tema="sistema"]{
+    --fondo:#faf8f5;
+    --fondo-alto:rgba(250,248,245,.72);
+    --carta:#ffffff;
+    --carta-alta:#ffffff;
+    --ink:#191512;
+    --tenue:#726c64;
+    --tenue-forte:#544f49;
+    --linea:rgba(0,0,0,.09);
+    --linea-forte:rgba(0,0,0,.17);
+    --acc:#a8721b;
+    --acc-tenue:rgba(168,114,27,.11);
+    --su-acc:#fffaf0;
+    --ok:#2f7d4a;
+    --male:#b23f2c;
+    --ombra:0 1px 2px rgba(0,0,0,.05), 0 8px 24px rgba(0,0,0,.07);
+    color-scheme:light;
+  }
+}
+
 :root{
-  --fondo:#14110f;
-  --carta:#1e1a18;
-  --ink:#f3ede4;
-  --tenue:#9a8e80;
-  --linea:#332d29;
-  --acc:#d9a441;          /* l'unica cosa colorata: ciò che si tocca */
-  --acc-scuro:#8a6620;
-  --ok:#5aa469;
-  --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
-  --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,'SF Mono',Menlo,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Inter,Helvetica,Arial,sans-serif;
+  --lato-largo:252px;
+  --curva:cubic-bezier(.32,.72,0,1);   /* la curva iOS: parte decisa, si posa */
 }
 
 *{ margin:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent }
@@ -24,94 +87,348 @@ html,body{ height:100% }
 body{
   background:var(--fondo); color:var(--ink);
   font-family:var(--sans); font-size:17px; line-height:1.5;
-  display:flex; flex-direction:column;
-  padding:env(safe-area-inset-top) 16px env(safe-area-inset-bottom);
-  -webkit-font-smoothing:antialiased;
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  overflow:hidden;
 }
 
 .nascosto{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0) }
 
-/* ── la barra ─────────────────────────────────────────────────────────── */
-.barra{
-  display:flex; align-items:center; justify-content:space-between;
-  padding:14px 2px 10px; border-bottom:1px solid var(--linea);
+code{ font:.86em var(--mono); color:var(--tenue-forte) }
+
+/* ════ IL MENU LATERALE ═══════════════════════════════════════════════════
+   Da 900px in su è una colonna fissa. Sotto, è un pannello che entra da
+   sinistra: materiale più pesante del contenuto, perché separa due regioni
+   diverse dell'app e non deve galleggiarci sopra come un bottone. */
+.lato{
+  position:fixed; inset:0 auto 0 0; z-index:40;
+  width:min(80vw,300px);
+  display:flex; flex-direction:column;
+  background:var(--carta);
+  border-right:1px solid var(--linea);
+  padding:calc(env(safe-area-inset-top) + 18px) 14px calc(env(safe-area-inset-bottom) + 14px);
+  transform:translateX(calc(-100% + var(--trascina, 0px)));
+  transition:transform .34s var(--curva);
+  will-change:transform;
 }
-.marchio{ font:12px var(--mono); color:var(--tenue); letter-spacing:.1em; text-transform:uppercase }
-.contatore{ font:12px var(--mono); color:var(--tenue) }
+.lato.aperto{ transform:translateX(var(--trascina, 0px)) }
+.lato.trascinato{ transition:none }   /* durante il dito niente transizione: 1:1 */
+
+.lato-testa{ padding:4px 10px 18px }
+.marchio{
+  font:600 13px/1 var(--mono); color:var(--tenue);
+  letter-spacing:.14em; text-transform:uppercase;
+}
+
+.voci{ display:flex; flex-direction:column; gap:2px; flex:1 }
+.voce{
+  display:flex; align-items:center; gap:11px;
+  padding:10px 12px; border-radius:10px;
+  color:var(--tenue-forte); text-decoration:none;
+  font-size:15px; font-weight:500; letter-spacing:-.01em;
+  transition:background .12s ease, color .12s ease;
+}
+.voce:hover{ background:var(--acc-tenue); color:var(--ink) }
+.voce[aria-current="page"]{ background:var(--acc-tenue); color:var(--ink); font-weight:600 }
+.voce[aria-current="page"] .voce-segno{ color:var(--acc) }
+.voce-segno{ width:18px; text-align:center; font-size:13px; color:var(--tenue); flex:none }
+.voce-nome{ flex:1 }
+.voce-conto{ font:11px var(--mono); color:var(--tenue); font-variant-numeric:tabular-nums }
+
+/* il contatore, che è sacro */
+.lato-piede{ border-top:1px solid var(--linea); padding:14px 12px 2px }
+.stato{ display:flex; align-items:baseline; gap:7px }
+.stato-numero{
+  font-size:27px; font-weight:600; letter-spacing:-.03em; line-height:1;
+  font-variant-numeric:tabular-nums; color:var(--tenue);
+}
+.stato.pieno .stato-numero{ color:var(--acc) }
+.stato-etichetta{ font-size:13px; color:var(--tenue) }
+.stato-ponte{ font:11px/1.45 var(--mono); color:var(--tenue); padding-top:8px }
+
+.velo{
+  position:fixed; inset:0; z-index:30;
+  background:rgba(0,0,0,.45); backdrop-filter:blur(2px);
+  opacity:0; transition:opacity .34s var(--curva);
+}
+.velo.mostra{ opacity:1 }
+
+/* ════ IL PALCO ═══════════════════════════════════════════════════════════ */
+.palco{ height:100%; display:flex; flex-direction:column; min-height:0 }
+
+.testata{
+  position:sticky; top:0; z-index:20; flex:none;
+  display:flex; align-items:center; gap:12px;
+  padding:calc(env(safe-area-inset-top) + 10px) 18px 10px;
+  background:var(--fondo-alto);
+  backdrop-filter:saturate(180%) blur(20px);
+  -webkit-backdrop-filter:saturate(180%) blur(20px);
+  border-bottom:1px solid var(--linea);
+}
+.titolo-sez{ font-size:17px; font-weight:600; letter-spacing:-.02em; flex:1 }
+.contatore{ font:12px var(--mono); color:var(--tenue); font-variant-numeric:tabular-nums }
 .contatore.pieno{ color:var(--acc) }
 
-/* ── il lampo ─────────────────────────────────────────────────────────── */
-main{ flex:1; display:flex; flex-direction:column; padding-top:14px; min-height:0 }
+.apri-menu{
+  flex:none; width:34px; height:34px; margin-left:-6px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px;
+  background:none; border:0; cursor:pointer; border-radius:9px;
+}
+.apri-menu span{
+  display:block; width:17px; height:1.5px; border-radius:2px; background:var(--tenue-forte);
+  transition:transform .3s var(--curva), opacity .2s ease;
+}
+.apri-menu[aria-expanded="true"] span:first-child{ transform:translateY(3.25px) rotate(45deg) }
+.apri-menu[aria-expanded="true"] span:last-child{ transform:translateY(-3.25px) rotate(-45deg) }
+.apri-menu:active{ background:var(--acc-tenue) }
+
+main{ flex:1; min-height:0; display:flex; flex-direction:column; overflow:hidden }
+
+.sez{
+  flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch;
+  padding:0 18px calc(env(safe-area-inset-bottom) + 18px);
+  display:flex; flex-direction:column;
+}
+.sez[hidden]{ display:none }
+
+/* ════ 1 · IL LAMPO ═══════════════════════════════════════════════════════ */
+#sez-cattura{ padding-top:6px }
 
 textarea{
-  flex:1; min-height:120px; width:100%; resize:none;
+  flex:1; min-height:130px; width:100%; resize:none;
   background:transparent; border:0; color:var(--ink);
-  font-family:inherit; font-size:21px; line-height:1.45;
-  padding:6px 2px;
+  font-family:inherit; font-size:21px; line-height:1.45; letter-spacing:-.011em;
+  padding:12px 2px;
 }
 textarea:focus{ outline:none }
-textarea::placeholder{ color:var(--linea) }
+textarea::placeholder{ color:var(--linea-forte) }
 
-/* ── il tipo, in un tocco ─────────────────────────────────────────────── */
-.tipi{ display:flex; flex-wrap:wrap; gap:7px; padding:10px 0 }
+.sotto-lampo{ flex:none; padding-top:4px }
+
+.tipi{ display:flex; flex-wrap:wrap; gap:7px; padding:6px 0 12px }
 .tipo{
-  font:13px var(--mono); color:var(--tenue);
+  font:13px var(--mono); color:var(--tenue-forte);
   background:var(--carta); border:1px solid var(--linea); border-radius:999px;
-  padding:9px 13px; cursor:pointer; min-height:38px;
+  padding:9px 14px; min-height:38px; cursor:pointer;
+  transition:transform .1s ease-out, background .14s ease, color .14s ease, border-color .14s ease;
 }
-.tipo[aria-pressed="true"]{ background:var(--acc); border-color:var(--acc); color:var(--fondo); font-weight:600 }
+.tipo:active{ transform:scale(.96) }
+.tipo[aria-pressed="true"]{
+  background:var(--acc); border-color:var(--acc); color:var(--su-acc); font-weight:600;
+}
 .tipo.prova::after{ content:' ·'; opacity:.5 }   /* in prova, non ancora nel metodo */
 
+.riga-dove{ display:flex }
 .dove{
   width:100%; background:var(--carta); border:1px solid var(--linea);
-  border-radius:10px; color:var(--ink); font:14px var(--mono);
-  padding:12px 14px; margin-bottom:12px;
+  border-radius:11px; color:var(--ink); font:14px var(--mono);
+  padding:13px 14px;
 }
-.dove:focus{ outline:none; border-color:var(--acc-scuro) }
+.dove:focus{ outline:none; border-color:var(--acc); box-shadow:0 0 0 3px var(--acc-tenue) }
 .dove::placeholder{ color:var(--tenue) }
 
-/* ── il gesto che chiude ──────────────────────────────────────────────── */
+.scorciatoie-progetto{
+  display:flex; gap:6px; overflow-x:auto; padding:9px 0 3px;
+  scrollbar-width:none;
+}
+.scorciatoie-progetto::-webkit-scrollbar{ display:none }
+.scorciatoia-progetto{
+  flex:none; font:12px var(--mono); color:var(--tenue);
+  background:none; border:1px solid var(--linea); border-radius:999px;
+  padding:6px 11px; cursor:pointer; white-space:nowrap;
+}
+.scorciatoia-progetto[aria-pressed="true"]{ border-color:var(--acc); color:var(--acc) }
+
 .salva{
-  width:100%; min-height:56px;              /* pollice, non puntatore */
-  background:var(--acc); color:var(--fondo);
+  width:100%; min-height:56px; margin-top:12px;   /* pollice, non puntatore */
+  background:var(--acc); color:var(--su-acc);
   border:0; border-radius:14px;
-  font-family:inherit; font-size:18px; font-weight:650;
+  font-family:inherit; font-size:18px; font-weight:650; letter-spacing:-.01em;
   cursor:pointer;
+  transition:transform .1s ease-out, opacity .14s ease;
 }
 .salva:active{ transform:scale(.985) }
-.salva:disabled{ background:var(--carta); color:var(--linea); cursor:default; transform:none }
-.scorciatoia{ text-align:center; font:11px var(--mono); color:var(--linea); padding:8px 0 2px }
+.salva:disabled{ background:var(--carta); color:var(--linea-forte); cursor:default; transform:none }
+.scorciatoia{ text-align:center; font:11px var(--mono); color:var(--tenue); padding:9px 0 2px }
 
-/* ── il piede: roba che si usa una volta ogni tanto ───────────────────── */
-.piede{ display:flex; align-items:center; justify-content:center; gap:10px;
-        padding:10px 0 14px; border-top:1px solid var(--linea) }
-.minore{ background:none; border:0; color:var(--tenue); font:12px var(--mono);
-         cursor:pointer; padding:6px; text-decoration:underline; text-underline-offset:3px }
-.minore:hover{ color:var(--ink) }
-.sep{ color:var(--linea) }
+/* ════ 2 · L'ARCHIVIO ═════════════════════════════════════════════════════ */
+.barra-filtri{ flex:none; padding:12px 0 6px; position:sticky; top:0; background:var(--fondo); z-index:5 }
+.cerca{
+  width:100%; background:var(--carta); border:1px solid var(--linea);
+  border-radius:11px; color:var(--ink); font-size:15px; padding:11px 14px;
+  -webkit-appearance:none;
+}
+.cerca:focus{ outline:none; border-color:var(--acc); box-shadow:0 0 0 3px var(--acc-tenue) }
+.filtri-tipo{ display:flex; gap:6px; overflow-x:auto; padding:10px 0 4px; scrollbar-width:none }
+.filtri-tipo::-webkit-scrollbar{ display:none }
+.filtro{
+  flex:none; font:12px var(--mono); color:var(--tenue);
+  background:none; border:1px solid var(--linea); border-radius:999px;
+  padding:6px 12px; cursor:pointer; white-space:nowrap;
+}
+.filtro[aria-pressed="true"]{ background:var(--acc); border-color:var(--acc); color:var(--su-acc) }
 
-/* ── la conferma: l'unica animazione, e dura meno di un secondo ───────── */
+.gruppi{ padding-bottom:24px }
+.gruppo{ border-top:1px solid var(--linea); padding:2px 0 }
+.gruppo summary{
+  display:flex; align-items:center; gap:9px; cursor:pointer; list-style:none;
+  padding:13px 2px; font-size:15px; font-weight:600; letter-spacing:-.01em;
+}
+.gruppo summary::-webkit-details-marker{ display:none }
+.gruppo summary::before{
+  content:'›'; color:var(--tenue); font-size:17px; line-height:1;
+  transition:transform .25s var(--curva); display:inline-block;
+}
+.gruppo[open] summary::before{ transform:rotate(90deg) }
+.gruppo-conto{ margin-left:auto; font:11px var(--mono); color:var(--tenue) }
+
+.cattura{
+  border:1px solid var(--linea); border-radius:13px; background:var(--carta);
+  padding:13px 15px; margin:0 0 8px;
+}
+.cattura-testo{ font-size:15px; line-height:1.5; white-space:pre-wrap; word-break:break-word }
+.cattura-meta{
+  display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+  padding-top:9px; font:11px var(--mono); color:var(--tenue);
+}
+.tag-tipo{ color:var(--acc); border:1px solid var(--acc-tenue); background:var(--acc-tenue);
+           border-radius:5px; padding:2px 6px }
+.tag-stato{ margin-left:auto }
+.tag-stato.fuori{ color:var(--ok) }
+.cattura-azioni{ display:flex; gap:8px; flex-wrap:wrap; align-items:center;
+                 padding-top:11px; margin-top:10px; border-top:1px solid var(--linea) }
+.cattura-azioni[hidden]{ display:none }   /* [hidden] da solo perde contro display:flex */
+.cattura-azioni select{
+  background:var(--carta-alta); color:var(--ink); border:1px solid var(--linea);
+  border-radius:8px; font:12px var(--mono); padding:6px 8px;
+}
+.vuoto{ color:var(--tenue); font-size:15px; padding:34px 2px; text-align:center }
+
+/* ════ 3 · 4 · PANNELLI ═══════════════════════════════════════════════════ */
+.pannello{
+  background:var(--carta); border:1px solid var(--linea); border-radius:16px;
+  padding:18px; margin:14px 0;
+}
+.pannello:first-child{ margin-top:16px }
+.pannello h2{ font-size:16px; font-weight:600; letter-spacing:-.015em; padding-bottom:6px }
+.spiega{ font-size:13.5px; line-height:1.55; color:var(--tenue); padding-bottom:12px }
+.pannello-avviso{ border-color:var(--acc-tenue); background:linear-gradient(var(--acc-tenue),var(--acc-tenue)),var(--carta) }
+.pannello-pericolo h2{ color:var(--male) }
+
+.lista-passi{ padding-left:20px; font-size:13.5px; line-height:1.7; color:var(--tenue) }
+.lista-passi li{ padding-bottom:4px }
+
+.riga-bottoni{ display:flex; flex-wrap:wrap; gap:9px; align-items:center }
+.bottone{
+  background:var(--acc); color:var(--su-acc); border:0; border-radius:11px;
+  font-family:inherit; font-size:15px; font-weight:600; padding:11px 16px; min-height:44px;
+  cursor:pointer; transition:transform .1s ease-out;
+}
+.bottone:active{ transform:scale(.98) }
+.bottone:disabled{ background:var(--carta-alta); color:var(--tenue); cursor:default }
+.bottone-min{
+  background:var(--carta-alta); color:var(--ink); border:1px solid var(--linea);
+  border-radius:11px; font-family:inherit; font-size:14px; font-weight:500;
+  padding:10px 14px; min-height:44px; cursor:pointer;
+}
+.bottone-min:hover{ border-color:var(--linea-forte) }
+.bottone-pericolo{
+  background:none; color:var(--male); border:1px solid var(--male);
+  border-radius:11px; font-family:inherit; font-size:14px; font-weight:600;
+  padding:10px 16px; min-height:44px; cursor:pointer;
+}
+
+.riga-aggiungi{ display:flex; gap:8px }
+.riga-aggiungi input{
+  flex:1; background:var(--carta-alta); border:1px solid var(--linea); border-radius:11px;
+  color:var(--ink); font:14px var(--mono); padding:11px 13px;
+}
+.riga-aggiungi input:focus{ outline:none; border-color:var(--acc); box-shadow:0 0 0 3px var(--acc-tenue) }
+
+.elenco-progetti{ padding-bottom:12px }
+.progetto{
+  display:flex; align-items:center; gap:10px;
+  padding:11px 2px; border-bottom:1px solid var(--linea);
+}
+.progetto:last-child{ border-bottom:0 }
+.progetto-nome{ font:14px var(--mono); color:var(--ink) }
+.progetto-fonte{ font:10px var(--mono); color:var(--tenue); border:1px solid var(--linea);
+                 border-radius:4px; padding:2px 5px; text-transform:uppercase; letter-spacing:.06em }
+.progetto-conto{ margin-left:auto; font:11px var(--mono); color:var(--tenue) }
+.progetto-togli{ background:none; border:0; color:var(--tenue); font-size:16px; cursor:pointer; padding:2px 4px }
+.progetto-togli:hover{ color:var(--male) }
+
+.esito{ font:12px/1.5 var(--mono); color:var(--tenue); padding-bottom:10px }
+.esito.male{ color:var(--male) }
+.esito.bene{ color:var(--ok) }
+
+.elenco-repo{ max-height:320px; overflow-y:auto }
+.repo{ display:flex; align-items:center; gap:10px; padding:9px 2px; border-bottom:1px solid var(--linea) }
+.repo-nome{ font:13px var(--mono); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.repo button{ flex:none; background:none; border:1px solid var(--linea); border-radius:8px;
+              color:var(--tenue-forte); font:11px var(--mono); padding:5px 9px; cursor:pointer }
+.repo button:hover{ border-color:var(--acc); color:var(--acc) }
+.repo button[disabled]{ opacity:.4; cursor:default }
+
+.segmento{ display:inline-flex; background:var(--carta-alta); border:1px solid var(--linea);
+           border-radius:11px; padding:3px; gap:2px }
+.segmento button{
+  background:none; border:0; border-radius:8px; color:var(--tenue-forte);
+  font-family:inherit; font-size:14px; padding:8px 15px; min-height:38px; cursor:pointer;
+}
+.segmento button[aria-pressed="true"]{ background:var(--acc); color:var(--su-acc); font-weight:600 }
+
+/* ════ LA CONFERMA ════════════════════════════════════════════════════════
+   L'unica animazione non richiesta dal dito, e dura poco più di un secondo. */
 .conferma{
-  position:fixed; left:50%; bottom:calc(84px + env(safe-area-inset-bottom));
+  position:fixed; left:50%; bottom:calc(26px + env(safe-area-inset-bottom)); z-index:60;
   transform:translate(-50%,10px);
-  background:var(--ok); color:#0d1a10;
+  background:var(--ok); color:#fff;
   font:13px var(--mono); font-weight:600;
-  padding:9px 16px; border-radius:999px;
-  opacity:0; pointer-events:none;
+  padding:10px 17px; border-radius:999px; box-shadow:var(--ombra);
+  opacity:0; pointer-events:none; max-width:86vw; text-align:center;
 }
-.conferma.mostra{ animation:lampo 1.1s ease forwards }
+.conferma.mostra{ animation:lampo 1.5s var(--curva) forwards }
+.conferma.male{ background:var(--male) }
 @keyframes lampo{
-  0%{ opacity:0; transform:translate(-50%,10px) }
-  14%{ opacity:1; transform:translate(-50%,0) }
-  76%{ opacity:1; transform:translate(-50%,0) }
-  100%{ opacity:0; transform:translate(-50%,-4px) }
-}
-@media (prefers-reduced-motion: reduce){
-  .conferma.mostra{ animation:none; opacity:1 }
-  .salva:active{ transform:none }
+  0%{ opacity:0; transform:translate(-50%,10px) scale(.96) }
+  10%{ opacity:1; transform:translate(-50%,0) scale(1) }
+  80%{ opacity:1; transform:translate(-50%,0) scale(1) }
+  100%{ opacity:0; transform:translate(-50%,-4px) scale(1) }
 }
 
-/* ── da tablet in su non si allarga: resta una colonna stretta ─────────── */
-@media (min-width:600px){
-  body{ max-width:520px; margin-inline:auto }
+/* ════ DA 900px IN SU: la colonna resta lì ════════════════════════════════ */
+@media (min-width:900px){
+  .lato{ transform:none; transition:none; width:var(--lato-largo); background:transparent;
+         border-right:1px solid var(--linea) }
+  .velo{ display:none }
+  .apri-menu{ display:none }
+  .palco{ margin-left:var(--lato-largo) }
+  .testata{ padding-left:34px; padding-right:34px }
+  .sez{ padding-left:34px; padding-right:34px }
+  .sez > *{ width:100%; max-width:720px; margin-inline:auto }
+  /* Da computer il blocco della cattura sta insieme e centrato: il vuoto sotto
+     serve solo dove il pollice deve arrivare in basso senza spostare la mano. */
+  #sez-cattura{ max-width:none; justify-content:center; padding-bottom:9vh }
+  textarea{ flex:none; font-size:24px; min-height:34vh }
+  .titolo-sez{ font-size:22px; letter-spacing:-.025em }
 }
+@media (min-width:900px) and (max-width:1200px){
+  .lato{ width:210px }
+  .palco{ margin-left:210px }
+}
+
+/* ════ ACCESSIBILITÀ ══════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration:.01ms !important; transition-duration:.01ms !important }
+  .conferma.mostra{ animation:none; opacity:1 }
+  .salva:active,.tipo:active,.bottone:active{ transform:none }
+}
+@media (prefers-reduced-transparency: reduce){
+  .testata{ background:var(--fondo); backdrop-filter:none }
+  .velo{ backdrop-filter:none }
+}
+@media (prefers-contrast: more){
+  body{ --linea:rgba(128,128,128,.5); --tenue:var(--tenue-forte) }
+  .testata{ background:var(--fondo); backdrop-filter:none }
+}
+:focus-visible{ outline:2px solid var(--acc); outline-offset:2px; border-radius:6px }

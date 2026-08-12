@@ -13,62 +13,91 @@
 
 La porta di [The Knowledge](https://github.com/eneaqupovisione/the-knowledge):
 cattura senza attrito, da telefono e da computer. Pagina web installabile,
-**nessuna dipendenza, nessun passo di costruzione, nessuna rete**: si apre
-`index.html` e funziona.
+**nessuna dipendenza, nessun passo di costruzione**: si apre `index.html` e
+funziona.
 
-**Cosa non è, oggi.** Delle tre funzioni previste dal nodo, è costruita solo la
-**prima**. La vista trasversale delle scadenze e il ritorno sulle idee vecchie
-non esistono — non sono a metà: non ci sono.
+**Cosa non è, oggi.** Delle tre funzioni previste dal nodo è costruita la
+**prima**, con intorno il minimo che la rende utilizzabile davvero: un archivio
+che si legge, i progetti, un ponte verso `_inbox`. La vista trasversale delle
+scadenze e il ritorno sulle idee vecchie non esistono — non sono a metà: non ci
+sono, e leggono l'albero, quindi arrivano dopo la sincronizzazione.
 
 **Cosa non deve diventare mai.** Un posto dove si scrive, si ragiona o si
 ristruttura. Su quel terreno Claude Code è più forte di qualunque interfaccia, e
-il nodo lo dichiara come limite del progetto, non come stato attuale.
+il nodo lo dichiara come limite del progetto, non come stato attuale. È il
+motivo per cui nell'archivio si cambia l'etichetta di una cattura e **non il suo
+testo**.
 
 ## La planimetria
 
 | File | Ruolo | Note operative |
 |---|---|---|
-| `index.html` | la schermata unica | non ce ne sono altre, ed è una scelta |
-| `app.js` | tutta la logica | 7 tipi, salvataggio, contatore, esportazione. Nessuna chiamata di rete |
-| `stile.css` | l'aspetto | scura di base, progettata a 375px, tutto ciò che si tocca sta in basso |
-| `sw.js` | il guscio offline | cache-first. Alzare `VERSIONE` a ogni cambio di file, o l'app non si aggiorna |
+| `index.html` | le quattro schermate e il menu | è l'unico documento: le sezioni si mostrano e si nascondono |
+| `stile.css` | l'aspetto | scura di base (chiara a scelta), progettata a 375px; da 900px il menu resta fisso |
+| `dati.js` | il modello e il magazzino | 7 tipi, catture, progetti, impostazioni. **Nessuna chiamata di rete** |
+| `ponte.js` | come le catture escono di qui | cartella collegata + esportazione. Il formato lo comanda `METODO.md` §6 |
+| `cattura.js` | il lampo | la schermata che si apre e riceve il fuoco |
+| `archivio.js` | leggere e rietichettare | raggruppa per progetto; il testo non è modificabile |
+| `progetti.js` | i nomi dei progetti | **l'unico punto che tocca la rete**: legge i repo pubblici di GitHub, senza token |
+| `impostazioni.js` | ponte, tema, svuota | ci vive anche l'avviso su ciò che ancora non c'è |
+| `app.js` | avvio, navigazione, contatore | `App.aggiorna()` è il solo punto da chiamare dopo un cambiamento |
+| `sw.js` | il guscio offline | cache-first. Alzare `VERSIONE` **e l'elenco dei file** a ogni cambio, o l'app non si aggiorna |
 | `manifest.webmanifest` · `icona.svg` | installabilità | |
 | `decisioni/` | perché è così | una decisione per file |
 | `trappole.md` | ciò che sembra vero e non lo è | |
+
+Sono `<script>` normali, non moduli: i moduli non si caricano da `file://`, e
+`index.html` deve continuare ad aprirsi come file.
 
 ## Il flusso dei dati
 
 ```
 lampo → textarea → localStorage['the-office.catture']   (immediato, sincrono)
                         ↓
-                   «esporta» → un file .md con dentro tutti i blocchi
+        ┌───────────────┴────────────────┐
+   cartella collegata               «esporta»
+   (computer, Chromium,        (ovunque, telefono compreso)
+    https o localhost)                  │
+        │  un .md per cattura,     un .md con dentro tutti i blocchi
+        │  scritto da solo                │
+        └───────────────┬────────────────┘
                         ↓
-                   smistamento → ~/the-knowledge/_inbox/*.md
+              ~/the-knowledge/_inbox/*.md
+                        ↓
+                  smistamento (Claude Code, su un branch)
 ```
 
 **Non c'è nessun server, nessun database, nessun account.** I dati vivono nel
-browser del dispositivo finché non vengono esportati.
+browser del dispositivo finché non escono da una delle due strade. Una cattura
+che non è uscita è **una cattura a rischio**: è quello che conta il contatore.
 
 ## Dove NON mettere le mani
 
 1. **Non aggiungere campi obbligatori alla cattura.** Il testo è l'unica cosa
    necessaria; tipo e appartenenza sono facoltativi e restano facoltativi. È il
    primo principio del metodo, non una preferenza di interfaccia.
-2. **Non introdurre una chiamata di rete nel percorso del salvataggio.** Local-first
-   è una decisione scritta: se la scrittura aspetta la rete, i cinque secondi sono
-   già persi. La sincronizzazione, quando arriverà, sta *dopo* il salvataggio locale.
+2. **Non introdurre una chiamata di rete nel percorso del salvataggio.** La
+   scrittura nella cartella collegata è disco locale e viene **dopo** il
+   salvataggio: se fallisce, la cattura è già al sicuro. La sincronizzazione,
+   quando arriverà, sta anche lei dopo.
 3. **Nessun segreto in questo repo.** Il token GitHub vivrà in una funzione lato
    server, mai nel dispositivo e mai nel bundle. Una chiave finita qui è pubblica
-   per sempre, anche dopo il commit che la toglie.
-4. **Non aggiungere una lista sfogliabile delle catture.** «Un canale di cattura
-   scrive solo»: dal telefono non si naviga, non si legge, non si modifica. È ciò
-   che tiene il problema piccolo. L'unica cosa che si vede è il **contatore**.
-5. **Il contatore è sacro** e sta sempre in vista. Senza, la fiducia crolla in due
-   settimane.
+   per sempre, anche dopo il commit che la toglie. La lettura dei repo pubblici
+   non ne usa nessuno, ed è l'unica cosa che l'app chiede alla rete.
+4. **L'apertura atterra sul lampo.** Sempre, col fuoco già nel testo. L'archivio
+   esiste (→ `decisioni/2026-08-11-l-archivio-si-legge-e-si-riordina.md`, che
+   rovescia il vecchio divieto) ma costa un gesto in più, e non deve mai
+   diventare la schermata d'ingresso: lì muoiono i cinque secondi.
+5. **Nell'archivio non si modifica il testo di una cattura.** Tipo e progetto
+   sì — correggerli *è* smistamento. Il corpo no: è il confine oltre il quale
+   l'app comincia a competere con Claude Code.
+6. **Il contatore è sacro** e sta sempre in vista, in tutte e due le
+   impaginazioni. Conta ciò che **non è ancora uscito** dal dispositivo, non il
+   totale. Senza, la fiducia crolla in due settimane.
 
 ## Se il lavoro riguarda…
 
 - **il metodo, dove va una cosa, una decisione** → `~/the-knowledge/METODO.md`
 - **l'ordine del repo** → skill `repo-in-ordine`
 - **il formato dei file dell'inbox** → `~/the-knowledge/METODO.md` §6, ed è la
-  sorgente di verità: se l'esportazione e il metodo divergono, **vince il metodo**
+  sorgente di verità: se `ponte.js` e il metodo divergono, **vince il metodo**

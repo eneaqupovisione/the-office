@@ -8,11 +8,17 @@
    sono dati remoti da tenere freschi, perché i dati stanno in locale.
    ═══════════════════════════════════════════════════════════════════════ */
 
-const VERSIONE = 'the-office-v1';
+const VERSIONE = 'the-office-v2';
 const GUSCIO = [
   './',
   './index.html',
   './stile.css',
+  './dati.js',
+  './ponte.js',
+  './cattura.js',
+  './archivio.js',
+  './progetti.js',
+  './impostazioni.js',
   './app.js',
   './icona.svg',
   './manifest.webmanifest'
