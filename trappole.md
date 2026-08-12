@@ -7,6 +7,21 @@ La più recente in alto.
 
 ---
 
+**Le catture non seguono l'app da un indirizzo all'altro.** `localStorage` è
+legato all'**origine**: quello che hai catturato aprendo `index.html` come file
+non c'è aprendo `https://…netlify.app`, e viceversa. Non sono sparite — stanno
+in un altro cassetto, e ogni cassetto ha il suo contatore. Vale anche fra il
+telefono e il computer, che sono due dispositivi e quindi due cassetti: è
+esattamente il problema che la sincronizzazione esiste per chiudere.
+**Prima di adottare l'indirizzo nuovo come quello buono, esporta dal vecchio.**
+*(2026-08-12)*
+
+**Il nome del sito non è il nome del prodotto.** L'indirizzo è
+`ufficio-smistamento-idee.netlify.app`, il prodotto si chiama The Office e la
+cartella pure (`moduli/codice/SKILL.md` §7 vuole che coincidano). Cambiarlo è un
+campo in Netlify e costa zero **adesso**; costa un'app da reinstallare e un
+segnalibro morto **dopo** che l'hai messa sulla schermata home. *(2026-08-12)*
+
 **«Sembra buggato» quasi sempre è la cache, non il codice.** Aprendo l'app
 sempre dallo stesso `file://`, il browser può servirti `index.html` nuovo con
 `stile.css` e i `.js` vecchi — e col markup nuovo e il JS vecchio l'app **muore
