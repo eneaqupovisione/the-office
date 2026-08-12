@@ -71,6 +71,17 @@ const Cattura = (() => {
   /* ── le caselle del tipo ───────────────────────────────────────────────
      Il tipo prima del progetto: nel momento del lampo so quasi sempre *che
      genere di cosa* è, non ancora dove va. */
+  /* Un solo punto per scegliere un tipo: lo usano le caselle e il
+     riconoscitore, così non possono divergere. `null` lo toglie — niente è
+     obbligatorio. */
+  function scegliTipo(id){
+    tipoScelto = id || null;
+    document.querySelectorAll('#tipi .tipo').forEach(x =>
+      x.setAttribute('aria-pressed', String(x.dataset.tipo === tipoScelto)));
+    salva.dataset.tipo = tipoScelto || '';
+    disegnaSpiegazione();
+  }
+
   function disegnaTipi(){
     const casa = $('tipi');
     casa.innerHTML = '';
@@ -83,12 +94,8 @@ const Cattura = (() => {
       b.title = t.cosa;
       b.setAttribute('aria-pressed', String(tipoScelto === t.id));
       b.addEventListener('click', () => {
-        const gia = tipoScelto === t.id;
-        casa.querySelectorAll('.tipo').forEach(x => x.setAttribute('aria-pressed','false'));
-        tipoScelto = gia ? null : t.id;     // ritoccarlo lo toglie: niente è obbligatorio
-        if (!gia) b.setAttribute('aria-pressed','true');
-        disegnaSpiegazione();
-        testo.focus();                       // il fuoco torna sempre al lampo                       // il fuoco torna sempre al lampo
+        scegliTipo(tipoScelto === t.id ? null : t.id);
+        testo.focus();                       // il fuoco torna sempre al lampo
       });
       casa.appendChild(b);
     });
@@ -133,6 +140,50 @@ const Cattura = (() => {
     testo.focus();
   }
 
+  /* ── quello che l'app ha capito ───────────────────────────────────────────
+     Serve alle note dettate: le intitoli «cantera idea» e le incolli qui. Non
+     decide da sola — mostra cosa ha letto e aspetta un tocco. Se sbaglia, un
+     tocco su «ignora» e non ne parla più per questa cattura. */
+  let riconoscimentoIgnorato = false;
+
+  function disegnaCapito(){
+    const casa = $('capito');
+    casa.innerHTML = '';
+    const r = riconoscimentoIgnorato ? null : Dati.riconosci(testo.value);
+    /* Non propone quello che hai già scelto a mano: sarebbe rumore. */
+    const utile = r && ((r.tipo && r.tipo !== tipoScelto) || (r.dove && r.dove !== dove.value.trim()));
+    casa.hidden = !utile;
+    if (!utile) return;
+
+    const eti = document.createElement('span');
+    eti.className = 'capito-testo';
+    eti.append(document.createTextNode('ho letto '));
+    if (r.tipo){
+      const t = document.createElement('strong'); t.dataset.tipo = r.tipo;
+      t.className = 'capito-tipo'; t.textContent = r.tipo; eti.appendChild(t);
+    }
+    if (r.tipo && r.dove) eti.append(document.createTextNode(' per '));
+    if (r.dove){
+      const p = document.createElement('strong'); p.textContent = r.dove; eti.appendChild(p);
+    }
+
+    const usa = document.createElement('button');
+    usa.type = 'button'; usa.className = 'capito-usa'; usa.textContent = 'usa';
+    usa.addEventListener('click', () => {
+      if (r.tipo) scegliTipo(r.tipo);
+      if (r.dove) dove.value = r.dove;
+      if (r.resto !== testo.value){ testo.value = r.resto; aggiornaSalva(); aggiornaFinestra(); }
+      disegnaProgetti(); disegnaCapito(); testo.focus();
+    });
+
+    const no = document.createElement('button');
+    no.type = 'button'; no.className = 'capito-no'; no.textContent = 'ignora';
+    no.setAttribute('aria-label', 'Ignora');
+    no.addEventListener('click', () => { riconoscimentoIgnorato = true; disegnaCapito(); testo.focus(); });
+
+    casa.append(eti, usa, no);
+  }
+
   /* ── i due passi: che oggetto è, poi quale progetto ──────────────────────
      Il primo passo **filtra il secondo, non lo precede come obbligo**: se so già
      il nome del progetto lo scrivo e la forma non la tocco. È la stessa scala di
@@ -167,29 +218,31 @@ const Cattura = (() => {
 
   /* ── i progetti, come suggerimento e mai come obbligo ─────────────────── */
   function disegnaProgetti(){
-    const lista = $('elenco-progetti');
-    const visibili = Dati.progetti().filter(p => !formaScelta || p.forma === formaScelta);
-    lista.innerHTML = '';
-    visibili.forEach(p => {
-      const o = document.createElement('option');
-      o.value = p.id;
-      o.label = p.forma || '';
-      lista.appendChild(o);
-    });
+    const scritto = dove.value.trim().toLowerCase();
+    const visibili = Dati.progetti()
+      .filter(p => !formaScelta || p.forma === formaScelta)
+      .filter(p => !scritto || p.id.includes(scritto));
 
     /* Le scorciatoie mostrano i cinque progetti usati più di recente: sono un
        tocco invece di dodici lettere, che sul telefono è la differenza fra
        scriverlo e saltarlo. */
-    /* Con una forma scelta, le scorciatoie sono **tutti** i progetti di quella
-       forma: è il senso del filtro. Senza, sono gli ultimi cinque usati. */
+    /* Tre casi, e nessuno usa `<datalist>`: su Safari iPhone non compare, ed è
+       lì che serve di più.
+       • stai scrivendo → i progetti **che esistono** e che contengono quello
+         che hai scritto: è il completamento;
+       • hai scelto una forma → tutti i progetti di quella forma;
+       • campo vuoto → gli ultimi cinque usati. */
     let recenti = [];
-    if (formaScelta){
+    if (scritto || formaScelta){
       recenti = visibili.map(p => p.id).slice(0, 8);
     } else {
       Dati.catture().slice().reverse().forEach(r => {
         if (r.dove && !recenti.includes(r.dove) && recenti.length < 5) recenti.push(r.dove);
       });
     }
+    /* Se scrivi un nome che non esiste, non lo si nasconde e non si corregge:
+       l'appartenenza è alla precisione che hai adesso, anche se è nuova. */
+    const nuovo = scritto && !visibili.some(p => p.id === Dati.normalizza(dove.value));
 
     const casa = $('progetti-recenti');
     casa.innerHTML = '';
@@ -206,6 +259,13 @@ const Cattura = (() => {
       });
       casa.appendChild(b);
     });
+
+    if (nuovo){
+      const n = document.createElement('span');
+      n.className = 'progetto-nuovo';
+      n.textContent = 'nuovo: ' + Dati.normalizza(dove.value);
+      casa.appendChild(n);
+    }
   }
 
   /* ── salvare ─────────────────────────────────────────────────────────── */
@@ -230,7 +290,9 @@ const Cattura = (() => {
     /* Il tipo e l'appartenenza RESTANO: capita spesso di catturare due cose di
        fila sullo stesso progetto, e ributtarli ogni volta è attrito che si paga
        a ogni singola cattura. */
+    riconoscimentoIgnorato = false;
     aggiornaSalva();
+    disegnaCapito();
     aggiornaFinestra('salvata · in attesa');
     App.aggiorna();
     testo.focus();
@@ -270,6 +332,7 @@ const Cattura = (() => {
     disegnaForme();
     disegnaProgetti();
     disegnaAllegati();
+    disegnaCapito();
 
     $('allega').addEventListener('click', () => $('scegli-file').click());
     $('scegli-file').addEventListener('change', scegliFile);
@@ -284,8 +347,8 @@ const Cattura = (() => {
     aggiornaSalva();
     aggiornaFinestra();
 
-    testo.addEventListener('input', () => { aggiornaSalva(); aggiornaFinestra(); });
-    dove.addEventListener('input', () => disegnaProgetti());
+    testo.addEventListener('input', () => { aggiornaSalva(); aggiornaFinestra(); disegnaCapito(); });
+    dove.addEventListener('input', () => { disegnaProgetti(); disegnaCapito(); });
     salva.addEventListener('click', salvaCattura);
 
     /* ⌘/Ctrl + invio funziona da qualunque punto della schermata di cattura,

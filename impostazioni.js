@@ -1,11 +1,12 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   IMPOSTAZIONI — il ponte, l'aspetto, e la verità su ciò che manca.
+   IMPOSTAZIONI — le tre strade, l'aspetto, e la verità su dove finiscono le
+   catture.
 
-   Il pannello «quello che ancora non c'è» è scritto nell'HTML e va tenuto
-   aggiornato: dichiara che telefono e computer restano due mucchi separati
-   finché non esistono repo pubblicato, sito Netlify e token. È un avviso, non
-   un promemoria decorativo — la trappola numero uno di questo progetto è
-   crederlo già sincronizzato.
+   **Niente stato scritto a mano.** Qui c'era un elenco di «cose che ancora non
+   ci sono», ed è diventato falso due volte nello stesso giorno: appena una di
+   quelle cose veniva fatta, il pannello continuava a dirla mancante. Ora
+   `statoVero()` lo calcola da quello che l'app riesce davvero a fare. Se
+   qualcuno riscrive lì dentro una frase fissa, ha rimesso la bugia.
    ═══════════════════════════════════════════════════════════════════════ */
 
 const Impostazioni = (() => {
@@ -25,6 +26,54 @@ const Impostazioni = (() => {
     if (meta) meta.setAttribute('content', chiaro ? '#F4F3EE' : '#0C0C0E');
     document.querySelectorAll('#segmento-tema button').forEach(b =>
       b.setAttribute('aria-pressed', String(b.dataset.tema === t)));
+  }
+
+  /* ── lo stato vero, calcolato ─────────────────────────────────────────────
+     Prima qui c'era un elenco scritto a mano di «cose che ancora non ci sono».
+     È diventato falso **due volte in un giorno** — appena una di quelle cose
+     veniva fatta, il pannello continuava a dirla mancante. Un avviso che mente
+     è peggio di nessun avviso, quindi ora si calcola da quello che l'app
+     riesce davvero a fare. */
+  function statoVero(){
+    const casa = $('stato-vero');
+    casa.innerHTML = '';
+    const attesa = Dati.inAttesa().length;
+
+    const strade = [
+      { nome:'Sincronizzazione', attiva: Ponte.sincronizzabile(),
+        se:  'ogni cattura va in _inbox/ su GitHub da sola, anche dal telefono',
+        no:  !location.protocol.startsWith('http')
+               ? 'serve aprire l\'app dal sito, non da un file sul disco'
+               : 'manca la chiave d\'app qui sopra' },
+      { nome:'Cartella collegata', attiva: Ponte.collegata(),
+        se:  'le catture finiscono anche in ' + (Ponte.nomeCartella() || 'una cartella locale'),
+        no:  Ponte.possibile() ? 'non collegata — è una scorciatoia da computer, non serve se la sincronizzazione va'
+                               : 'questo browser non la sostiene (è normale su iPhone)' },
+      { nome:'Esportazione', attiva: true,
+        se:  'funziona sempre, anche senza niente configurato',
+        no:  '' }
+    ];
+
+    strade.forEach(st => {
+      const r = document.createElement('div');
+      r.className = 'riga-stato' + (st.attiva ? ' attiva' : '');
+      const s1 = document.createElement('span');
+      s1.className = 'riga-stato-segno'; s1.textContent = st.attiva ? '✓' : '·';
+      const s2 = document.createElement('span');
+      s2.className = 'riga-stato-nome'; s2.textContent = st.nome;
+      const s3 = document.createElement('span');
+      s3.className = 'riga-stato-nota'; s3.textContent = st.attiva ? st.se : st.no;
+      r.append(s1, s2, s3);
+      casa.appendChild(r);
+    });
+
+    const p = document.createElement('p');
+    p.className = 'spiega';
+    p.style.padding = '13px 0 0';
+    p.textContent = attesa
+      ? attesa + (attesa === 1 ? ' cattura non è' : ' catture non sono') + ' ancora uscita di qui.'
+      : 'Tutto quello che hai catturato è uscito di qui.';
+    casa.appendChild(p);
   }
 
   /* ── la sincronizzazione ─────────────────────────────────────────────────
@@ -232,5 +281,5 @@ const Impostazioni = (() => {
     App.aggiorna();
   }
 
-  return { avvia, statoCartella, statoSincronia, applicaTema };
+  return { avvia, statoCartella, statoSincronia, statoVero, applicaTema };
 })();

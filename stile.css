@@ -340,7 +340,10 @@ textarea::placeholder{ color:var(--tenue); opacity:.6 }
 .salva:active{ transform:scale(.988) }
 .salva:disabled{ background:var(--carta-2); color:var(--tenue); box-shadow:none;
                  transform:none; cursor:default }
+/* La scorciatoia esiste solo dove c'è una tastiera: su un telefono era una
+   riga di testo inutile in fondo alla schermata che si usa più spesso. */
 .scorciatoia{ text-align:center; font-size:12px; color:var(--tenue); padding:9px 0 2px }
+@media (pointer: coarse){ .scorciatoia{ display:none } }
 
 
 
@@ -385,6 +388,42 @@ textarea::placeholder{ color:var(--tenue); opacity:.6 }
   font-size:11px; color:var(--ink-2); background:var(--carta-2);
   padding:2px 8px; border-radius:999px;
 }
+
+/* ── quello che l'app ha capito, e lo stato vero ─────────────────────────── */
+.capito{
+  display:flex; align-items:center; gap:9px; flex-wrap:wrap;
+  background:var(--acc-tenue); border-radius:12px;
+  padding:11px 13px; margin-top:12px; font-size:13.5px;
+}
+.capito[hidden]{ display:none }
+.capito-testo{ flex:1; min-width:12ch; color:var(--ink-2) }
+.capito-testo strong{ color:var(--ink); font-weight:600 }
+.capito-tipo{ color:var(--tinta) !important }
+.capito-usa{
+  background:var(--acc); color:var(--su-acc); border:0; border-radius:8px;
+  font-family:inherit; font-size:13.5px; font-weight:600;
+  padding:7px 14px; min-height:36px; cursor:pointer;
+}
+.capito-no{
+  background:none; border:0; color:var(--tenue); font-family:inherit;
+  font-size:13px; padding:7px 4px; min-height:36px; cursor:pointer;
+}
+.capito-no:hover{ color:var(--ink) }
+
+.progetto-nuovo{
+  flex:none; font-size:12.5px; color:var(--tenue);
+  padding:9px 4px; white-space:nowrap;
+}
+
+.riga-stato{
+  display:flex; align-items:baseline; gap:9px;
+  padding:9px 0; border-bottom:1px solid var(--linea);
+}
+.riga-stato:last-of-type{ border-bottom:0 }
+.riga-stato-segno{ width:14px; flex:none; color:var(--tenue); font-weight:600 }
+.riga-stato.attiva .riga-stato-segno{ color:var(--ok) }
+.riga-stato-nome{ font-size:14.5px; font-weight:500; flex:none }
+.riga-stato-nota{ font-size:13px; color:var(--tenue); line-height:1.4 }
 
 /* ── che differenza c'è fra i tipi ────────────────────────────────────────
    La spiegazione del tipo scelto e la legenda completa. Sono l'unica parte

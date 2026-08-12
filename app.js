@@ -150,6 +150,7 @@ const App = (() => {
     Progetti.disegna();
     Impostazioni.statoCartella();
     Impostazioni.statoSincronia();
+    Impostazioni.statoVero();
   }
 
   /* ── la conferma ─────────────────────────────────────────────────────── */

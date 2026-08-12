@@ -160,6 +160,53 @@ const Dati = (() => {
   function impostazioni(){ return Object.assign({}, IMPOST_DEFAULT, leggiChiave(CHIAVE_IMPOST, {})); }
   function imposta(campi){ scriviChiave(CHIAVE_IMPOST, Object.assign(impostazioni(), campi)); }
 
+  /* ── il riconoscitore ────────────────────────────────────────────────────
+     Una nota dettata comincia spesso con due parole che **sono già** i due assi
+     del metodo: «cantera idea», «enny-p riferimento». Riconoscerle è un
+     confronto fra parole, non un giudizio: **niente modello.** Un modello,
+     anche piccolo, sarebbe decine di megabyte, romperebbe l'apertura da
+     `file://` e il funzionamento offline, e sarebbe *probabilistico* dove qui
+     la risposta è certa — i tipi sono sette e i progetti li conosciamo per
+     nome.
+
+     Legge **solo la prima riga**, e solo se è corta: dentro un pensiero lungo
+     la parola «idea» compare per caso, e indovinare al posto di chi scrive è
+     peggio che non provarci. Non decide niente da solo: propone, e chi cattura
+     conferma con un tocco. */
+  function riconosci(testo){
+    const righe = (testo || '').split(/\r?\n/);
+    const prima = (righe[0] || '').trim();
+    if (!prima || prima.length > 60) return null;
+
+    /* Il trattino **non** separa: i nomi dei progetti lo contengono
+       (`enny-p`, `the-office`). Separano gli spazi e la punteggiatura, e i
+       segni rimasti soli si buttano. */
+    const parole = prima.toLowerCase()
+      .split(/[\s,;:·>\/|–—]+/)
+      .filter(w => w && !/^[-_.]+$/.test(w));
+    if (!parole.length || parole.length > 5) return null;
+
+    const nomiProgetti = progetti().map(p => p.id);
+    let tipo = '', dove = '', usate = 0;
+
+    for (const w of parole){
+      const t = TIPI.find(x => x.id === w
+        || (w.length > 3 && (x.id.startsWith(w) || w.startsWith(x.id))));
+      if (t && !tipo){ tipo = t.id; usate++; continue; }
+      const pr = nomiProgetti.find(n => n === w || (w.length > 3 && n.startsWith(w)));
+      if (pr && !dove){ dove = pr; usate++; continue; }
+    }
+
+    if (!tipo && !dove) return null;
+    /* La prima riga si toglie solo se **era soltanto** le etichette: se dentro
+       c'è anche del pensiero, quel pensiero non si tocca. */
+    const soloEtichette = usate === parole.length;
+    return {
+      tipo, dove, prima,
+      resto: soloEtichette ? righe.slice(1).join('\n').replace(/^\n+/, '') : testo
+    };
+  }
+
   /* ── il travaso dalla versione a schermata unica ─────────────────────────
      Le catture vecchie non hanno `uscita`: la si ricostruisce dalla data
      dell'ultima esportazione, che è l'unica cosa che quella versione sapeva.
@@ -182,7 +229,7 @@ const Dati = (() => {
     TIPI, orario,
     catture, aggiungi, elimina, rietichetta, segnaUscite, inAttesa, svuota,
     progetti, ricorda, dimentica, normalizza, conteggi, forme,
-    impostazioni, imposta, travasa,
+    impostazioni, imposta, travasa, riconosci,
     ultimaEsportazione: () => localStorage.getItem(CHIAVE_EXPORT)
   };
 })();
