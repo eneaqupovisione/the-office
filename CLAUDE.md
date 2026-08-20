@@ -2,65 +2,56 @@
 
 > Se una cosa qui contraddice il codice, **vince il codice**: aggiorna questo file.
 
-> Questo file dice *dove sono le cose*. *Perché sono così* sta in [`decisioni/`](decisioni/).
-
-> Il **perché esiste** sta nel nodo: `~/the-knowledge/prodotti/the-office/README.md`.
-> **Leggilo prima di proporre scelte di impostazione.** Contiene le tre cose che
-> l'app deve fare, le tre che **non** deve fare, e un elenco di decisioni già
-> prese che sembrano domande aperte e non lo sono.
-
-## Cos'è
-
-> **È uno strumento, non un prodotto** (nodo, 2026-08-12). Serve a Enea e non ha
-> compratori: prezzo, mercato e modello di ricavo **non sono domande aperte, non
-> sono pertinenti**. Il criterio con cui si giudica una scelta di aspetto o di
-> interazione non è il posizionamento — non esiste — ma la destinazione d'uso:
->
-> **si apre molte volte al giorno, spesso di sera, con una mano sola, per meno
-> di cinque secondi alla volta.**
->
-> Una proposta che non regge questa frase si scarta prima di costruirla.
-
-La porta di [The Knowledge](https://github.com/eneaqupovisione/the-knowledge):
-cattura senza attrito, da telefono e da computer. Pagina web installabile,
-**nessuna dipendenza, nessun passo di costruzione**: si apre `index.html` e
+Pagina web installabile per catturare testo in fretta, da telefono e da computer.
+**Nessuna dipendenza, nessun passo di costruzione**: si apre `index.html` e
 funziona.
-
-**Cosa non è, oggi.** Delle tre funzioni previste dal nodo è costruita la
-**prima**, con intorno il minimo che la rende utilizzabile davvero: un archivio
-che si legge, i progetti, e tre strade verso `_inbox`. La vista trasversale
-delle scadenze e il ritorno sulle idee vecchie non esistono — non sono a metà:
-non ci sono. Adesso che la sincronizzazione c'è, sono la cosa successiva.
-
-**Cosa non deve diventare mai.** Un posto dove si scrive, si ragiona o si
-ristruttura. Su quel terreno Claude Code è più forte di qualunque interfaccia, e
-il nodo lo dichiara come limite del progetto, non come stato attuale. È il
-motivo per cui nell'archivio si cambia l'etichetta di una cattura e **non il suo
-testo**.
 
 ## La planimetria
 
 | File | Ruolo | Note operative |
 |---|---|---|
 | `index.html` | le quattro schermate e il menu | è l'unico documento: le sezioni si mostrano e si nascondono |
-| `stile.css` | l'aspetto | **impaginazione San Francisco, palette 06** (→ `decisioni/2026-08-12-la-via-di-mezzo.md`). Carattere di sistema, l'acido come unico accento. Chiaro di base, progettata a 375px; da 900px il menu resta fisso |
-| `dati.js` | il modello e il magazzino | 7 tipi, catture, progetti (con la loro `forma`), impostazioni, e `riconosci()` — che legge «cantera idea» dalla prima riga **confrontando parole, non indovinando**. **Nessuna chiamata di rete** |
+| `stile.css` | l'aspetto | carattere di sistema, l'acido come unico accento. Chiaro di base, progettato a 375px; da 900px il menu resta fisso |
+| `dati.js` | il modello e il magazzino | catture, progetti (con la loro `forma`), impostazioni, e `riconosci()` — che legge il nome del progetto dalla prima riga **confrontando parole, non indovinando**. **Nessuna chiamata di rete** |
 | `media.js` | gli allegati, in transito | IndexedDB e non `localStorage`: una foto in base64 satura la quota e uccide la cattura |
 | `netlify/functions/cattura.js` | **il portiere** — l'unico pezzo che gira su un server | ci vive il token. Non conosce il formato di una cattura: riceve percorso e contenuto già composti. Senza dipendenze e corto, o muore il piano B |
-| `ponte.js` | come le catture escono di qui | si collega **la radice** `~/the-knowledge`: scrive in `_inbox/` e `_inbox/media/`, e legge la `forma:` dei progetti. Il formato lo comanda `METODO.md` §6 |
+| `ponte.js` | come le catture escono di qui, e come si leggono i file dell'albero | si collega **la radice** `~/the-knowledge`: scrive in `_inbox/` e `_inbox/media/`, legge la `forma:` dei progetti, e con `leggiTesto`/`scriviTesto` apre file qualsiasi dentro l'albero. Il formato del `.md` lo costruisce `testa()` |
 | `cattura.js` | il lampo | la schermata che si apre e riceve il fuoco |
 | `archivio.js` | leggere e rietichettare | raggruppa per progetto; il testo non è modificabile |
-| `progetti.js` | i nomi dei progetti | li legge dall'albero (cartella collegata) o dai repo pubblici di GitHub, senza token |
-| `impostazioni.js` | sincronizzazione, ponte, tema, svuota | ci vive la chiave d'app. `statoVero()` **calcola** dove finiscono le catture: nessuno stato scritto a mano, era già stato falso due volte |
+| `lavori.js` | il motore di commissioni e acquisti | legge le caselle `- [ ]` dai `.md` dell'albero. **Non riorganizza il file**: spuntare cambia un carattere, aggiungere inserisce una riga. Provabile da solo, non tocca il DOM |
+| `agenda.js` | le schermate Commissioni e Acquisti | ogni gesto riscrive il file e poi **rilegge**: il file è la verità, e Claude Code può cambiarlo mentre l'app è aperta |
+| `progetti.js` | i nomi dei progetti | li legge dalla cartella collegata o dai repo pubblici di GitHub, senza token |
+| `impostazioni.js` | sincronizzazione, ponte, tema, svuota | ci vive la chiave d'app. `statoVero()` **calcola** dove finiscono le catture: nessuno stato scritto a mano |
 | `app.js` | avvio, navigazione, contatore | `App.aggiorna()` è il solo punto da chiamare dopo un cambiamento |
 | `sw.js` | il guscio offline | cache-first. Alzare `VERSIONE` **e l'elenco dei file** a ogni cambio, o l'app non si aggiorna |
 | `manifest.webmanifest` · `icona.svg` · `icona-*.png` | installabilità | i PNG servono a iOS, che ignora l'SVG. Si **rigenerano** dall'SVG, non si ridisegnano |
 | `netlify.toml` | dove sta la funzione | nessun `command`: non c'è costruzione |
-| `decisioni/` | perché è così | una decisione per file |
 | `trappole.md` | ciò che sembra vero e non lo è | |
 
 Sono `<script>` normali, non moduli: i moduli non si caricano da `file://`, e
 `index.html` deve continuare ad aprirsi come file.
+
+**Il numero di versione sta in due posti** — `VERSIONE` in `sw.js` e le `?v=` di
+`index.html`. Devono coincidere, o il guscio in cache e il documento vanno fuori
+fase.
+
+## Le sei sezioni, e due famiglie
+
+| | Dove vivono i dati | Quando si ridisegna |
+|---|---|---|
+| **Idee** (l'apertura) · **Archivio** · **Progetti** | `localStorage`, poi le tre strade verso `_inbox/` | a ogni `App.aggiorna()`: costa niente |
+| **Commissioni** · **Acquisti** | file veri nell'albero, letti e riscritti sul posto | solo entrando nella sezione: leggere venti file a ogni cattura salvata sarebbe sprecato |
+
+**Commissioni** è la vista su `clienti/`: una scheda per cartella, e le cose da
+fare sono le caselle `- [ ]` del suo `prossimi-passi.md`. **Acquisti** è un file
+solo, `personale/acquisti.md`, con tre liste. Tutte e due vogliono la **radice**
+collegata e Chromium sul computer: senza, la sezione dice cosa manca invece di
+mostrare una lista vuota.
+
+**Nella cattura non c'è più la griglia dei tipi.** Al lampo l'unica cosa che sai
+e che un agente non può dedurre è di quale progetto si tratta: è l'unico campo
+rimasto. Il campo `tipo` resta nel modello per le catture già fatte, e nei file
+nuovi semplicemente non compare.
 
 ## Il flusso dei dati
 
@@ -76,56 +67,46 @@ sincronizzazione   cartella collegata    «esporta»
    │  → API GitHub          │  cattura         │  tutti i blocchi
    ↓                        ↓                  ↓
         ~/the-knowledge/_inbox/<progetto>/*.md
-                        ↓
-              smistamento (Claude Code, su un branch)
 ```
 
-**Nessun database, nessun account, e un solo pezzo di server** — il portiere,
-che esiste per tenere il token e nient'altro. I dati vivono nel browser del
-dispositivo finché non escono da una delle tre strade. Una cattura che non è
-uscita è **una cattura a rischio**: è quello che conta il contatore.
+Il formato del file che esce:
 
-## Dove NON mettere le mani
+```
+---
+tipo: idea                 # facoltativo
+progetto: cantera          # facoltativo
+origine: the-office
+stato: da-smistare
+allegati: media/…          # solo se ce ne sono
+---
 
-1. **Non aggiungere campi obbligatori alla cattura.** Il testo è l'unica cosa
-   necessaria; tipo e appartenenza sono facoltativi e restano facoltativi. È il
-   primo principio del metodo, non una preferenza di interfaccia.
-2. **Non introdurre una chiamata di rete nel percorso del salvataggio.** Vale
-   ancora adesso che una chiamata di rete esiste: la sincronizzazione parte
-   **dopo** che la cattura è in `localStorage`, e se fallisce la cattura resta
-   «in attesa» e riparte al giro dopo. Il salvataggio non aspetta mai la rete.
-3. **Nessun segreto in questo repo.** Il token GitHub vive **solo** in
-   `GITHUB_TOKEN` fra le variabili d'ambiente di Netlify: mai nel dispositivo,
-   mai nel bundle, mai in un commit. Una chiave finita qui è pubblica per
-   sempre, anche dopo il commit che la toglie. Sul dispositivo c'è soltanto la
-   `CHIAVE_APP`, che apre l'aggiunta di file in `_inbox/` e nient'altro — e si
-   cambia in dieci secondi.
-4. **L'apertura atterra sul lampo.** Sempre, col fuoco già nel testo. L'archivio
-   esiste (→ `decisioni/2026-08-11-l-archivio-si-legge-e-si-riordina.md`, che
-   rovescia il vecchio divieto) ma costa un gesto in più, e non deve mai
-   diventare la schermata d'ingresso: lì muoiono i cinque secondi.
-5. **Nell'archivio non si modifica il testo di una cattura.** Tipo e progetto
-   sì — correggerli *è* smistamento. Il corpo no: è il confine oltre il quale
-   l'app comincia a competere con Claude Code.
-6. **Il contatore è sacro** e sta sempre in vista, in tutte e due le
-   impaginazioni. Conta ciò che **non è ancora nell'albero** — non il totale, e
-   non «quante ne ho scritte». Senza, la fiducia crolla in due settimane.
-7. **Il colore dice il tipo, e nient'altro.** Le sette coppie `--c-*` / `--f-*`
-   di `stile.css` — testo dell'etichetta e fondo del foglietto — non si usano
-   per stati, progetti o decorazione. Se si aggiunge un tipo gli si dà una
-   coppia lì; se si toglie una coppia, si toglie il tipo. L'acido è un'altra
-   cosa ancora: è **ciò che si tocca**, ed è l'unico accento. Il mono sta solo
-   dove c'è un dato — appena diventa la voce delle etichette, torna il tono da
-   rapporto tecnico che è stato tolto apposta.
-8. **Nessun webfont, e non è una svista.** I caratteri sono quelli di sistema:
-   un `@font-face` da un CDN sarebbe una dipendenza di rete e romperebbe
-   l'apertura da `file://`. La direzione chiede tipografia ordinaria proprio
-   per questo (→ `decisioni/2026-08-12-…`). Un carattere si aggiunge solo
-   mettendone il file nel repo.
+il testo della cattura
+```
 
-## Se il lavoro riguarda…
+**Nessun database, nessun account, e un solo pezzo di server** — il portiere, che
+esiste per tenere il token e nient'altro. I dati vivono nel browser del
+dispositivo finché non escono da una delle tre strade. Il contatore conta le
+catture che non sono ancora uscite.
 
-- **il metodo, dove va una cosa, una decisione** → `~/the-knowledge/METODO.md`
-- **l'ordine del repo** → skill `repo-in-ordine`
-- **il formato dei file dell'inbox** → `~/the-knowledge/METODO.md` §6, ed è la
-  sorgente di verità: se `ponte.js` e il metodo divergono, **vince il metodo**
+## Vincoli tecnici
+
+1. **Niente chiamate di rete nel percorso del salvataggio.** La sincronizzazione
+   parte **dopo** che la cattura è in `localStorage`; se fallisce, la cattura
+   resta «in attesa» e riparte al giro dopo. Il salvataggio non aspetta mai la
+   rete, o offline si perde tutto.
+2. **Nessun segreto in questo repo.** Il token GitHub vive **solo** in
+   `GITHUB_TOKEN` fra le variabili d'ambiente di Netlify. Una chiave finita qui è
+   pubblica per sempre, anche dopo il commit che la toglie. Sul dispositivo c'è
+   soltanto la `CHIAVE_APP`, che apre l'aggiunta di file in `_inbox/` e
+   nient'altro — e si cambia in dieci secondi.
+3. **Nessun webfont.** Un `@font-face` da un CDN è una dipendenza di rete e
+   rompe l'apertura da `file://`. Un carattere si aggiunge solo mettendone il
+   file nel repo.
+4. **Il testo di una cattura non si modifica nell'archivio.** Tipo e progetto sì.
+   Per il corpo non esiste un campo, ed è voluto.
+5. **`lavori.js` non riscrive mai un file intero.** Un `prossimi-passi.md` vero
+   ha dentro prosa, titoli e tabelle oltre alle caselle: rigenerarlo sarebbe il
+   modo più veloce di perdere qualcosa. Spuntare cambia un carattere della sua
+   riga, aggiungere inserisce una riga sola.
+6. **Ogni scrittura rilegge il file un istante prima.** Se l'hai toccato da
+   Claude Code mentre l'app era aperta, si lavora sulla versione vera.

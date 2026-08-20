@@ -117,7 +117,7 @@ la sorgente: se cambia il disegno si rigenerano con
 `rsvg-convert -w 180 -h 180 icona.svg -o icona-180.png`, non si ridisegnano.
 *(2026-08-10, chiusa il 2026-08-12)*
 
-**`contatto` è il settimo tipo, ed è in prova.** Sta nell'interfaccia (segnato
-con un punto) ma **non** in `METODO.md` §6, che di tipi ne ha sei. Non è una
-dimenticanza: non sale finché non dimostra di pesare. Se qualcuno allinea i due
-elenchi «per coerenza», rompe una decisione. *(2026-08-10)*
+**`contatto` è il settimo tipo, ed è in prova.** In `dati.js` è l'unico con
+`prova:true` — il CSS gli disegna un punto dopo l'etichetta — ed è l'unico il cui
+campo `dove` non nomina un file di destinazione. Non è una dimenticanza da
+correggere «per coerenza». *(2026-08-10)*

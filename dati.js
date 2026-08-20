@@ -19,14 +19,10 @@ const Dati = (() => {
   const CHIAVE_PROGETTI = 'the-office.progetti';
   const CHIAVE_IMPOST   = 'the-office.impostazioni';
 
-  /* I sei tipi di METODO.md §6, più `contatto` che è in prova: introdotto
-     parlando, non ha ancora una casa (le persone attraversano più progetti) e
-     non sale nel metodo finché non dimostra di pesare. Il punto dopo
-     l'etichetta lo segnala — allinearlo «per coerenza» rompe una decisione. */
-  /* `cosa` e `dove` sono copiati da METODO.md §6 e **quello è la sorgente di
-     verità**: se i due divergono si cambia qui, mai il metodo. `dove` non è un
-     dettaglio da spiegazione — è ciò che distingue davvero due tipi, perché
-     dice in che file finiranno dopo lo smistamento. */
+  /* Sette tipi. `contatto` è marcato `prova:true` e il CSS gli disegna un punto
+     dopo l'etichetta: è l'unico senza un file di destinazione.
+     `dove` non è testo di spiegazione — dice in che file finisce la cattura
+     dopo lo smistamento, ed è ciò che distingue davvero due tipi. */
   const TIPI = [
     { id:'idea',        prova:false, cosa:'qualcosa da fare o esplorare, non ancora valutato', dove:'note/, o promossa' },
     { id:'passo',       prova:false, cosa:'un\'azione concreta, definita',                     dove:'prossimi-passi.md' },
@@ -161,9 +157,9 @@ const Dati = (() => {
   function imposta(campi){ scriviChiave(CHIAVE_IMPOST, Object.assign(impostazioni(), campi)); }
 
   /* ── il riconoscitore ────────────────────────────────────────────────────
-     Una nota dettata comincia spesso con due parole che **sono già** i due assi
-     del metodo: «cantera idea», «enny-p riferimento». Riconoscerle è un
-     confronto fra parole, non un giudizio: **niente modello.** Un modello,
+     Una nota dettata comincia spesso col nome del progetto: «cantera, il menu
+     che cambia». Riconoscerlo è un confronto fra parole, non un giudizio:
+     **niente modello.** Un modello,
      anche piccolo, sarebbe decine di megabyte, romperebbe l'apertura da
      `file://` e il funzionamento offline, e sarebbe *probabilistico* dove qui
      la risposta è certa — i tipi sono sette e i progetti li conosciamo per
@@ -187,22 +183,19 @@ const Dati = (() => {
     if (!parole.length || parole.length > 5) return null;
 
     const nomiProgetti = progetti().map(p => p.id);
-    let tipo = '', dove = '', usate = 0;
+    let dove = '', usate = 0;
 
     for (const w of parole){
-      const t = TIPI.find(x => x.id === w
-        || (w.length > 3 && (x.id.startsWith(w) || w.startsWith(x.id))));
-      if (t && !tipo){ tipo = t.id; usate++; continue; }
       const pr = nomiProgetti.find(n => n === w || (w.length > 3 && n.startsWith(w)));
       if (pr && !dove){ dove = pr; usate++; continue; }
     }
 
-    if (!tipo && !dove) return null;
+    if (!dove) return null;
     /* La prima riga si toglie solo se **era soltanto** le etichette: se dentro
        c'è anche del pensiero, quel pensiero non si tocca. */
     const soloEtichette = usate === parole.length;
     return {
-      tipo, dove, prima,
+      dove, prima,
       resto: soloEtichette ? righe.slice(1).join('\n').replace(/^\n+/, '') : testo
     };
   }

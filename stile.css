@@ -248,7 +248,7 @@ main{ flex:1; min-height:0; display:flex; flex-direction:column; overflow:hidden
 
 /* ══ 01 · IL LAMPO ═════════════════════════════════════════════════════════
    Riceve il fuoco all'apertura. Nessun campo obbligatorio: si salva col solo
-   testo. (METODO §2, principio 1: la cattura non chiede permesso) */
+   testo. */
 .foglio{
   flex:1; min-height:132px; display:flex; flex-direction:column;
   background:var(--carta); border:1px solid var(--linea); border-radius:14px;
@@ -696,3 +696,93 @@ textarea::placeholder{ color:var(--tenue); opacity:.6 }
   .testata{ background:var(--fondo); backdrop-filter:none }
 }
 :focus-visible{ outline:2.5px solid var(--acc-ink); outline-offset:2px; border-radius:8px }
+
+/* ══ I LAVORI — commissioni e acquisti ═════════════════════════════════════
+   Le due sezioni che leggono file veri invece di localStorage. Stessa forma
+   per tutte e due: una scheda per gruppo, dentro righe con una casella.
+   L'acido resta ciò che si tocca: qui è la casella spuntata e nient'altro. */
+.lavori{ display:flex; flex-direction:column; gap:14px; padding-bottom:28px }
+
+.lavoro{
+  background:var(--carta);
+  border:1px solid var(--linea);
+  border-radius:14px;
+  padding:13px 14px 11px;
+}
+
+.lavoro-testa{
+  display:flex; align-items:baseline; gap:9px;
+  padding-bottom:9px; margin-bottom:7px;
+  border-bottom:1px solid var(--linea);
+}
+.lavoro-nome{
+  font-size:15px; font-weight:600; letter-spacing:-.012em;
+  color:var(--ink); flex:1; min-width:0;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+/* Il conto è un dato, quindi mono — è la sola cosa qui dentro che lo è. */
+.lavoro-conto{ font:12px var(--mono); color:var(--tenue); flex:none }
+.lavoro-stato{
+  font-size:11px; letter-spacing:.02em; color:var(--tenue);
+  border:1px solid var(--linea); border-radius:999px;
+  padding:1px 7px; flex:none;
+}
+.lavoro-stato[data-stato="attivo"]{ color:var(--ink-2); border-color:var(--linea-forte) }
+
+.lavoro-vuoto{ font-size:13.5px; color:var(--tenue); padding:3px 2px 7px }
+.lavoro-divisorio{
+  font-size:11px; letter-spacing:.04em; text-transform:lowercase;
+  color:var(--tenue); padding:10px 2px 4px;
+}
+
+/* ── una riga ──────────────────────────────────────────────────────────── */
+.voce-lavoro{
+  display:flex; align-items:flex-start; gap:9px;
+  padding:5px 0;
+  border-bottom:1px solid transparent;
+}
+.voce-lavoro:hover{ border-bottom-color:var(--linea) }
+
+.casella{
+  flex:none; width:19px; height:19px; margin-top:1px;
+  border:1.5px solid var(--linea-forte); border-radius:6px;
+  background:transparent; cursor:pointer; padding:0;
+  transition:background .14s var(--curva), border-color .14s var(--curva);
+}
+.casella:hover{ border-color:var(--ink-2) }
+.casella[aria-checked="true"]{
+  background:var(--acc); border-color:var(--acc);
+  /* il segno di spunta è disegnato, non un carattere: resta netto a ogni scala */
+  background-image:url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.6 8.4l2.9 2.9 5.9-6.2' fill='none' stroke='%2314140F' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:center; background-size:15px;
+}
+.casella:focus-visible{ outline:2px solid var(--acc); outline-offset:2px }
+
+.voce-lavoro-testo{
+  flex:1; min-width:0; font-size:14.5px; line-height:1.42;
+  color:var(--ink-2); word-break:break-word;
+  border-radius:5px; padding:1px 3px; margin:-1px -3px;
+}
+.voce-lavoro-testo:focus{
+  outline:none; background:var(--carta-2); color:var(--ink);
+}
+.voce-lavoro.fatta .voce-lavoro-testo{ color:var(--tenue); text-decoration:line-through }
+
+.voce-lavoro-togli{
+  flex:none; width:22px; height:22px; padding:0;
+  border:none; background:transparent; cursor:pointer;
+  color:var(--tenue); font-size:16px; line-height:1;
+  opacity:0; transition:opacity .14s var(--curva);
+}
+.voce-lavoro:hover .voce-lavoro-togli,
+.voce-lavoro-togli:focus-visible{ opacity:1 }
+.voce-lavoro-togli:hover{ color:var(--ink) }
+
+.riga-aggiungi-lavoro{ padding-top:10px }
+.riga-aggiungi-lavoro input{ font-size:14px }
+
+/* Col dito non c'è hover: il cestino sta sempre lì, e le righe respirano di più. */
+@media (hover:none){
+  .voce-lavoro-togli{ opacity:.55 }
+  .voce-lavoro{ padding:7px 0 }
+}

@@ -6,12 +6,12 @@
    scrive nel repo privato `the-knowledge`. Il telefono non lo vede mai.
 
    È deliberatamente stupido: **non conosce il formato di una cattura.** Riceve
-   un percorso e un contenuto già composti dall'app e li scrive. La forma dei
-   file dell'inbox la comanda `METODO.md` §6 e la costruisce `ponte.js`, in un
-   posto solo — se il formato vivesse anche qui, due copie divergerebbero.
+   un percorso e un contenuto già composti dall'app e li scrive. Il formato lo
+   costruisce `ponte.js`, in un posto solo — se vivesse anche qui, due copie
+   divergerebbero.
 
-   Ed è deliberatamente corto. Il piano B (`prossimi-passi.md`) è spostarlo su
-   una macchina Oracle se Netlify sparisce: resta trasportabile in un pomeriggio
+   Ed è deliberatamente corto. Il piano B, se Netlify sparisce, è spostarlo su
+   una macchina Oracle: resta trasportabile in un pomeriggio
    finché non ha dipendenze e sta sotto un centinaio di righe. Se un giorno
    servisse un `package.json`, il piano B è già morto senza che nessuno lo dica.
    ═══════════════════════════════════════════════════════════════════════ */

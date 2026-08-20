@@ -1,13 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    L'ARCHIVIO — si legge e si riordina, non si riscrive.
 
-   Questa schermata **rovescia una decisione scritta** («un canale di cattura
-   scrive solo», nodo → *Deciso*). Il perché sta in
-   `decisioni/2026-08-11-l-archivio-si-legge-e-si-riordina.md`, e il confine che
-   la tiene onesta è questo: qui si può cambiare **l'etichetta** di una cattura
-   — il tipo, il progetto — e si può cancellarla. Il **testo non si modifica**.
-   Correggere un'etichetta è smistamento; riscrivere il pensiero è ragionare, e
-   il nodo dichiara che l'app non deve diventare il posto dove si ragiona.
+   Qui si cambia il **progetto** di una cattura, e si può cancellarla. Il **testo non si modifica**: non esiste un campo per farlo,
+   ed è voluto.
 
    La cattura resta comunque la schermata che si apre: l'archivio sta dietro il
    menu, dove non si finisce per sbaglio.
@@ -17,7 +12,6 @@ const Archivio = (() => {
 
   const $ = (id) => document.getElementById(id);
   let cerca = '';
-  const tipiScelti = new Set();
 
   const MESI = ['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
   function quando(iso){
@@ -26,24 +20,7 @@ const Archivio = (() => {
     return d.getDate() + ' ' + MESI[d.getMonth()] + ' · ' + p(d.getHours()) + ':' + p(d.getMinutes());
   }
 
-  function disegnaFiltri(){
-    const casa = $('filtri-tipo');
-    casa.innerHTML = '';
-    Dati.TIPI.forEach(t => {
-      const b = document.createElement('button');
-      b.type = 'button'; b.className = 'filtro'; b.textContent = t.id;
-      b.dataset.tipo = t.id;
-      b.setAttribute('aria-pressed', String(tipiScelti.has(t.id)));
-      b.addEventListener('click', () => {
-        tipiScelti.has(t.id) ? tipiScelti.delete(t.id) : tipiScelti.add(t.id);
-        disegnaFiltri(); disegna();
-      });
-      casa.appendChild(b);
-    });
-  }
-
   function passa(r){
-    if (tipiScelti.size && !tipiScelti.has(r.tipo)) return false;
     if (!cerca) return true;
     const q = cerca.toLowerCase();
     return r.testo.toLowerCase().includes(q)
@@ -104,15 +81,6 @@ const Archivio = (() => {
     const azioni = document.createElement('div');
     azioni.className = 'cattura-azioni'; azioni.hidden = true;
 
-    const selTipo = document.createElement('select');
-    selTipo.setAttribute('aria-label','Tipo');
-    selTipo.appendChild(new Option('— tipo —',''));
-    Dati.TIPI.forEach(x => selTipo.appendChild(new Option(x.id, x.id)));
-    selTipo.value = r.tipo || '';
-    selTipo.addEventListener('change', () => {
-      Dati.rietichetta(r.id, { tipo: selTipo.value }); App.aggiorna();
-    });
-
     const selDove = document.createElement('select');
     selDove.setAttribute('aria-label','Progetto');
     selDove.appendChild(new Option('— senza progetto —',''));
@@ -135,7 +103,7 @@ const Archivio = (() => {
       }
     });
 
-    azioni.append(selTipo, selDove, togli);
+    azioni.append(selDove, togli);
     el.appendChild(azioni);
 
     apri.addEventListener('click', () => { azioni.hidden = !azioni.hidden; });
@@ -183,7 +151,6 @@ const Archivio = (() => {
   }
 
   function avvia(){
-    disegnaFiltri();
     $('cerca').addEventListener('input', (e) => { cerca = e.target.value.trim(); disegna(); });
   }
 

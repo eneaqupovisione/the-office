@@ -1,11 +1,12 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   IL LAMPO — la schermata che si apre, e l'unica che conta davvero.
+   LE IDEE — la schermata che si apre, e l'unica che conta davvero.
 
-   Obiettivo unico: dal pensiero al testo salvato in meno di cinque secondi e
-   **nessuna decisione obbligatoria** (METODO §1). Tutto ciò che sta qui sotto
-   è facoltativo tranne il testo; se un giorno qualcosa diventasse obbligatorio,
-   sarebbe una rottura del primo principio del metodo, non un dettaglio di
-   interfaccia.
+   Si scrive e basta. **Nessuna griglia di tipi**: al momento del lampo l'unica
+   cosa che sai e che un agente non può dedurre è di che progetto si tratta, ed
+   è l'unico campo rimasto. Che genere di cosa sia lo decide lo smistamento.
+
+   Tutto ciò che sta qui sotto è facoltativo tranne il testo: `Dati.aggiungi()`
+   rifiuta la cattura vuota e nient'altro.
    ═══════════════════════════════════════════════════════════════════════ */
 
 const Cattura = (() => {
@@ -13,7 +14,6 @@ const Cattura = (() => {
   const $ = (id) => document.getElementById(id);
   const testo = $('testo'), dove = $('dove'), salva = $('salva');
 
-  let tipoScelto = null;
   let formaScelta = null;
   let inAllegato = [];        // scelti e non ancora salvati
 
@@ -26,79 +26,6 @@ const Cattura = (() => {
       ? 'nuova cattura'
       : '_inbox/' + Dati.orario(new Date()) + '.md';
     $('stato-file').textContent = stato || (vuoto ? 'vuota' : 'non salvata');
-  }
-
-  /* ── che differenza c'è fra i tipi ───────────────────────────────────────
-     Due modi di leggerlo, e nessuno dei due costa un gesto in più al lampo:
-     la riga sotto la griglia spiega **il tipo scelto** mentre lo scegli, e
-     «che differenza c'è?» apre l'elenco intero per quando lo stai imparando.
-     La differenza vera fra due tipi non è la definizione: è **dove finiscono**
-     dopo lo smistamento, e infatti è scritto lì accanto. */
-  function disegnaSpiegazione(){
-    const el = $('spiega-tipo');
-    const t = Dati.TIPI.find(x => x.id === tipoScelto);
-    if (!t){ el.textContent = ''; el.removeAttribute('data-tipo'); return; }
-    el.dataset.tipo = t.id;
-    el.innerHTML = '';
-    const cosa = document.createElement('span');
-    cosa.textContent = t.cosa;
-    const dove = document.createElement('span');
-    dove.className = 'spiega-dove';
-    dove.textContent = '→ ' + t.dove;
-    el.append(cosa, dove);
-  }
-
-  function disegnaLegenda(){
-    const casa = $('legenda');
-    casa.innerHTML = '';
-    Dati.TIPI.forEach(t => {
-      const r = document.createElement('div');
-      r.className = 'voce-legenda';
-      r.dataset.tipo = t.id;
-      const n = document.createElement('span'); n.className = 'voce-legenda-nome'; n.textContent = t.id;
-      const c = document.createElement('span'); c.className = 'voce-legenda-cosa'; c.textContent = t.cosa;
-      const d = document.createElement('span'); d.className = 'voce-legenda-dove'; d.textContent = t.dove;
-      r.append(n, c, d);
-      casa.appendChild(r);
-    });
-    const nota = document.createElement('p');
-    nota.className = 'nota-campo';
-    nota.textContent = 'Sono i sei tipi di METODO.md §6, più contatto che è in prova. '
-      + 'Sono pochi apposta: davanti a dodici pulsanti la scelta diventa l\'attrito che il sistema doveva togliere.';
-    casa.appendChild(nota);
-  }
-
-  /* ── le caselle del tipo ───────────────────────────────────────────────
-     Il tipo prima del progetto: nel momento del lampo so quasi sempre *che
-     genere di cosa* è, non ancora dove va. */
-  /* Un solo punto per scegliere un tipo: lo usano le caselle e il
-     riconoscitore, così non possono divergere. `null` lo toglie — niente è
-     obbligatorio. */
-  function scegliTipo(id){
-    tipoScelto = id || null;
-    document.querySelectorAll('#tipi .tipo').forEach(x =>
-      x.setAttribute('aria-pressed', String(x.dataset.tipo === tipoScelto)));
-    salva.dataset.tipo = tipoScelto || '';
-    disegnaSpiegazione();
-  }
-
-  function disegnaTipi(){
-    const casa = $('tipi');
-    casa.innerHTML = '';
-    Dati.TIPI.forEach(t => {
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'tipo' + (t.prova ? ' prova' : '');
-      b.dataset.tipo = t.id;        // il colore del foglietto glielo dà il CSS
-      b.textContent = t.id;
-      b.title = t.cosa;
-      b.setAttribute('aria-pressed', String(tipoScelto === t.id));
-      b.addEventListener('click', () => {
-        scegliTipo(tipoScelto === t.id ? null : t.id);
-        testo.focus();                       // il fuoco torna sempre al lampo
-      });
-      casa.appendChild(b);
-    });
   }
 
   /* ── gli allegati ────────────────────────────────────────────────────────
@@ -151,26 +78,18 @@ const Cattura = (() => {
     casa.innerHTML = '';
     const r = riconoscimentoIgnorato ? null : Dati.riconosci(testo.value);
     /* Non propone quello che hai già scelto a mano: sarebbe rumore. */
-    const utile = r && ((r.tipo && r.tipo !== tipoScelto) || (r.dove && r.dove !== dove.value.trim()));
+    const utile = r && r.dove && r.dove !== dove.value.trim();
     casa.hidden = !utile;
     if (!utile) return;
 
     const eti = document.createElement('span');
     eti.className = 'capito-testo';
     eti.append(document.createTextNode('ho letto '));
-    if (r.tipo){
-      const t = document.createElement('strong'); t.dataset.tipo = r.tipo;
-      t.className = 'capito-tipo'; t.textContent = r.tipo; eti.appendChild(t);
-    }
-    if (r.tipo && r.dove) eti.append(document.createTextNode(' per '));
-    if (r.dove){
-      const p = document.createElement('strong'); p.textContent = r.dove; eti.appendChild(p);
-    }
+    const p = document.createElement('strong'); p.textContent = r.dove; eti.appendChild(p);
 
     const usa = document.createElement('button');
     usa.type = 'button'; usa.className = 'capito-usa'; usa.textContent = 'usa';
     usa.addEventListener('click', () => {
-      if (r.tipo) scegliTipo(r.tipo);
       if (r.dove) dove.value = r.dove;
       if (r.resto !== testo.value){ testo.value = r.resto; aggiornaSalva(); aggiornaFinestra(); }
       disegnaProgetti(); disegnaCapito(); testo.focus();
@@ -270,7 +189,7 @@ const Cattura = (() => {
 
   /* ── salvare ─────────────────────────────────────────────────────────── */
   async function salvaCattura(){
-    const r = Dati.aggiungi({ testo: testo.value, tipo: tipoScelto, dove: dove.value });
+    const r = Dati.aggiungi({ testo: testo.value, dove: dove.value });
     if (!r){
       if (testo.value.trim()) App.conferma('memoria piena: esporta e svuota', true);
       return;                                    // testo vuoto: non è un errore
@@ -287,9 +206,9 @@ const Cattura = (() => {
     }
 
     testo.value = '';
-    /* Il tipo e l'appartenenza RESTANO: capita spesso di catturare due cose di
-       fila sullo stesso progetto, e ributtarli ogni volta è attrito che si paga
-       a ogni singola cattura. */
+    /* L'appartenenza RESTA: capita spesso di catturare due cose di fila sullo
+       stesso progetto, e ributtarla ogni volta è attrito che si paga a ogni
+       singola cattura. */
     riconoscimentoIgnorato = false;
     aggiornaSalva();
     disegnaCapito();
@@ -326,9 +245,6 @@ const Cattura = (() => {
   function aggiornaSalva(){ salva.disabled = testo.value.trim() === ''; }
 
   function avvia(){
-    disegnaTipi();
-    disegnaLegenda();
-    disegnaSpiegazione();
     disegnaForme();
     disegnaProgetti();
     disegnaAllegati();
@@ -337,13 +253,6 @@ const Cattura = (() => {
     $('allega').addEventListener('click', () => $('scegli-file').click());
     $('scegli-file').addEventListener('change', scegliFile);
 
-    $('apri-legenda').addEventListener('click', () => {
-      const b = $('apri-legenda'), l = $('legenda');
-      const aperta = l.hidden;
-      l.hidden = !aperta;
-      b.setAttribute('aria-expanded', String(aperta));
-      b.textContent = aperta ? 'chiudi' : 'che differenza c\'è?';
-    });
     aggiornaSalva();
     aggiornaFinestra();
 

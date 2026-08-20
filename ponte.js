@@ -25,13 +25,14 @@
       configurato. Un file solo con dentro tutti i blocchi, perché i browser
       bloccano i download multipli.
 
-   Il formato del file è quello di `METODO.md` §6, ed è **il metodo a comandare**:
-   se un giorno i due divergono, si cambia questo file, non il metodo.
+   Il formato del `.md` che esce da qui lo costruisce `testa()`, qui sotto:
+   frontmatter con `tipo` / `progetto` / `origine` / `stato` / `allegati`, riga
+   vuota, poi il testo della cattura.
    ═══════════════════════════════════════════════════════════════════════ */
 
 const Ponte = (() => {
 
-  /* ── il formato dell'inbox (METODO §6) ───────────────────────────────── */
+  /* ── il formato del file in `_inbox/` ───────────────────────────────── */
   function testa(r, allegati){
     const righe = ['---'];
     if (r.tipo) righe.push('tipo: ' + r.tipo);
@@ -223,9 +224,7 @@ const Ponte = (() => {
 
   /* ── la casella del progetto ─────────────────────────────────────────────
      Una cattura con un'appartenenza atterra in `_inbox/<progetto>/`, non nel
-     mucchio. **Resta `da-smistare`**: la sottocartella divide, non promuove —
-     nei file strutturati ci si entra solo dopo lo smistamento (METODO §6, «la
-     casella non è la destinazione»).
+     mucchio. **Resta `da-smistare`**: la sottocartella divide, non promuove.
 
      Il vantaggio non è l'ordine per l'ordine: è che la **radice** di `_inbox/`
      diventa da sola l'elenco di ciò che non ha ancora un'appartenenza, e che
@@ -263,8 +262,8 @@ const Ponte = (() => {
     return trovati;
   }
 
-  /* Che oggetto è un progetto, letto dal campo `forma:` nella sua intestazione
-     (METODO §5). Non lo si indovina dal nome né dal dominio: se il nodo non lo
+  /* Che oggetto è un progetto, letto dal campo `forma:` nel frontmatter del suo
+     `README.md`. Non lo si indovina dal nome né dalla cartella: se il file non lo
      dichiara, il progetto non ha forma — ed è un'informazione, non un errore. */
   async function formaDi(dirProgetto){
     try{
@@ -343,9 +342,9 @@ const Ponte = (() => {
     } catch (e) { return false; }
   }
 
-  /* Gli allegati vanno in `_inbox/media/`, che è la destinazione che il metodo
-     prevede già per i riferimenti (METODO §6). Escono da IndexedDB e non ci
-     tornano: da quel momento vivono nell'albero, come devono. */
+  /* Gli allegati vanno in `_inbox/media/`, e la riga `allegati:` del frontmatter
+     è ciò che li tiene legati alla loro nota. Escono da IndexedDB e non ci
+     tornano: da quel momento il file vive su disco. */
   async function scriviAllegati(dir, r){
     if (typeof Media === 'undefined') return [];
     let allegati = [];
@@ -378,11 +377,71 @@ const Ponte = (() => {
     return { scritte, errori };
   }
 
+  /* ── leggere e scrivere nell'albero ──────────────────────────────────────
+     Fin qui il ponte sapeva solo **depositare** in `_inbox/`. Commissioni e
+     acquisti hanno bisogno dell'altra metà: aprire un file che esiste già,
+     cambiarlo e riscriverlo. Vale solo con la **radice** collegata — da
+     `_inbox` non si risale, e queste funzioni restituiscono `null` invece di
+     fingere. */
+  function pezzi(percorso){
+    return String(percorso || '').split('/').filter(Boolean);
+  }
+
+  async function dirDa(parti, crea){
+    let d = cartella;
+    for (const nome of parti) d = await d.getDirectoryHandle(nome, { create: !!crea });
+    return d;
+  }
+
+  /* `null` = non leggibile (albero non collegato, o file inesistente). Chi
+     chiama distingue i due casi con `vedeLAlbero()`. */
+  async function leggiTesto(percorso){
+    if (!cartella || cartella.name === '_inbox') return null;
+    const parti = pezzi(percorso);
+    const nomeFile = parti.pop();
+    try{
+      const d = await dirDa(parti, false);
+      const f = await d.getFileHandle(nomeFile);
+      return await (await f.getFile()).text();
+    } catch (e) { return null; }
+  }
+
+  async function scriviTesto(percorso, testo){
+    if (!cartella || cartella.name === '_inbox') return false;
+    const parti = pezzi(percorso);
+    const nomeFile = parti.pop();
+    try{
+      const d = await dirDa(parti, true);
+      const f = await d.getFileHandle(nomeFile, { create:true });
+      const w = await f.createWritable();
+      await w.write(testo);
+      await w.close();
+      return true;
+    } catch (e) { return false; }
+  }
+
+  /* I nomi delle cartelle dentro un dominio (`clienti`, `prodotti`, …). Serve
+     a Commissioni, che è la vista su `clienti/`. */
+  async function cartelleIn(dominio){
+    if (!cartella || cartella.name === '_inbox') return null;
+    try{
+      const d = await cartella.getDirectoryHandle(dominio);
+      const nomi = [];
+      for await (const [nome, h] of d.entries()){
+        if (h.kind !== 'directory') continue;
+        if (nome.startsWith('.') || nome.startsWith('_')) continue;
+        nomi.push(nome);
+      }
+      return nomi.sort();
+    } catch (e) { return []; }
+  }
+
   return {
     corpo, componiEsportazione, scarica, nomiUnici,
     possibile, riprendi, collega, riprova, scollega, collegata, nomeCartella,
     scriviUna, scriviTutte, progettiVeri,
     chiaveApp, impostaChiave, sincronizzabile, sincronizzaUna, sincronizzaTutte,
-    vedeLAlbero: () => !!cartella && cartella.name !== '_inbox'
+    vedeLAlbero: () => !!cartella && cartella.name !== '_inbox',
+    leggiTesto, scriviTesto, cartelleIn
   };
 })();

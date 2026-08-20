@@ -1,21 +1,33 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    THE OFFICE — l'avvio, la navigazione, il contatore.
 
-   Quattro sezioni, e una sola è il motivo per cui l'app esiste: **la cattura si
-   apre per prima e riceve il fuoco**. Archivio, progetti e impostazioni stanno
-   dietro il menu, dove non ci si finisce per sbaglio. Se un giorno l'apertura
-   non dovesse più atterrare sul lampo, sarebbe una regressione del progetto
-   intero, non un cambio di navigazione.
+   Sei sezioni, e una sola riceve il fuoco all'apertura: **le idee**. Tutto il
+   resto sta dietro il menu, dove non ci si finisce per sbaglio.
+
+   Due famiglie, e si comportano diversamente. Idee e archivio vivono in
+   `localStorage`: si ridisegnano a ogni `aggiorna()`, costano niente.
+   Commissioni e acquisti leggono file veri dal disco: si ridisegnano solo
+   quando ci si entra.
    ═══════════════════════════════════════════════════════════════════════ */
 
 const App = (() => {
 
   const $ = (id) => document.getElementById(id);
   const SEZIONI = {
-    cattura:      'Cattura',
+    cattura:      'Idee',
     archivio:     'Archivio',
+    commissioni:  'Commissioni',
+    acquisti:     'Acquisti',
     progetti:     'Progetti',
     impostazioni: 'Impostazioni'
+  };
+
+  /* Commissioni e acquisti leggono file dal disco: si ridisegnano quando ci si
+     entra, non a ogni `aggiorna()`. Leggere venti file a ogni cattura salvata
+     sarebbe lavoro sprecato in una sezione che non si sta guardando. */
+  const DA_LEGGERE = {
+    commissioni: () => Agenda.disegnaCommissioni(),
+    acquisti:    () => Agenda.disegnaAcquisti()
   };
   let sezione = 'cattura';
 
@@ -37,6 +49,7 @@ const App = (() => {
     /* Il fuoco torna al lampo ogni volta che si atterra sulla cattura — su
        telefono no: aprirebbe la tastiera addosso a chi sta solo navigando. */
     if (nome === 'cattura' && window.innerWidth >= 900) Cattura.fuoco();
+    if (DA_LEGGERE[nome]) DA_LEGGERE[nome]();
   }
 
   /* ── il menu laterale ────────────────────────────────────────────────────
@@ -169,6 +182,7 @@ const App = (() => {
 
     Cattura.avvia();
     Archivio.avvia();
+    Agenda.avvia();
     Progetti.avvia();
     Impostazioni.avvia();          // asincrona: chiama aggiorna() quando ha finito
 
