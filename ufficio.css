@@ -12,32 +12,17 @@
 
    Nessun webfont e nessuna decorazione, come nell'altra: se un elemento non
    porta un'informazione o non si tocca, non c'è.
-   ═══════════════════════════════════════════════════════════════════════ */
 
-body{
-  --fondo:#F3F1EA; --carta:#FDFCF9; --carta-2:#EBE9E1;
-  --ink:#14140F; --ink-2:#46453D; --tenue:#706E67;
-  --linea:rgba(20,20,15,.09); --linea-forte:rgba(20,20,15,.17);
-  --acc:#EDE93C; --acc-ink:#5E5900; --acc-tenue:rgba(224,219,60,.30);
-  --su-acc:#14140F; --acc-forte:#E2DD1C;
-  --male:#C2352A; --ok:#2E7548;
-  --ombra-1:0 1px 2px rgba(16,16,22,.05);
-  --ombra-2:0 1px 3px rgba(16,16,22,.06), 0 10px 28px -14px rgba(16,16,22,.22);
-  color-scheme:light;
-}
-@media (prefers-color-scheme: dark){
-  body{
-    --fondo:#100F0C; --carta:#1A1915; --carta-2:#24231E;
-    --ink:#F4F2E9; --ink-2:#C7C4B7; --tenue:#8C8A7E;
-    --linea:rgba(244,242,233,.10); --linea-forte:rgba(244,242,233,.19);
-    --acc:#EDE93C; --acc-ink:#E4DF66; --acc-tenue:rgba(237,233,60,.16);
-    --su-acc:#14140F; --acc-forte:#F5F158;
-    --male:#E3705F; --ok:#63B981;
-    --ombra-1:0 1px 2px rgba(0,0,0,.4);
-    --ombra-2:0 1px 3px rgba(0,0,0,.5), 0 12px 30px -16px rgba(0,0,0,.8);
-    color-scheme:dark;
-  }
-}
+   ## Le variabili non stanno qui, e c'è un perché
+
+   I colori e le misure vivono in un `:root` dentro `ufficio.html`, **dopo**
+   il collegamento a questo foglio. Non è disordine: è l'unico posto in cui
+   `~/Attrezzi/studio-web` le sa leggere e riscrivere — le cerca con una
+   regex su `:root` nel testo della pagina, e le regole che generi toccando
+   il sito le appende all'ultimo `<style>`. Stando dopo questo file, vincono.
+
+   Qui dentro si scrivono solo regole, e sempre in termini di `var(--...)`.
+   ═══════════════════════════════════════════════════════════════════════ */
 
 *{ box-sizing:border-box; }
 html,body{ margin:0; padding:0; }

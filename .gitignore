@@ -3,3 +3,7 @@ node_modules/
 # Il file d'icona di una cartella su macOS: si chiama "Icon" con un ritorno a
 # capo in fondo, non e' contenuto e non deve viaggiare col repo.
 Icon?
+# Le copie di sicurezza che lascia ~/Attrezzi/studio-web a ogni salvataggio,
+# e la sua cassetta della posta: servono sul disco, non nella storia.
+*.bak
+.studio/

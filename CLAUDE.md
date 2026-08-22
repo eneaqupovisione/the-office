@@ -112,6 +112,35 @@ perdere la data» è una risposta legittima che costa un tocco. Un'app che ti
 mette in mora è un'app che smetti di aprire, che è il modo in cui uno strumento
 contro l'abbandono viene abbandonato.
 
+## Toccare l'interfaccia invece di descriverla
+
+La struttura sta in cima a `ufficio.js` come **dato**, non sparsa nelle
+funzioni: `SEZIONI`, `SCHEDA`, `MOSSA`, `MOSSA_TESTO`, `RIGA`. Ogni nome è la
+chiave di un registro — `PEZZI`, `PARTE_MOSSA`, `PARTE_RIGA` — e ogni pezzo è
+una funzione che riceve il contesto e restituisce un nodo, o `null` se non ha
+niente da dire. **Un nome che non esiste viene saltato**: si toglie un pezzo
+commentandolo.
+
+Spostare le idee sotto le cose da fare, invertire il verso di una riga della
+Bacheca, togliere una sezione: è cambiare una riga lassù. Serve a Enea per
+riorganizzare senza passare da me, e serve perché **nessun editor visuale può
+salvare uno spostamento se la struttura vive dentro le funzioni** — non
+esisterebbe un posto in cui scriverlo.
+
+E l'aspetto si tocca con `~/Attrezzi/studio-web`:
+
+```bash
+node ~/Attrezzi/studio-web/studio.mjs "~/Lavori/the-office" ufficio.html?prova
+```
+
+Il `?prova` non è un dettaglio: senza, dentro lo studio l'app chiederebbe una
+cartella al browser invece di lasciarsi guardare. Da lì si toccano colori,
+misure, caratteri e spaziature, e **salva** riscrive `ufficio.html` lasciando
+una copia datata.
+
+Lo studio **non sposta e non riordina** — per quello ci sono le liste. E i
+`.bak` che lascia stanno nel `.gitignore`.
+
 ## Il colore dice l'appartenenza
 
 Una tinta per **cartella di lavoro**, e ogni progetto dentro una gradazione
