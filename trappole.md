@@ -7,6 +7,31 @@ La più recente in alto.
 
 ---
 
+**«Porta diversa» non basta a scappare dal guscio.** L'ufficio nuovo gira su
+`localhost:8010` proprio per non ereditare il service worker registrato su
+`:8000`. Ma su 8010 il server serve la cartella intera, e `/` senza nome di
+file dà `index.html` — cioè **la vecchia app**, che a quel punto registra il suo
+guscio anche lì. Da quel momento `:8010/` serve `index.html` dalla cache
+`the-office-v12` per sempre, e ci si ritrova a guardare la vecchia app credendo
+di guardare la nuova: le sezioni ci sono tutte e sono tutte vuote, che è
+esattamente l'aspetto di un'app rotta.
+
+Peggio: il reindirizzamento messo dentro `index.html` per rimediare **non parte
+neanche**, perché arriva dalla cache anche lui. Un rimedio che vive dentro il
+file che il guscio ha congelato non è un rimedio.
+
+Oggi quello script, oltre a reindirizzare, **smonta il guscio e svuota le
+cache** — così una registrazione vecchia si cura da sola al primo caricamento
+che riesce a passare. Ma se «non si aggiorna» resta il primo sospetto:
+
+```js
+navigator.serviceWorker.getRegistrations().then(r => r.forEach(x => x.unregister()))
+caches.keys().then(k => k.forEach(x => caches.delete(x)))
+```
+
+La regola vera non è «cambia porta»: è **non lasciare due app raggiungibili
+dalla stessa origine**. *(2026-08-21)*
+
 **Da adesso l'albero cambia anche quando tu non lo tocchi.** Con la
 sincronizzazione attiva, una cattura fatta dal telefono finisce nel repo **su
 GitHub** — non nel `~/the-knowledge` che hai sul Mac. Il locale non lo sa

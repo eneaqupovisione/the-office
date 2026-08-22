@@ -4,6 +4,26 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
 <title>The Office</title>
+<!-- La porta 8010 è quella dell'ufficio nuovo, e lì `/` serve questo file
+     perché si chiama index.html: ci si finisce dentro per sbaglio e si guarda
+     la vecchia app credendo di guardare la nuova (successo il 2026-08-21).
+
+     Si smonta anche il guscio, e non è per scrupolo: aprendo 8010 questa
+     pagina ci ha registrato il suo service worker, e da quel momento la porta
+     serviva `index.html` dalla cache — compreso questo commento, che quindi
+     non arrivava mai. Un reindirizzamento che vive dentro il file che la cache
+     ha congelato non serve a niente: prima si toglie la cache.
+
+     Solo in locale e solo su quella porta. Su Netlify e su 8000 non fa nulla. -->
+<script>
+if (location.port === '8010'){
+  if (navigator.serviceWorker)
+    navigator.serviceWorker.getRegistrations().then(r => r.forEach(x => x.unregister()));
+  if (window.caches)
+    caches.keys().then(k => k.forEach(x => caches.delete(x)));
+  location.replace('ufficio.html?prova');
+}
+</script>
 <meta name="description" content="Dal pensiero al testo salvato in meno di cinque secondi."/>
 <meta name="theme-color" content="#F6F6F8"/>
 <link rel="manifest" href="manifest.webmanifest"/>
