@@ -1,2 +1,5 @@
 .DS_Store
 node_modules/
+# Il file d'icona di una cartella su macOS: si chiama "Icon" con un ritorno a
+# capo in fondo, non e' contenuto e non deve viaggiare col repo.
+Icon?

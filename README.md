@@ -1,12 +1,33 @@
 # The Office
 
+> **Sta cambiando mestiere.** Dal 2026-08-21 The Office non è più «cattura
+> testo in fretta»: è **l'organizzazione dei progetti**, e vive in
+> `ufficio.html`. Serve a tre cose precise — non perdere un progetto sotto gli
+> altri, avere una ragione per riprenderlo, e ritrovare le belle idee che ci
+> si era dimenticati di aver avuto.
+>
+> ```bash
+> cd ~/Lavori/the-office && python3 -m http.server 8010
+> ```
+>
+> poi `http://localhost:8010/` — che porta all'ufficio nuovo. Per provarlo su
+> un disco finto, senza toccare nessun file vero e da qualunque browser
+> (Safari compreso): `http://localhost:8010/ufficio.html?prova`.
+>
+> La planimetria sta in [`CLAUDE.md`](CLAUDE.md). **Quello che segue descrive
+> l'app vecchia**, che è ancora intera e ancora in linea, e si spegne quando le
+> catture rimaste sul telefono saranno state esportate.
+
+---
+
 Cattura testo in fretta, da telefono e da computer, e lo fa uscire come file
-`.md` veri in `~/the-knowledge/_inbox/`.
+`.md` veri in `~/the-knowledge/_inbox/` — un albero che **dal 2026-08-21 non
+esiste più** sul disco: resta solo il repo privato omonimo su GitHub.
 
 ## Provarla, adesso
 
 ```bash
-open ~/Desktop/Personale/Progetti/the-office/index.html
+open ~/Lavori/the-office/index.html
 ```
 
 Non serve nient'altro: nessun `npm`, nessuna costruzione, nessun account. Si apre
@@ -18,7 +39,7 @@ fuoco all'apertura, e nessun altro campo è obbligatorio.
 Per la **cartella collegata** (sotto) serve `localhost` invece del file:
 
 ```bash
-cd ~/Desktop/Personale/Progetti/the-office && python3 -m http.server 8000
+cd ~/Lavori/the-office && python3 -m http.server 8000
 ```
 
 poi `http://localhost:8000`.
