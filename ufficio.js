@@ -45,6 +45,56 @@ const Ufficio = (() => {
      sarebbe la cosa meno utile possibile. */
   const GIORNI_VIVI = 14, MINIMO_IN_BACHECA = 3;
 
+  /* ═══ L'ORDINE DELLE COSE ═════════════════════════════════════════════════
+
+     Qui sotto c'è la **struttura dell'interfaccia, scritta come dato** invece
+     che sparsa dentro il corpo delle funzioni. Spostare un blocco più in su,
+     toglierne uno, cambiare cosa si legge per primo su una riga: è cambiare
+     una riga qui.
+
+     Non è ordine per il gusto dell'ordine. Serve a due cose precise:
+
+     1. **A te**, per riorganizzare senza passare da me. Le parole che servono
+        a dirmi «sposta le idee sotto le cose da fare» costano più del farlo.
+     2. **A uno strumento visuale.** Finché la struttura vive dentro le
+        funzioni, nessun editor può salvarti uno spostamento: non esiste un
+        posto in cui scriverlo. Una lista, invece, si riscrive.
+
+     I nomi sono le chiavi dei registri più sotto — `PEZZI` per la scheda,
+     `PARTE_RIGA` e `PARTE_MOSSA` per le righe. **Un nome che non esiste viene
+     saltato**, non rompe niente: si può togliere un pezzo commentandolo. */
+
+  /* Le sezioni, nell'ordine in cui compaiono in alto. */
+  const SEZIONI = [
+    { id: 'bacheca',   titolo: 'Bacheca'   },
+    { id: 'scrivania', titolo: 'Scrivania' },
+    { id: 'rubrica',   titolo: 'Rubrica'   }
+  ];
+
+  /* La scheda di un progetto, dall'alto in basso. */
+  const SCHEDA = [
+    'testa',         // il nome, e da quanto tace
+    'proponi',       // «questa cartella non è ancora un progetto»
+    'patto',         // per chi · entro il —, e il tasto modifica
+    'impostazioni',  // il pannello, quando è aperto
+    'avviso',        // chiuso, oppure la data passata
+    'perche',        // la prima cosa che leggi tornando dopo mesi
+    'idee',
+    'daFare',
+    'fatte',
+    'figli',         // le cartelle qui dentro, da promuovere
+    'altrove'        // le caselle che vivono negli altri file
+  ];
+
+  /* Una riga della Bacheca: prima **la cosa da fare**, e il nome del lavoro
+     sotto e piccolo. Il verso conta — al contrario torna a essere un elenco
+     di progetti, che è esattamente quello che la Bacheca non deve essere. */
+  const MOSSA       = ['spunta', 'testo', 'scadenza', 'silenzio', 'freccia'];
+  const MOSSA_TESTO = ['cosa', 'chi'];
+
+  /* Una riga di Scrivania e Rubrica. */
+  const RIGA = ['nome', 'dentro', 'conti', 'scadenza', 'silenzio', 'freccia'];
+
   let lavori = null;                 // lo scandaglio
   let aperto = null;                 // { p, md, altrove }
   let sezione = localStorage.getItem('ufficio.sezione') || 'bacheca';
@@ -215,14 +265,19 @@ const Ufficio = (() => {
   /* ── l'avvio ─────────────────────────────────────────────────────────── */
 
   async function avvia(){
-    $('sezioni').querySelectorAll('button').forEach(b => {
+    /* Il menu lo costruisce `SEZIONI`, non l'HTML: aggiungerne una, toglierla
+       o cambiarle nome e' una riga in cima al file. */
+    $('sezioni').replaceChildren(...SEZIONI.map(({ id, titolo }) => {
+      const b = el('button', null, titolo);
+      b.dataset.sezione = id;
       b.addEventListener('click', () => {
-        sezione = b.dataset.sezione;
-        localStorage.setItem('ufficio.sezione', sezione);
+        sezione = id;
+        localStorage.setItem('ufficio.sezione', id);
         aperto = null;
         disegna();
       });
-    });
+      return b;
+    }));
 
     /* Niente bottone «riscandaglia»: l'app si rilegge da sola quando torni
        sulla finestra, che è il momento in cui potresti aver cambiato i file da
@@ -333,9 +388,8 @@ const Ufficio = (() => {
   function disegna(){
     $('sezioni').querySelectorAll('button').forEach(b =>
       b.setAttribute('aria-current', String(b.dataset.sezione === sezione)));
-    if (sezione === 'scrivania') scrivania();
-    else if (sezione === 'rubrica') rubrica();
-    else bacheca();
+    const viste = { bacheca, scrivania, rubrica };
+    (viste[sezione] || bacheca)();
   }
 
   /* La riga di servizio in fondo, solo in prova. Non sta nella testata perché
@@ -380,50 +434,69 @@ const Ufficio = (() => {
 
   /* Una mossa, e sotto il progetto da cui viene. Il verso conta: quello che
      leggi per primo è la cosa da fare, non il nome del lavoro. */
-  function rigaMossa(p){
-    const r = tinteggia(el('div', 'mossa'), p);
+  /* ── le parti di una riga della Bacheca ──────────────────────────────── */
 
-    if (p.mossa){
+  const PARTE_MOSSA = {
+
+    spunta: (p) => {
+      if (!p.mossa) return null;
       const c = document.createElement('input');
       c.type = 'checkbox';
       c.title = 'fatta';
       c.addEventListener('click', (e) => e.stopPropagation());
       c.addEventListener('change', async () => {
         const dove = p.percorso + '/' + p.mossa.file;
-        const testo = p.mossa.testo, riga = p.mossa.riga, sua = p.mossa.sua;
+        const { testo, riga, sua } = p.mossa;
         const prima = (await Radice.leggi(dove)) || '';
         const dopo = sua ? Passi.spunta(prima, riga, testo) : Passi.spuntaSulPosto(prima, riga, true, testo);
         if (dopo !== prima) await Radice.scrivi(dove, dopo);
         await scandaglia();          // la mossa dopo prende il suo posto
       });
-      r.append(c);
-    }
+      return c;
+    },
 
-    const mezzo = el('div', 'mezzo');
-    mezzo.append(el('div', 'cosa', p.mossa ? soloTesto(p.mossa.testo) : 'nessuna mossa scritta'));
+    testo: (p) => {
+      const mezzo = el('div', 'mezzo');
+      const parti = {
+        cosa: () => el('div', 'cosa', p.mossa ? soloTesto(p.mossa.testo) : 'nessuna mossa scritta'),
+        chi: () => {
+          const s = el('div', 'chi');
+          s.append(el('span', 'nome', p.nome));
+          if (p.dentro) s.append(el('span', null, ' · in ' + p.dentro));
+          if (!p.mossa) s.append(el('span', null, ' · aprilo e scrivine una'));
+          return s;
+        }
+      };
+      MOSSA_TESTO.forEach(n => { if (parti[n]) mezzo.append(parti[n]()); });
+      return mezzo;
+    },
 
-    const sotto = el('div', 'chi');
-    sotto.append(el('span', 'nome', p.nome));
-    if (p.dentro) sotto.append(el('span', null, ' · in ' + p.dentro));
-    if (!p.mossa) sotto.append(el('span', null, ' · aprilo e scrivine una'));
-    mezzo.append(sotto);
-    r.append(mezzo);
-
-    if (!p.chiuso){
+    scadenza: (p) => {
+      if (p.chiuso) return null;
       const s = Passi.scadenza(p.entro);
-      if (s) r.append(el('span', 'scad' + (s.scaduta ? ' scaduta' : ''), s.testo));
-    }
+      return s ? el('span', 'scad' + (s.scaduta ? ' scaduta' : ''), s.testo) : null;
+    },
 
-    const t = tace(p.quando);
-    r.append(el('span', 'tace ' + t.classe, t.testo));
-    r.append(el('span', 'apri', '›'));
+    silenzio: (p) => {
+      const t = tace(p.quando);
+      return el('span', 'tace ' + t.classe, t.testo);
+    },
 
-    const vai = (e) => { if (e.target.tagName !== 'INPUT') apri(p); };
-    r.addEventListener('click', vai);
-    r.tabIndex = 0;
-    r.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter'){ e.preventDefault(); apri(p); }
+    freccia: () => el('span', 'apri', '›')
+  };
+
+  function rigaMossa(p){
+    const r = tinteggia(el('div', 'mossa'), p);
+    MOSSA.forEach(n => {
+      const fai = PARTE_MOSSA[n];
+      if (!fai) return;
+      const nodo = fai(p);
+      if (nodo) r.append(nodo);
     });
+
+    r.addEventListener('click', (e) => { if (e.target.tagName !== 'INPUT') apri(p); });
+    r.tabIndex = 0;
+    r.addEventListener('keydown', (e) => { if (e.key === 'Enter'){ e.preventDefault(); apri(p); } });
     return r;
   }
 
@@ -513,35 +586,53 @@ const Ufficio = (() => {
     mostra(...fuori);
   }
 
-  function riga(p, conNomeDelLavoro){
-    /* Una `div` e non un `button`: dentro ci sta il nome del lavoro, che è a
-       sua volta da toccare, e un bottone dentro un bottone non è HTML valido. */
-    const b = tinteggia(el('div', 'riga' + (p.dichiarato ? '' : ' proposto')), p);
-    b.tabIndex = 0;
-    b.setAttribute('role', 'button');
-    b.append(el('span', 'nome', p.nome));
+  /* ── le parti di una riga di Scrivania e Rubrica ─────────────────────── */
 
-    if (conNomeDelLavoro && p.dentro){
+  const PARTE_RIGA = {
+    nome: (p) => el('span', 'nome', p.nome),
+
+    dentro: (p, conNomeDelLavoro) => {
+      if (!conNomeDelLavoro || !p.dentro) return null;
       const d = el('span', 'dentro tocca', 'in ' + p.dentro);
       d.title = 'apri la cartella di lavoro';
       d.addEventListener('click', (e) => { e.stopPropagation(); apri(lavoroDi(p.dentro)); });
-      b.append(d);
-    }
+      return d;
+    },
 
-    const c = conti(p);
-    const q = el('span', 'conti');
-    if (c) q.textContent = c;
-    b.append(q);
+    conti: (p) => {
+      const c = conti(p);
+      const q = el('span', 'conti');
+      if (c) q.textContent = c;
+      return q;                        // resta anche vuoto: e' lui che spinge il resto a destra
+    },
 
-    if (p.chiuso) b.append(el('span', 'scad chiuso', 'chiuso'));
-    else {
+    scadenza: (p) => {
+      if (p.chiuso) return el('span', 'scad chiuso', 'chiuso');
       const s = Passi.scadenza(p.entro);
-      if (s) b.append(el('span', 'scad' + (s.scaduta ? ' scaduta' : ''), s.testo));
-    }
+      return s ? el('span', 'scad' + (s.scaduta ? ' scaduta' : ''), s.testo) : null;
+    },
 
-    const t = tace(p.quando);
-    b.append(el('span', 'tace ' + t.classe, t.testo));
-    b.append(el('span', 'apri', '›'));
+    silenzio: (p) => {
+      const t = tace(p.quando);
+      return el('span', 'tace ' + t.classe, t.testo);
+    },
+
+    freccia: () => el('span', 'apri', '›')
+  };
+
+  function riga(p, conNomeDelLavoro){
+    /* Una `div` e non un `button`: dentro ci sta il nome del lavoro, che e' a
+       sua volta da toccare, e un bottone dentro un bottone non e' HTML valido. */
+    const b = tinteggia(el('div', 'riga' + (p.dichiarato ? '' : ' proposto')), p);
+    b.tabIndex = 0;
+    b.setAttribute('role', 'button');
+
+    RIGA.forEach(n => {
+      const fai = PARTE_RIGA[n];
+      if (!fai) return;
+      const nodo = fai(p, conNomeDelLavoro);
+      if (nodo) b.append(nodo);
+    });
 
     const vai = () => apri(p);
     b.addEventListener('click', vai);
@@ -831,118 +922,121 @@ const Ufficio = (() => {
     return b;
   }
 
-  function scheda(){
-    const p = aperto.p;
-    const fuori = [];
+  /* ── i pezzi della scheda ──────────────────────────────────────────────
+     Ogni pezzo e' una funzione col suo nome, e non sa dove finira': l'ordine
+     lo decide la lista `SCHEDA` in cima al file. Riceve il contesto — il
+     progetto e il suo file gia' letto — e restituisce un nodo, un elenco di
+     nodi, oppure `null` se in questa scheda non ha niente da dire. */
 
-    const indietro = el('button', 'indietro', '←  indietro');
-    indietro.addEventListener('click', disegna);
-    fuori.push(indietro);
+  const PEZZI = {
 
-    const testa = el('div', 'scheda');
-    testa.append(el('h1', null, p.nome));
-    const t = tace(p.quando);
-    const sotto = el('p', 'sotto');
-    if (p.dentro) sotto.append(el('span', null, 'in ' + p.dentro + ' · '));
-    sotto.append(el('b', null,
-      t.testo === 'oggi' || t.testo === 'ieri' ? 'toccato ' + t.testo : 'tace da ' + t.testo));
-    testa.append(sotto);
-    fuori.push(testa);
+    testa: ({ p }) => {
+      const testa = el('div', 'scheda');
+      testa.append(el('h1', null, p.nome));
+      const t = tace(p.quando);
+      const sotto = el('p', 'sotto');
+      if (p.dentro) sotto.append(el('span', null, 'in ' + p.dentro + ' · '));
+      sotto.append(el('b', null,
+        t.testo === 'oggi' || t.testo === 'ieri' ? 'toccato ' + t.testo : 'tace da ' + t.testo));
+      testa.append(sotto);
+      return testa;
+    },
 
-    /* Non ancora un progetto: l'app **propone**, non decide — e dichiararlo è
-       crearlo, perché il tocco scrive il `prossimi-passi.md`. */
-    if (!p.dichiarato){
-      fuori.push(dice(
-        'Questa cartella non è ancora un progetto',
-        'Dentro c\'è roba di lavoro, quindi te la propongo — ma decidere che cos\'è tocca a te. '
-        + 'Farne un progetto scrive ' + Radice.FILE_PASSI + ' qui dentro, e da lì ha un perché, '
-        + 'le sue idee e i suoi passi.',
-        'Fanne un progetto',
-        async () => {
-          await Radice.scrivi(filePassi(p), Passi.nuovo(p.nome));
-          p.dichiarato = true; p.tipo = 'progetto'; p.quando = Date.now();
-          await ricarica();
-        }));
-    } else {
-      const letto = Passi.leggi(aperto.md || '');
+    /* Non ancora un progetto: l'app **propone**, non decide — e dichiararlo e'
+       crearlo, perche' il tocco scrive il `prossimi-passi.md`. */
+    proponi: ({ p }) => p.dichiarato ? null : dice(
+      'Questa cartella non è ancora un progetto',
+      'Dentro c\'è roba di lavoro, quindi te la propongo — ma decidere che cos\'è tocca a te. '
+      + 'Farne un progetto scrive ' + Radice.FILE_PASSI + ' qui dentro, e da lì ha un perché, '
+      + 'le sue idee e i suoi passi.',
+      'Fanne un progetto',
+      async () => {
+        await Radice.scrivi(filePassi(p), Passi.nuovo(p.nome));
+        p.dichiarato = true; p.tipo = 'progetto'; p.quando = Date.now();
+        await ricarica();
+      }),
 
-      /* Il patto sta **dietro un bottone**. Chi aspetta, entro quando e di che
-         colore sono cose che si mettono una volta e poi non si toccano più: se
-         restassero aperte in cima alla scheda, ogni volta che apri un progetto
-         la prima cosa che vedi sono tre campi da riempire invece del perché per
-         cui ti piaceva. */
-      const riga1 = el('div', 'patto');
-      const dettoPer = letto.per ? 'per ' + letto.per : 'nessuno aspetta';
-      const s0 = Passi.scadenza(letto.entro);
-      riga1.append(tinteggia(el('span', 'pallino grande'), p));
-      riga1.append(el('span', 'detto', dettoPer + (s0 ? ' · entro il ' + letto.entro : '')));
+    /* Il patto sta **dietro un bottone**. Chi aspetta, entro quando e di che
+       colore sono cose che si mettono una volta: se restassero aperte, ogni
+       volta che apri un progetto la prima cosa che vedi sarebbero tre campi da
+       riempire invece del perche' per cui ti piaceva. */
+    patto: ({ p, letto }) => {
+      if (!letto) return null;
+      const r = el('div', 'patto');
+      const s = Passi.scadenza(letto.entro);
+      r.append(tinteggia(el('span', 'pallino grande'), p));
+      r.append(el('span', 'detto',
+        (letto.per ? 'per ' + letto.per : 'nessuno aspetta') + (s ? ' · entro il ' + letto.entro : '')));
+      const tasto = el('button', 'min', modificaAperta ? 'chiudi le impostazioni' : 'modifica');
+      tasto.addEventListener('click', () => { modificaAperta = !modificaAperta; scheda(); });
+      r.append(tasto);
+      return r;
+    },
 
-      const tastoMod = el('button', 'min', modificaAperta ? 'chiudi le impostazioni' : 'modifica');
-      tastoMod.addEventListener('click', () => { modificaAperta = !modificaAperta; scheda(); });
-      riga1.append(tastoMod);
-      fuori.push(riga1);
+    impostazioni: ({ p, letto }) => {
+      if (!letto || !modificaAperta) return null;
+      const m = el('div', 'modifica');
 
-      if (modificaAperta){
-        const m = el('div', 'modifica');
+      const perE = document.createElement('input');
+      perE.type = 'text'; perE.value = letto.per; perE.placeholder = 'nessuno, per ora';
+      perE.setAttribute('list', 'clienti-noti');
+      perE.addEventListener('change', () => cambiaPassi(md => Passi.scriviCampo(md, 'per', perE.value)));
+      const l1 = el('label', null, 'per chi'); l1.append(perE);
 
-        const perE = document.createElement('input');
-        perE.type = 'text'; perE.value = letto.per; perE.placeholder = 'nessuno, per ora';
-        perE.setAttribute('list', 'clienti-noti');
-        perE.addEventListener('change', () => cambiaPassi(md => Passi.scriviCampo(md, 'per', perE.value)));
-        const l1 = el('label', null, 'per chi'); l1.append(perE);
+      const entroE = document.createElement('input');
+      entroE.type = 'date'; entroE.value = letto.entro;
+      entroE.addEventListener('change', () => cambiaPassi(md => Passi.scriviCampo(md, 'entro', entroE.value)));
+      const l2 = el('label', null, 'entro'); l2.append(entroE);
 
-        const entroE = document.createElement('input');
-        entroE.type = 'date'; entroE.value = letto.entro;
-        entroE.addEventListener('change', () => cambiaPassi(md => Passi.scriviCampo(md, 'entro', entroE.value)));
-        const l2 = el('label', null, 'entro'); l2.append(entroE);
+      const l3 = el('label', null, 'colore');
+      l3.append(tavolozza(letto.colore, p, (v) => cambiaPassi(md => Passi.scriviCampo(md, 'colore', v))));
 
-        const l3 = el('label', null, 'colore');
-        l3.append(tavolozza(letto.colore, p, (v) => cambiaPassi(md => Passi.scriviCampo(md, 'colore', v))));
+      const chiudi = el('button', 'min', letto.chiuso ? 'riapri il progetto' : 'chiudi il progetto');
+      chiudi.addEventListener('click', () =>
+        cambiaPassi(md => Passi.scriviCampo(md, 'chiuso', letto.chiuso ? '' : Passi.oggi())));
 
-        m.append(l1, l2, l3, elencoClienti());
+      m.append(l1, l2, l3, elencoClienti(), chiudi);
+      return m;
+    },
 
-        const chiudi = el('button', 'min', letto.chiuso ? 'riapri il progetto' : 'chiudi il progetto');
-        chiudi.addEventListener('click', () =>
-          cambiaPassi(md => Passi.scriviCampo(md, 'chiuso', letto.chiuso ? '' : Passi.oggi())));
-        m.append(chiudi);
-        fuori.push(m);
-      }
+    /* La data passata fa una **domanda**, non una multa. «Lascio perdere» e'
+       una risposta legittima e costa un tocco: un'app che ti mette in mora e'
+       un'app che smetti di aprire. */
+    avviso: ({ letto }) => {
+      if (!letto) return null;
+      if (letto.chiuso) return dice('Chiuso il ' + letto.chiuso,
+        'Non è stato cancellato niente: è solo uscito dagli elenchi e non ti chiede più niente. '
+        + 'Riaprirlo lo rimette in fila dov\'era.');
+      const s = Passi.scadenza(letto.entro);
+      if (!s || !s.scaduta) return null;
+      return dice('La data è passata da ' + (-s.giorni) + ' giorni',
+        'Succede, e non vuol dire niente di male. Mettine un\'altra qui sopra, oppure togli la data: '
+        + 'resta un progetto senza nessuno che aspetta, che è una cosa onesta.',
+        'Lascio perdere la data',
+        () => cambiaPassi(md => Passi.scriviCampo(md, 'entro', '')));
+    },
 
-      if (letto.chiuso){
-        fuori.push(dice('Chiuso il ' + letto.chiuso,
-          'Non è stato cancellato niente: è solo uscito dagli elenchi e non ti chiede più niente. '
-          + 'Riaprirlo lo rimette in fila dov\'era.'));
-      } else {
-        /* La data passata fa una **domanda**, non una multa. «Lascio perdere» è
-           una risposta legittima, e deve costare un tocco: un'app che ti mette
-           in mora è un'app che smetti di aprire. */
-        const s = Passi.scadenza(letto.entro);
-        if (s && s.scaduta){
-          fuori.push(dice('La data è passata da ' + (-s.giorni) + ' giorni',
-            'Succede, e non vuol dire niente di male. Mettine un\'altra qui sopra, oppure togli la data: '
-            + 'resta un progetto senza nessuno che aspetta, che è una cosa onesta.',
-            'Lascio perdere la data',
-            () => cambiaPassi(md => Passi.scriviCampo(md, 'entro', ''))));
-        }
-      }
-
-      /* Il perché, che è la prima cosa che leggi tornando dopo mesi. */
-      const perche = el('blockquote', 'perche' + (letto.perche ? '' : ' vuoto'),
+    /* Il perche', che e' la prima cosa che leggi tornando dopo mesi. */
+    perche: ({ letto }) => {
+      if (!letto) return null;
+      const q = el('blockquote', 'perche' + (letto.perche ? '' : ' vuoto'),
         letto.perche || 'perché esiste — scrivilo adesso, che te lo ricordi');
-      perche.contentEditable = 'true';
-      perche.spellcheck = false;
-      perche.addEventListener('focus', () => { if (!letto.perche) perche.textContent = ''; });
-      perche.addEventListener('keydown', (e) => { if (e.key === 'Enter'){ e.preventDefault(); perche.blur(); } });
-      perche.addEventListener('blur', () => {
-        const nuovo = perche.textContent.trim();
+      q.contentEditable = 'true';
+      q.spellcheck = false;
+      q.addEventListener('focus', () => { if (!letto.perche) q.textContent = ''; });
+      q.addEventListener('keydown', (e) => { if (e.key === 'Enter'){ e.preventDefault(); q.blur(); } });
+      q.addEventListener('blur', () => {
+        const nuovo = q.textContent.trim();
         if (nuovo !== (letto.perche || '')) cambiaPassi(md => Passi.scriviPerche(md, nuovo));
         else if (!nuovo) scheda();
       });
-      fuori.push(perche);
+      return q;
+    },
 
-      /* Le belle idee — quelle che «mi ero dimenticato di aver avuto». */
-      const idee = [];
-      letto.idee.forEach(v => {
+    /* Le belle idee — quelle che «mi ero dimenticato di aver avuto». */
+    idee: ({ letto }) => {
+      if (!letto) return null;
+      const dentro = letto.idee.map(v => {
         const r = el('div', 'idea');
         r.append(testoModificabile(v.testo, (nuovo) =>
           cambiaPassi(md => Passi.rinomina(md, v.riga, nuovo, v.testo))));
@@ -953,15 +1047,17 @@ const Ufficio = (() => {
         via.title = 'togli';
         via.addEventListener('click', () => cambiaPassi(md => Passi.elimina(md, v.riga, v.testo)));
         r.append(su, via);
-        idee.push(r);
+        return r;
       });
-      if (!letto.idee.length) idee.push(el('p', 'vuoto', 'Niente ancora. Le idee che ti vengono su questo progetto vanno qui.'));
-      idee.push(campoAppendi('un\'idea che ti è venuta…', (t2) => cambiaPassi(md => Passi.aggiungiIdea(md, t2))));
-      fuori.push(blocco(Passi.IDEE, ...idee));
+      if (!dentro.length) dentro.push(el('p', 'vuoto', 'Niente ancora. Le idee che ti vengono su questo progetto vanno qui.'));
+      dentro.push(campoAppendi('un\'idea che ti è venuta…', (t) => cambiaPassi(md => Passi.aggiungiIdea(md, t))));
+      return blocco(Passi.IDEE, ...dentro);
+    },
 
-      /* Da fare — le caselle di casa, quelle che The Office può muovere. */
-      const daFare = [];
-      letto.daFare.forEach((v, i) => {
+    /* Da fare — le caselle di casa, quelle che The Office puo' muovere. */
+    daFare: ({ letto }) => {
+      if (!letto) return null;
+      const dentro = letto.daFare.map((v, i) => {
         const r = el('div', 'voce' + (i === 0 ? ' prima' : ''));
         const c = document.createElement('input');
         c.type = 'checkbox';
@@ -972,62 +1068,81 @@ const Ufficio = (() => {
         via.title = 'togli';
         via.addEventListener('click', () => cambiaPassi(md => Passi.elimina(md, v.riga, v.testo)));
         r.append(via);
-        daFare.push(r);
+        return r;
       });
-      if (!letto.daFare.length) daFare.push(el('p', 'vuoto', 'Niente da fare qui dentro. Una mossa sola basta.'));
-      daFare.push(campoAppendi('la prossima mossa…', (t2) => cambiaPassi(md => Passi.aggiungiPasso(md, t2))));
-      fuori.push(blocco(Passi.DA_FARE, ...daFare));
+      if (!dentro.length) dentro.push(el('p', 'vuoto', 'Niente da fare qui dentro. Una mossa sola basta.'));
+      dentro.push(campoAppendi('la prossima mossa…', (t) => cambiaPassi(md => Passi.aggiungiPasso(md, t))));
+      return blocco(Passi.DA_FARE, ...dentro);
+    },
 
-      /* Le fatte: chiuse, ma contate. È il numero che ti fa riaprire un
-         progetto dopo tre mesi — «guarda quanto avevi già fatto». */
-      if (letto.fatte.length){
-        const d = el('details', 'fatte');
-        d.append(el('summary', null, letto.fatte.length + (letto.fatte.length === 1 ? ' cosa fatta' : ' cose fatte')));
-        letto.fatte.forEach(v => {
-          const r = el('div', 'voce');
-          const c = document.createElement('input');
-          c.type = 'checkbox'; c.checked = true;
-          c.addEventListener('change', () => cambiaPassi(md => Passi.despunta(md, v.riga, v.testo)));
-          r.append(c);
-          if (v.data) r.append(el('span', 'data', v.data));
-          r.append(el('span', 'testo', soloTesto(v.testo)));
-          d.append(r);
-        });
-        fuori.push(blocco(Passi.FATTE, d));
-      }
-    }
+    /* Le fatte: chiuse, ma contate. E' il numero che ti fa riaprire un progetto
+       dopo tre mesi — «guarda quanto avevi gia' fatto». */
+    fatte: ({ letto }) => {
+      if (!letto || !letto.fatte.length) return null;
+      const d = el('details', 'fatte');
+      d.append(el('summary', null, letto.fatte.length + (letto.fatte.length === 1 ? ' cosa fatta' : ' cose fatte')));
+      letto.fatte.forEach(v => {
+        const r = el('div', 'voce');
+        const c = document.createElement('input');
+        c.type = 'checkbox'; c.checked = true;
+        c.addEventListener('change', () => cambiaPassi(md => Passi.despunta(md, v.riga, v.testo)));
+        r.append(c);
+        if (v.data) r.append(el('span', 'data', v.data));
+        r.append(el('span', 'testo', soloTesto(v.testo)));
+        d.append(r);
+      });
+      return blocco(Passi.FATTE, d);
+    },
 
-    /* Le cartelle che stanno qui dentro. È il posto — l'unico — dove l'app
-       propone: qui vedi `food-cost-urby` fermo da centocinquanta giorni dentro
-       un `urby` che sembra vivo, e con un tocco diventa un progetto. */
-    const lav = p.dentro === null ? lavoroDi(p.nome) : null;
-    const figli = lav ? lav.progetti.filter(x => x.dentro !== null) : [];
-    if (figli.length){
+    /* Le cartelle qui dentro. E' il posto — l'unico — dove l'app propone: qui
+       vedi `food-cost-urby` fermo da centocinquanta giorni dentro un `urby`
+       che sembra vivo, e con un tocco diventa un progetto. */
+    figli: ({ p }) => {
+      const lav = p.dentro === null ? lavoroDi(p.nome) : null;
+      const figli = lav ? lav.progetti.filter(x => x.dentro !== null) : [];
+      if (!figli.length) return null;
       const dentro = figli.slice().sort(perSilenzio).map(f => {
         const r = riga(f, false);
         if (f.tipo === 'materiale') r.append(el('span', 'altrove', 'materiale'));
         return r;
       });
-      fuori.push(blocco('cartelle qui dentro', ...dentro));
-    }
+      return blocco('cartelle qui dentro', ...dentro);
+    },
 
-    /* Le caselle che stanno negli altri file del progetto. Qui The Office
-       spunta e basta: `consegna.md` ha le caselle numerate e intrecciate alla
-       prosa, e spostarle distruggerebbe il documento. */
-    aperto.altrove.forEach(f => {
-      const dentro = [];
-      f.voci.forEach(v => {
+    /* Le caselle che stanno negli altri file. Qui The Office spunta e basta:
+       `consegna.md` ha le caselle numerate e intrecciate alla prosa, e
+       spostarle distruggerebbe il documento. */
+    altrove: ({ p }) => aperto.altrove.map(f => {
+      const dentro = f.voci.map(v => {
         const r = el('div', 'voce');
         const c = document.createElement('input');
         c.type = 'checkbox';
         c.addEventListener('change', () =>
-          cambia(aperto.p.percorso + '/' + f.file, md => Passi.spuntaSulPosto(md, v.riga, true, v.testo)));
+          cambia(p.percorso + '/' + f.file, md => Passi.spuntaSulPosto(md, v.riga, true, v.testo)));
         r.append(c, el('span', 'testo', soloTesto(v.testo)));
-        dentro.push(r);
+        return r;
       });
       const b = blocco(f.file, ...dentro);
       b.querySelector('h2').append(el('span', 'altrove', ' spuntate sul posto'));
-      fuori.push(b);
+      return b;
+    })
+  };
+
+  function scheda(){
+    const p = aperto.p;
+    const contesto = { p, letto: p.dichiarato ? Passi.leggi(aperto.md || '') : null };
+
+    const indietro = el('button', 'indietro', '←  indietro');
+    indietro.addEventListener('click', disegna);
+
+    const fuori = [indietro];
+    SCHEDA.forEach(nome => {
+      const fai = PEZZI[nome];
+      if (!fai) return;                      // un nome che non esiste si salta
+      const n = fai(contesto);
+      if (!n) return;
+      if (Array.isArray(n)) fuori.push(...n.filter(Boolean));
+      else fuori.push(n);
     });
 
     mostra(...fuori);
