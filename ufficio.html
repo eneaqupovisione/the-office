@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Office — i lavori</title>
+
+<!-- Nessun `?v=`, nessun service worker, nessun manifest: questa pagina si apre
+     dal computer e basta. Il doppio numero di versione da tenere allineato a
+     mano serviva a installare l'app sul telefono — e con il telefono che
+     cattura in Note, non c'è piu' niente da installare. -->
+<link rel="stylesheet" href="ufficio.css">
+</head>
+<body>
+
+<div class="foglio">
+
+  <header class="testata">
+    <h1>The Office</h1>
+    <!-- Le tre sezioni, e sono tre domande diverse:
+         Bacheca → cosa faccio adesso · Scrivania → cosa ho in mano ·
+         Rubrica → per chi lavoro. Niente bottoni di servizio qui dentro:
+         lo scandaglio si rifà da solo quando torni sulla finestra. -->
+    <nav class="sezioni" id="sezioni" hidden>
+      <button data-sezione="bacheca">Bacheca</button>
+      <button data-sezione="scrivania">Scrivania</button>
+      <button data-sezione="rubrica">Rubrica</button>
+    </nav>
+    <span class="dove" id="dove"></span>
+  </header>
+
+  <!-- Tutto quello che si vede lo costruisce `ufficio.js`: le due viste non
+       coesistono mai, quindi non ha senso tenerle tutte e due nel documento. -->
+  <main id="palco"></main>
+
+</div>
+
+<!-- Script normali, non moduli: stessa scelta del resto del progetto.
+
+     Ma **in locale** si caricano con un numero che cambia a ogni apertura, e
+     non è un vezzo: senza, il browser tiene i `.js` in cache, tu modifichi un
+     file, ricarichi, e non cambia niente. È lo stesso male del vecchio
+     `?v=12` da tenere allineato a mano fra `index.html` e `sw.js` — la
+     trappola che in questo progetto ha fatto perdere più tempo di tutte.
+     Qui il numero se lo scrive la macchina, quindi non si può sbagliare.
+
+     Fuori da localhost non si aggiunge niente: là la cache serve davvero.
+     `async = false` tiene l'ordine di esecuzione, che conta — `radice.js`
+     usa `Passi`, e `ufficio.js` usa tutti e due. -->
+<script>
+(function(){
+  var v = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) ? '?v=' + Date.now() : '';
+  ['passi.js', 'seed.js', 'radice.js', 'ufficio.js'].forEach(function(f){
+    var s = document.createElement('script');
+    s.src = f + v;
+    s.async = false;
+    document.head.appendChild(s);
+  });
+})();
+</script>
+</body>
+</html>
