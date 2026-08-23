@@ -1,5 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="The Office">
-  <rect width="512" height="512" rx="96" fill="#14110f"/>
-  <!-- il lampo che entra e si ferma: la cosa che l'app fa, e l'unica -->
-  <path d="M286 96 L188 268 h62 l-24 148 L338 236 h-64 z" fill="#d9a441"/>
-</svg>

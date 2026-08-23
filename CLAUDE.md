@@ -2,44 +2,37 @@
 
 > Se una cosa qui contraddice il codice, **vince il codice**: aggiorna questo file.
 
-## ⚠️ Due app in questa cartella, e una sta sostituendo l'altra
+## Cos'è
 
-Dal **2026-08-21** The Office sta cambiando mestiere. Non è più «cattura testo
-in fretta dal telefono»: è **l'organizzazione dei progetti**, e serve a
-risolvere tre cose precise — perdere un progetto sotto gli altri, non essere
-stimolati a riprenderlo, e aver dimenticato le belle idee che si erano avute.
+**L'organizzazione dei progetti.** Serve a tre cose precise: non perdere un
+progetto sotto gli altri, avere una ragione per riprenderlo, e ritrovare le
+belle idee che ci si era dimenticati di aver avuto.
 
-| | |
-|---|---|
-| `ufficio.html` + `radice.js` `passi.js` `ufficio.js` `ufficio.css` | **il nuovo**, e si apre da `localhost:8010` |
-| `index.html` + tutto il resto | **il vecchio**, ancora intero e ancora in linea su Netlify |
+Nessuna dipendenza, nessun passo di costruzione: si serve la cartella e si apre.
 
-**Il vecchio non si tocca finché non hai esportato le catture dal telefono.**
-Quelle vivono nel `localStorage` dell'origine `ufficio-smistamento-idee.netlify.app`
-e non stanno da nessun'altra parte: via sincronizzazione non ne è mai arrivata
-nemmeno una su GitHub (`_inbox/` ha un file solo, del 10 agosto, messo a mano).
-Spegnere il sito prima di esportare le cancella.
+```bash
+cd ~/Lavori/the-office && python3 servi.py 8010
+```
 
-Il passaggio, quando sarà il momento, è una rinomina — e allora cadono
-`sw.js`, `manifest.webmanifest`, le icone PNG, `netlify.toml`, il portiere e il
-doppio numero di versione.
-
-## La planimetria nuova
+## La planimetria
 
 | File | Ruolo | Note operative |
 |---|---|---|
-| `ufficio.html` | il documento del nuovo | nessun `?v=`, nessun service worker, nessun manifest: si apre dal computer e basta |
+| `ufficio.html` | il documento | si apre dal computer e basta |
+| `servi.py` | **il server delle prove** | non è `http.server`: manda `no-store` e non manda `Last-Modified`. Senza, il browser si tiene `ufficio.html` per ore decidendolo da solo, la pagina vecchia carica i file nuovi, e l'app muore senza dire niente. È quello che lancia `.claude/launch.json` |
 | `seed.js` | **il disco finto di `?prova`** | un campionario dei casi, in `localStorage`. Si prova tutto senza toccare un file vero — e **anche su Safari**, dove `showDirectoryPicker` non esiste. Si cancella con la sua riga in `ufficio.html` quando non serve più |
 | `radice.js` | `~/Lavori` collegata, e lo scandaglio | **calcola** il silenzio di ogni progetto dalla data di modifica dei file. Salta `node_modules` e compagnia — senza, `cantera` da sola sono 27.000 file — e si ferma a 400 file per progetto: il limite può far sembrare un progetto **più** silenzioso, mai più vivo. `attacca()` esiste solo per le prove |
 | `passi.js` | il formato di `prossimi-passi.md` | perché · belle idee · da fare · fatte. Spuntare fa **scendere** la riga sotto `## Fatte` con la data, non la cancella. Ogni operazione dichiara che testo si aspetta di trovare e non fa niente se non combacia. **Non tocca il DOM: si prova da solo** |
-| `ufficio.js` | le tre sezioni e la scheda | ogni gesto rilegge il file, scrive, rilegge |
-| `ufficio.css` | l'aspetto | stessi nomi di colore di `stile.css`, così le due si fondono quando il vecchio si spegne |
+| `domande.js` | le domande della Bacheca | «cosa sto dimenticando?» e le altre. Restituiscono due o tre proposte da una lista di progetti. **Non toccano il DOM e non scrivono niente: si provano da sole** |
+| `ufficio.js` | le quattro sezioni e la scheda | ogni gesto rilegge il file, scrive, rilegge |
+| `ufficio.css` | l'aspetto | impaginazione San Francisco, palette 06. L'acido è l'unico accento, ed è il colore di ciò che si tocca |
+| `prova-passi.js` · `prova-radice.js` · `prova-domande.js` | le prove | `node prova-passi.js` e via. Niente dipendenze, niente `npm test` |
 
 ## Le quattro sezioni, e sono quattro domande
 
 | | risponde a | contiene |
 |---|---|---|
-| **Bacheca** | *cosa faccio adesso* | **una mossa per progetto**, e solo dei progetti toccati negli ultimi 14 giorni. Si spuntano lì: spuntata una, arriva la successiva dello stesso progetto |
+| **Bacheca** | *cosa faccio adesso* | **una mossa per progetto**, e solo dei progetti toccati negli ultimi 14 giorni. Si spuntano lì: spuntata una, arriva la successiva dello stesso progetto. In fondo, **le domande** |
 | **Scrivania** | *cosa ho in mano* | **tutti** i progetti, per scadenza (due mucchi: qualcuno aspetta / nessuno aspetta) o per appartenenza (dentro la loro cartella) |
 | **Rubrica** | *per chi lavoro* | i progetti raggruppati per `per:`, più le cose tue divise per tipo. È qui che nasce «un'idea per qualcuno» |
 | **Caccia** | *chi non è ancora mio* | i nomi che non sono ancora progetti (`_caccia.md`), le cacce aperte (i progetti `sperimentale`), e le prese |
@@ -49,6 +42,27 @@ verso conta: quello che leggi per primo è la cosa da fare, il nome del lavoro
 sta sotto e piccolo. Al contrario torna a essere un elenco di progetti, che è
 esattamente quello che non deve essere.
 
+Una riga dice: **la mossa** · il progetto · la scadenza · **«1 di 5»** · `i` ·
+`»` · `›`. Il silenzio non c'è, e non è una dimenticanza: in Bacheca ci sono per
+costruzione solo progetti toccati negli ultimi quattordici giorni, quindi quel
+numero variava poco e non cambiava niente di quello che fai oggi. È tornato
+dov'è utile — nella Scrivania, e sotto la `i`.
+
+**Spunta solo la casella, e il segno si vede prima della scrittura.** Il clic
+sulla riga apre la scheda e non tocca niente; la casella sta dentro
+un'etichetta che le fa da bersaglio, così ci prendi senza mirare. Al clic la
+riga si barra e sbiadisce per mezzo secondo (`RESPIRO`), **poi** si scrive il
+file e arriva la mossa dopo. Prima faceva il contrario — scriveva e rifaceva
+subito lo scandaglio — e la spunta durava un fotogramma: un gesto che non
+lascia traccia non sembra riuscito, sembra un clic andato a vuoto.
+
+**La `i` apre un'anteprima sotto la riga**, non un'altra schermata: il perché
+del progetto, per chi, entro quando, da quanto tace, i conti e le belle idee.
+Non è una scorciatoia per aprire il progetto — per quello c'è la freccia, ed è
+un clic — serve a **decidere se aprirlo**, che è una domanda diversa e molto
+più frequente. Una mossa scritta stringata tre settimane fa spesso non si
+capisce da sola, e il perché la rimette in piedi senza farti perdere il posto.
+
 `sol-y-mar` ha ventiquattro caselle aperte, e ventiquattro cose davanti non
 sono uno stimolo: sono il motivo per cui richiudi. Una sì.
 
@@ -56,6 +70,51 @@ sono uno stimolo: sono il motivo per cui richiudi. Una sì.
 smette di essere guardata. Ma allora devono stare *tutti* nella Scrivania,
 compresi quelli fermi da mesi: se sparissero da tutte e due le sezioni,
 l'app ricreerebbe il problema numero uno invece di risolverlo.
+
+## Le domande, e perché l'app non riordina i passi
+
+In fondo alla Bacheca ci sono tre parole. Non sono comandi: sono domande, e
+premerne una apre sotto un cassetto con **due o tre cose**, non una lista.
+
+| | mostra | perché esiste |
+|---|---|---|
+| **cosa sto dimenticando?** | mosse dei progetti che in Bacheca non ci sono, dal più silenzioso | è l'antidoto al problema numero uno. La Bacheca i sepolti li nasconde di proposito, e senza questa valvola non c'era **nessun** posto in cui tornassero a galla |
+| **che idee avevo avuto?** | belle idee ferme, da qualsiasi progetto | è il problema numero tre. Un'idea si vedeva solo aprendo la scheda del progetto che non stai aprendo |
+| **chi sta aspettando?** | i progetti con un `per:`, dalla data più vicina | la pressione guardata tutta insieme invece che una riga per volta |
+
+C'era un'altra idea, ed è stata scartata il **2026-08-23**: che fosse **l'app a
+ordinare i passi** dentro un progetto. Va contro la regola di questo repo — *si
+calcola il passato, si dichiara il futuro* — perché quale mossa sia la prossima
+è futuro puro: l'app non sa quale è pronta, quale aspetta una risposta, quale
+costa dieci minuti. Ordinarli vorrebbe dire indovinare, cioè sbagliare in
+silenzio. Ma *«questo non lo stai guardando»* è passato, e si calcola: le
+domande sono la versione onesta di quella richiesta.
+
+**Una domanda mostra ciò che non stai già vedendo — ma lo decide lei.** *Cosa
+sto dimenticando* toglie quello che è in Bacheca (`nuoveSoltanto`), o
+ripeterebbe il tabellone. *Chi sta aspettando* no: toglierli le faceva dire
+«Nessuno» mentre un cliente era scaduto da nove giorni, che è una bugia.
+
+**«per ora no» non è «no».** Su ogni riga — di Bacheca e di risposta — c'è un
+bottone (`»`, con la frase intera nel `title`) che mette via quella cosa per **una settimana**, e poi la riporta.
+Serve a sbloccare il tabellone: senza, una mossa che non fai ma non vuoi
+nemmeno togliere tiene il suo progetto fermo in cima per tre settimane, e la
+Bacheca diventa una cosa che smetti di guardare. Messa via una mossa, prende il
+suo posto la successiva **dello stesso progetto**; messe via tutte, il progetto
+esce dal tabellone finché non tornano.
+
+Vive in `localStorage` e **non tocca il file**, ed è voluto: un `- [ ]` nel
+`prossimi-passi.md` deve continuare a voler dire una cosa sola, o il file
+smetterebbe di essere leggibile da Claude Code senza sapere le regole
+dell'app. Il prezzo è che cambiando computer i rinvii riaffiorano — per una
+settimana di rinvii è un prezzo giusto.
+
+**Le belle idee stanno sotto le cose da fare, e piegate.** Non pesano allo
+stesso modo: una cosa da fare è un impegno, un'idea è un cassetto da cui
+attingi quando ti va. Aperte e per prime, la scheda apriva chiedendoti di
+guardare cose che non devi fare. Piegate ma **sempre presenti**, anche a
+cassetto vuoto, o il campo per scriverne una sarebbe irraggiungibile proprio
+quando l'idea ti viene.
 
 **Niente bottoni di servizio nella testata.** Lo scandaglio si rifà da solo
 quando torni sulla finestra (mai mentre sei dentro una scheda: ti cancellerebbe
@@ -66,6 +125,15 @@ perché il posto dove nasce un'idea per qualcuno è l'elenco delle persone.
 (`ufficio.html`, in fondo). Senza, modifichi un file, ricarichi e non cambia
 niente — lo stesso male del vecchio `?v=12` da tenere allineato a mano, ma qui
 il numero se lo scrive la macchina e non si può sbagliare.
+
+**Ma quel numero non busta la pagina che lo contiene**, ed è il buco in cui si
+è caduti il 2026-08-23 aggiungendo `domande.js` all'elenco: pagina vecchia dalla
+cache, file nuovi caricati, `Domande` inesistente, e da fuori si vedeva solo che
+cambiare sezione non faceva niente. Per questo il server è `servi.py` e non
+`http.server`, e per questo `ufficio.js` all'avvio **controlla che i pezzi ci
+siano** (`mancano()`): se ne manca uno scrive «Manca un pezzo» con un bottone
+che ricarica saltando la cache, invece di morire in silenzio. Una copia già in
+cache però resta lì: la prima volta ci vuole ⌘⇧R, o quel bottone.
 
 **Un progetto è una cartella che ha il suo `prossimi-passi.md`**, e non c'è
 nessun altro modo di diventarlo: lo dichiari tu, e dichiararlo è crearlo. Può
@@ -260,8 +328,9 @@ seed il 2026-08-21, con `tramonto` che si portava dietro `ricerca`.
 ### Le prove
 
 ```bash
-node prova-passi.js     # 32 prove sul formato di prossimi-passi.md
+node prova-passi.js     # 49 prove sul formato di prossimi-passi.md
 node prova-radice.js    # lo scandaglio, contro la ~/Lavori vera
+node prova-domande.js   # 33 prove su cosa ti viene messo davanti
 ```
 
 Niente dipendenze e niente `npm test`: sono due file che si lanciano con
@@ -279,108 +348,3 @@ fatto così:
   i file della sua radice.
 - **Se l'elenco dice «17 da fare», la scheda deve aprirne 17.** Un conteggio che
   non si può aprire promette una cosa che non c'è.
-
-## La planimetria vecchia
-
-| File | Ruolo | Note operative |
-|---|---|---|
-| `index.html` | le quattro schermate e il menu | è l'unico documento: le sezioni si mostrano e si nascondono |
-| `stile.css` | l'aspetto | carattere di sistema, l'acido come unico accento. Chiaro di base, progettato a 375px; da 900px il menu resta fisso |
-| `dati.js` | il modello e il magazzino | catture, progetti (con la loro `forma`), impostazioni, e `riconosci()` — che legge il nome del progetto dalla prima riga **confrontando parole, non indovinando**. **Nessuna chiamata di rete** |
-| `media.js` | gli allegati, in transito | IndexedDB e non `localStorage`: una foto in base64 satura la quota e uccide la cattura |
-| `netlify/functions/cattura.js` | **il portiere** — l'unico pezzo che gira su un server | ci vive il token. Non conosce il formato di una cattura: riceve percorso e contenuto già composti. Senza dipendenze e corto, o muore il piano B |
-| `ponte.js` | come le catture escono di qui, e come si leggono i file dell'albero | si collega **la radice** `~/the-knowledge`: scrive in `_inbox/` e `_inbox/media/`, legge la `forma:` dei progetti, e con `leggiTesto`/`scriviTesto` apre file qualsiasi dentro l'albero. Il formato del `.md` lo costruisce `testa()` |
-| `cattura.js` | il lampo | la schermata che si apre e riceve il fuoco |
-| `archivio.js` | leggere e rietichettare | raggruppa per progetto; il testo non è modificabile |
-| `lavori.js` | il motore di commissioni e acquisti | legge le caselle `- [ ]` dai `.md` dell'albero. **Non riorganizza il file**: spuntare cambia un carattere, aggiungere inserisce una riga. Provabile da solo, non tocca il DOM |
-| `agenda.js` | le schermate Commissioni e Acquisti | ogni gesto riscrive il file e poi **rilegge**: il file è la verità, e Claude Code può cambiarlo mentre l'app è aperta |
-| `progetti.js` | i nomi dei progetti | li legge dalla cartella collegata o dai repo pubblici di GitHub, senza token |
-| `impostazioni.js` | sincronizzazione, ponte, tema, svuota | ci vive la chiave d'app. `statoVero()` **calcola** dove finiscono le catture: nessuno stato scritto a mano |
-| `app.js` | avvio, navigazione, contatore | `App.aggiorna()` è il solo punto da chiamare dopo un cambiamento |
-| `sw.js` | il guscio offline | cache-first. Alzare `VERSIONE` **e l'elenco dei file** a ogni cambio, o l'app non si aggiorna |
-| `manifest.webmanifest` · `icona.svg` · `icona-*.png` | installabilità | i PNG servono a iOS, che ignora l'SVG. Si **rigenerano** dall'SVG, non si ridisegnano |
-| `netlify.toml` | dove sta la funzione | nessun `command`: non c'è costruzione |
-| `trappole.md` | ciò che sembra vero e non lo è | |
-
-Sono `<script>` normali, non moduli: i moduli non si caricano da `file://`, e
-`index.html` deve continuare ad aprirsi come file.
-
-**Il numero di versione sta in due posti** — `VERSIONE` in `sw.js` e le `?v=` di
-`index.html`. Devono coincidere, o il guscio in cache e il documento vanno fuori
-fase.
-
-## Le sei sezioni, e due famiglie
-
-| | Dove vivono i dati | Quando si ridisegna |
-|---|---|---|
-| **Idee** (l'apertura) · **Archivio** · **Progetti** | `localStorage`, poi le tre strade verso `_inbox/` | a ogni `App.aggiorna()`: costa niente |
-| **Commissioni** · **Acquisti** | file veri nell'albero, letti e riscritti sul posto | solo entrando nella sezione: leggere venti file a ogni cattura salvata sarebbe sprecato |
-
-**Commissioni** è la vista su `clienti/`: una scheda per cartella, e le cose da
-fare sono le caselle `- [ ]` del suo `prossimi-passi.md`. **Acquisti** è un file
-solo, `personale/acquisti.md`, con tre liste. Tutte e due vogliono la **radice**
-collegata e Chromium sul computer: senza, la sezione dice cosa manca invece di
-mostrare una lista vuota.
-
-**Nella cattura non c'è più la griglia dei tipi.** Al lampo l'unica cosa che sai
-e che un agente non può dedurre è di quale progetto si tratta: è l'unico campo
-rimasto. Il campo `tipo` resta nel modello per le catture già fatte, e nei file
-nuovi semplicemente non compare.
-
-## Il flusso dei dati
-
-```
-lampo → textarea → localStorage['the-office.catture']   (immediato, sincrono)
-                        ↓
-   ┌────────────────────┼────────────────────┐
-   │                    │                    │
-sincronizzazione   cartella collegata    «esporta»
-(ovunque, da sola)  (computer, Chromium,  (ovunque, a mano)
-   │                 https o localhost)       │
-   │  POST al portiere      │  un .md per      │  un .md con dentro
-   │  → API GitHub          │  cattura         │  tutti i blocchi
-   ↓                        ↓                  ↓
-        ~/the-knowledge/_inbox/<progetto>/*.md
-```
-
-Il formato del file che esce:
-
-```
----
-tipo: idea                 # facoltativo
-progetto: cantera          # facoltativo
-origine: the-office
-stato: da-smistare
-allegati: media/…          # solo se ce ne sono
----
-
-il testo della cattura
-```
-
-**Nessun database, nessun account, e un solo pezzo di server** — il portiere, che
-esiste per tenere il token e nient'altro. I dati vivono nel browser del
-dispositivo finché non escono da una delle tre strade. Il contatore conta le
-catture che non sono ancora uscite.
-
-## Vincoli tecnici
-
-1. **Niente chiamate di rete nel percorso del salvataggio.** La sincronizzazione
-   parte **dopo** che la cattura è in `localStorage`; se fallisce, la cattura
-   resta «in attesa» e riparte al giro dopo. Il salvataggio non aspetta mai la
-   rete, o offline si perde tutto.
-2. **Nessun segreto in questo repo.** Il token GitHub vive **solo** in
-   `GITHUB_TOKEN` fra le variabili d'ambiente di Netlify. Una chiave finita qui è
-   pubblica per sempre, anche dopo il commit che la toglie. Sul dispositivo c'è
-   soltanto la `CHIAVE_APP`, che apre l'aggiunta di file in `_inbox/` e
-   nient'altro — e si cambia in dieci secondi.
-3. **Nessun webfont.** Un `@font-face` da un CDN è una dipendenza di rete e
-   rompe l'apertura da `file://`. Un carattere si aggiunge solo mettendone il
-   file nel repo.
-4. **Il testo di una cattura non si modifica nell'archivio.** Tipo e progetto sì.
-   Per il corpo non esiste un campo, ed è voluto.
-5. **`lavori.js` non riscrive mai un file intero.** Un `prossimi-passi.md` vero
-   ha dentro prosa, titoli e tabelle oltre alle caselle: rigenerarlo sarebbe il
-   modo più veloce di perdere qualcosa. Spuntare cambia un carattere della sua
-   riga, aggiungere inserisce una riga sola.
-6. **Ogni scrittura rilegge il file un istante prima.** Se l'hai toccato da
-   Claude Code mentre l'app era aperta, si lavora sulla versione vera.

@@ -9,9 +9,10 @@
     },
     {
       "//": "L'ufficio sta su una porta sua, e non e' un capriccio: su localhost:8000 il vecchio index.html ha registrato un service worker, e un guscio in cache che serve file vecchi e' la trappola numero uno di questo progetto. Porta diversa = origine diversa = nessun guscio, nessun permesso vecchio.",
+      "//2": "E non e' `http.server`: quello non manda nessun Cache-Control, e il browser si tiene `ufficio.html` per ore decidendolo da solo. La pagina vecchia carica i file nuovi e l'app muore in silenzio. `servi.py` non fa tenere in cache niente.",
       "name": "ufficio",
       "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8010"],
+      "runtimeArgs": ["servi.py", "8010"],
       "port": 8010
     }
   ]
