@@ -85,6 +85,14 @@
 <script>
 (function(){
   var v = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) ? '?v=' + Date.now() : '';
+  /* Anche il foglio di stile, e non era ovvio: il numero bustava i `.js` e
+     lasciava fuori la CSS, che e' l'unico file caricato da un `<link>`. Il
+     23 agosto ho passato dieci minuti a chiedermi perche' una regola scritta
+     e salvata non si vedesse a schermo. */
+  if (v){
+    var l = document.querySelector('link[rel=stylesheet]');
+    if (l) l.href = l.getAttribute('href').split('?')[0] + v;
+  }
   ['passi.js', 'seed.js', 'radice.js', 'domande.js', 'ufficio.js'].forEach(function(f){
     var s = document.createElement('script');
     s.src = f + v;

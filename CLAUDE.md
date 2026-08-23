@@ -178,6 +178,54 @@ diverse stanno a schermo, dove servono: *sulla lista* non è «da fare», e
 > spuntare una preda ne creava una seconda in fondo, perché `Passi` cerca
 > `## Fatte`. Il nome giusto per un file non è il nome giusto per una schermata.
 
+## I modelli, e i passi grossi con le cose fini sotto
+
+Un **modello** è un `prossimi-passi.md` già scritto bene, in `~/Lavori/_modelli/`.
+Non ha un formato suo: **un modello è un progetto vuoto**, e per questo si
+corregge da Claude Code come qualunque altro file. Creando un progetto lo
+scegli da un menu; l'app gli cambia il titolo, ci mette il tuo perché al posto
+di quello del modello, e i campi del front matter.
+
+**Il legame finisce lì.** Il modello non resta agganciato: da quel momento
+quei passi sono tuoi, li rinomini e li togli. Tenere il filo vorrebbe dire
+un'app che chiede *«questo passo è cambiato nel modello, lo aggiorno?»*, ed è
+un altro prodotto.
+
+Le cartelle di primo livello che cominciano con `_` **non sono lavori**:
+`_modelli` è un magazzino dell'app. Al secondo livello invece `_assets` e
+`_trascrizioni` restano materiale del progetto, e lì si vogliono vedere.
+
+### Un passo è finito quando qualcosa che prima non c'era adesso c'è
+
+È la regola che ha buttato via due liste di passi prima di questa. «Capire a
+cosa serve» e «decidere l'aria» non sono passi: sono stati mentali, e per
+spuntarli devi giudicarti invece che guardare. Sono scesi dentro l'**indagine**,
+che è un passo perché produce due cose — quello che hai trovato, e i dati finti
+che diventeranno il contratto col back end.
+
+`_modelli/sito.md` ha sei passi: *Indagine · Le pagine senza stile · La faccia ·
+I comportamenti · La prova · La consegna*. Coprono dall'inizio alla **consegna
+al back end**, che è dove finisce il lavoro di chi fa il front.
+
+### Le cose fini stanno sotto, rientrate
+
+```markdown
+- [ ] Indagine
+      - [ ] l'unica azione, in una frase
+      - [ ] che dati girano, e in che forma
+```
+
+**In Bacheca va il passo grosso**, non la cosa fine: «Indagine», non «guardare
+cosa c'è oggi». Ma la riga porta il conto dei suoi figli — **«2 di 5»** — e
+quello si muove ogni giorno. Senza, un passo grosso resterebbe in cima due
+settimane sembrando fermo, e la Bacheca smetterebbe di dare la soddisfazione
+che la fa aprire.
+
+**Una casella rientrata si spunta sul posto.** Scendere sotto `## Fatte`
+lascerebbe orfano il passo che la conteneva e il conto non si potrebbe più
+fare: qui la struttura vale più dell'uniformità. Scendono solo i passi di
+primo livello, che sotto non hanno nessuno.
+
 ## I tre tipi di lavoro
 
 ```

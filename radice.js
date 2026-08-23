@@ -51,6 +51,7 @@ const Radice = (() => {
   const LAVORO = /\.(md|html?|css|js|jsx|ts|tsx|py|json|sh|rb|go|rs|swift|php|sql|toml|yml|yaml|csv)$/i;
 
   const FILE_PASSI = 'prossimi-passi.md';
+  const MODELLI    = '_modelli';
 
   let radice = null;
 
@@ -229,8 +230,17 @@ const Radice = (() => {
            sola mossa in mano non ci sarebbe niente da mettere. E le idee, che
            oggi si vedono solo aprendo la scheda del progetto che non stai
            aprendo, non uscirebbero mai da lì. */
-        mosse = letto.daFare.map(v =>
-          ({ file: FILE_PASSI, riga: v.riga, testo: v.testo, sua: true }));
+        /* In Bacheca vanno i **passi**, non le cose fini che ci stanno sotto:
+           «Indagine», non «guardare cosa c'e' oggi». Le sottocaselle si
+           spuntano dentro la scheda, e il loro avanzamento torna qui come
+           conto — «2 di 5» — cosi' un passo grosso puo' restare in cima per
+           due settimane senza che la riga sembri ferma.
+
+           Se un file ha tutto rientrato — non dovrebbe, ma non si sa mai —
+           valgono tutte, o la Bacheca resterebbe vuota. */
+        const grossi = letto.daFare.filter(v => v.rientro === 0);
+        mosse = (grossi.length ? grossi : letto.daFare).map(v =>
+          ({ file: FILE_PASSI, riga: v.riga, testo: v.testo, sua: true, figli: v.figli || null }));
         idee = letto.idee.map(v => ({ riga: v.riga, testo: v.testo }));
         perche = letto.perche || '';
         if (mosse.length) mossa = mosse[0];
@@ -258,7 +268,11 @@ const Radice = (() => {
     if (!radice) return null;
     if (!(await permesso(false))) return null;
 
-    const cartelle = await figlie(radice);
+    /* Al primo livello, una cartella che comincia con `_` non e' un lavoro:
+       e' un magazzino dell'app — `_modelli` oggi, forse altro domani. Al
+       secondo livello invece resta materiale del progetto (`_assets`,
+       `_trascrizioni`), e li' si vuole vedere. */
+    const cartelle = (await figlie(radice)).filter(c => !c.nome.startsWith('_'));
     const fuori = [];
     let fatti = 0;
 
@@ -373,6 +387,22 @@ const Radice = (() => {
      che compare nell'elenco deve potersi aprire, o è un numero che promette
      una cosa che non c'è. */
 
+  /* I modelli sono `prossimi-passi.md` gia' scritti bene, in `_modelli/`. Non
+     hanno un formato loro: un modello **e'** un progetto vuoto, e per questo
+     si corregge da Claude Code come qualunque altro file. */
+  async function modelli(){
+    if (!radice) return [];
+    let dir;
+    try { dir = await radice.getDirectoryHandle(MODELLI); }
+    catch (e){ return []; }
+    const fuori = [];
+    for await (const [n, h] of dir.entries())
+      if (h.kind === 'file' && /\.md$/i.test(n))
+        fuori.push({ nome: n.replace(/\.md$/i, ''), percorso: MODELLI + '/' + n });
+    fuori.sort((a, b) => a.nome.localeCompare(b.nome, 'it'));
+    return fuori;
+  }
+
   async function caselleAltrove(percorso, soloRadice){
     const pezzi = percorso.split('/').filter(Boolean);
     const dir = await cartellaDi(pezzi, false);
@@ -421,7 +451,7 @@ const Radice = (() => {
 
   return {
     possibile, collegata, nome, permesso, riprendi, collega, scollega,
-    scandaglia, leggi, scrivi, crea, caselleAltrove,
+    scandaglia, leggi, scrivi, crea, caselleAltrove, modelli,
     attacca, FILE_PASSI
   };
 })();

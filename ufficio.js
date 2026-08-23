@@ -114,6 +114,7 @@ const Ufficio = (() => {
   let ideeAperte = false;            // il cassetto delle belle idee, nella scheda
   let anteprimaAperta = null;        // il percorso della riga con la «i» aperta
   let ultimoScandaglio = 0;
+  let modelliNoti = [];         // i `_modelli/*.md`, letti aprendo il modulo
   let modificaAperta = false;   // il pannello delle impostazioni di un progetto
 
   /* ── mattoncini ──────────────────────────────────────────────────────── */
@@ -762,6 +763,11 @@ const Ufficio = (() => {
 
        Con una mossa sola non compare: «1 di 1» è rumore. */
     quante: (p) => {
+      /* Se il passo ha delle cose fini sotto, il conto è il **loro**: dice
+         quanto sei dentro a questo passo, che è il numero che si muove ogni
+         giorno. Se non ne ha, resta quello di prima — quale passo su quanti. */
+      if (p.mossa && p.mossa.figli)
+        return el('span', 'quante', p.mossa.figli.fatti + ' di ' + p.mossa.figli.totali);
       if (!p.mossa || !(p.quanteMosse > 1)) return null;
       return el('span', 'quante', (p.indiceMossa + 1) + ' di ' + p.quanteMosse);
     },
@@ -1264,9 +1270,10 @@ const Ufficio = (() => {
     .replace(/^-+|-+$/g, '')
     .slice(0, 40);
 
-  function nuovoProgetto(daDove, pre){
+  async function nuovoProgetto(daDove, pre){
     aperto = null;
     pre = pre || {};
+    try { modelliNoti = await Radice.modelli(); } catch (e){ modelliNoti = []; }
     const fuori = [];
     const torna = daDove === 'scrivania' ? scrivania : daDove === 'caccia' ? caccia : rubrica;
 
@@ -1332,6 +1339,22 @@ const Ufficio = (() => {
     };
     ridisegnaTipo();
 
+    /* Il modello: un progetto vuoto ben scritto, da cui partire. Sta dopo il
+       tipo perche' e' il tipo a dire quale ha senso, e prima del perche'
+       perche' il modello ne porta gia' uno da correggere. */
+    const labM = el('label', null, 'da quale modello');
+    const mod = document.createElement('select');
+    const senza = document.createElement('option');
+    senza.value = ''; senza.textContent = '— nessuno, parte vuoto —';
+    mod.append(senza);
+    modelliNoti.forEach(m => {
+      const o = document.createElement('option');
+      o.value = m.percorso; o.textContent = m.nome;
+      mod.append(o);
+    });
+    labM.append(mod);
+    if (modelliNoti.length) f.append(labM);
+
     const problema = campo(daDove === 'scrivania' ? 'perché esiste' : 'che problema ha',
                            'text', 'una riga, quella che diresti a voce');
     if (pre.problema) problema.value = pre.problema;
@@ -1386,7 +1409,10 @@ const Ufficio = (() => {
       via.disabled = true;
       esito.textContent = 'creo ' + percorso + '/…';
 
-      let md = Passi.nuovo(cartella, problema.value.trim());
+      const partenza = mod.value ? await Radice.leggi(mod.value) : null;
+      let md = partenza
+        ? Passi.daModello(partenza, cartella, problema.value.trim())
+        : Passi.nuovo(cartella, problema.value.trim());
       if (tipoScelto)       md = Passi.scriviCampo(md, 'tipo', tipoScelto);
       if (per.value.trim()) md = Passi.scriviCampo(md, 'per', per.value.trim());
       if (entro.value)      md = Passi.scriviCampo(md, 'entro', entro.value);
@@ -1656,7 +1682,12 @@ const Ufficio = (() => {
     daFare: ({ letto }) => {
       if (!letto) return null;
       const dentro = letto.daFare.map((v, i) => {
-        const r = el('div', 'voce' + (i === 0 ? ' prima' : ''));
+        /* Un passo grosso pesa, una cosa fine rientra: senza, la scheda è un
+           elenco piatto di ventiquattro righe e la struttura che il modello
+           porta non si vede più. */
+        const grosso = v.rientro === 0;
+        const r = el('div', 'voce' + (i === 0 ? ' prima' : '') + (grosso ? ' passo' : ' fine'));
+        if (grosso && v.figli) r.dataset.figli = v.figli.fatti + ' di ' + v.figli.totali;
         const c = document.createElement('input');
         c.type = 'checkbox';
         c.addEventListener('change', () => cambiaPassi(md => Passi.spunta(md, v.riga, v.testo)));

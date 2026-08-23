@@ -123,5 +123,63 @@ t('scadenza passata', Passi.scadenza('2026-08-12', adesso).testo === 'scaduta da
 t('scaduta e\' marcata', Passi.scadenza('2026-08-12', adesso).scaduta === true);
 t('data storta = niente scadenza', Passi.scadenza('boh', adesso) === null);
 
+
+/* ── 11 · i passi grossi, e le cose fini sotto ──────────────────────────── */
+const annidato = [
+  '# sito', '', '## Da fare', '',
+  '- [ ] Indagine',
+  '      - [x] guardare cosa c\'è oggi',
+  '      - [ ] l\'unica azione, in una frase',
+  '      - [ ] che dati girano',
+  '- [ ] La faccia',
+  '      - [ ] i caratteri sullo sfondo vero',
+  '', '## Fatte', ''
+].join('\n');
+
+let la = Passi.leggi(annidato);
+const passi = la.daFare.filter(v => v.rientro === 0);
+t('i passi di primo livello sono due', passi.length === 2, passi.map(v=>v.testo).join(' | '));
+t('il primo passo sa quanti figli ha', passi[0].figli && passi[0].figli.totali === 3, JSON.stringify(passi[0].figli));
+t('e quanti ne restano', passi[0].figli.fatti === 1);
+t('il secondo passo conta i suoi', passi[1].figli.totali === 1 && passi[1].figli.fatti === 0);
+t('un figlio non ha figli', !la.daFare.find(v => v.rientro > 0 && v.figli));
+
+/* una casella rientrata si spunta sul posto: se scendesse sotto ## Fatte
+   lascerebbe orfano il passo che la conteneva */
+const figlio = la.daFare.find(v => v.rientro > 0 && v.testo.startsWith('l\'unica azione'));
+const dopoFiglio = Passi.spunta(annidato, figlio.riga, figlio.testo);
+t('il figlio resta al suo posto', /^ +- \[x\] l'unica azione/m.test(dopoFiglio), dopoFiglio.split('\n')[6]);
+t('il figlio non e\' finito sotto Fatte', dopoFiglio.split('## Fatte')[1].trim() === '');
+t('il conto si aggiorna', Passi.leggi(dopoFiglio).daFare.filter(v=>v.rientro===0)[0].figli.fatti === 2);
+t('il passo padre e\' ancora da fare', Passi.leggi(dopoFiglio).daFare[0].testo === 'Indagine');
+
+/* un passo di primo livello invece scende, come sempre */
+const dopoPadre = Passi.spunta(annidato, passi[1].riga, passi[1].testo, '2026-08-24');
+t('il passo grosso scende sotto Fatte', /## Fatte\n\n- \[x\] 2026-08-24 · La faccia/.test(dopoPadre), dopoPadre.split('## Fatte')[1]);
+
+/* i file piatti di prima non cambiano di una virgola */
+const piatto = Passi.leggi(Passi.aggiungiPasso(Passi.nuovo('x'), 'una mossa'));
+t('un file piatto: rientro zero, nessun figlio', piatto.daFare[0].rientro === 0 && !piatto.daFare[0].figli);
+
+
+/* ── 12 · da modello a progetto ─────────────────────────────────────────── */
+const modello = [
+  '# sito', '',
+  '> a cosa serve, e qual è l\'unica azione di chi arriva', '',
+  '## Da fare', '',
+  '- [ ] Indagine',
+  '      - [ ] l\'unica azione, in una frase',
+  '', '## Fatte', ''
+].join('\n');
+
+const nato = Passi.daModello(modello, 'bottega-sito', 'stampano il menu ogni anno e sbagliano i prezzi');
+const ln = Passi.leggi(nato);
+t('il titolo diventa quello del progetto', /^# bottega-sito$/m.test(nato), nato.split('\n')[0]);
+t('il perché è quello tuo, non quello del modello', ln.perche === 'stampano il menu ogni anno e sbagliano i prezzi', ln.perche);
+t('i passi arrivano tutti', ln.daFare.length === 2);
+t('e il rientro sopravvive', ln.daFare[0].figli.totali === 1);
+t('senza perché, resta quello del modello',
+  Passi.leggi(Passi.daModello(modello, 'x', '')).perche.startsWith('a cosa serve'));
+
 console.log((ko ? '\n' : '') + ok + ' prove passate' + (ko ? ', ' + ko + ' FALLITE' : ''));
 process.exit(ko ? 1 : 0);

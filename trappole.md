@@ -35,6 +35,19 @@ Attenzione a una cosa: `servi.py` cura le pagine **da qui in avanti**. Una copia
 già in cache resta lì finché non la si sfratta, e un normale ricarica non basta
 — ci vuole ⌘⇧R, o il bottone. *(2026-08-23)*
 
+**Il numero che busta i `.js` lasciava fuori il foglio di stile.** `ufficio.html`
+carica gli script con un `?v=` ricalcolato a ogni apertura, e sembrava chiusa
+lì. Ma la CSS non arriva da quello script: arriva da un `<link>`, che il numero
+non lo vedeva. Risultato: una regola scritta, salvata e servita — verificata con
+`fetch`, era nel file — che a schermo **non si vedeva**, e nessun errore da
+nessuna parte. Dieci minuti a chiedermi se avessi sbagliato il selettore.
+
+Adesso lo stesso script riscrive anche l'`href` del `<link>` quando sei in
+locale. E la configurazione del pannello punta a `servi.py`, non a
+`http.server`: senza, la pagina e il foglio restano in cache per ore. Se una
+modifica all'aspetto non compare, il primo sospetto è ancora questo — e ⌘⇧R lo
+scioglie. *(2026-08-23)*
+
 **«Porta diversa» non basta a scappare dal guscio.** L'ufficio nuovo gira su
 `localhost:8010` proprio per non ereditare il service worker registrato su
 `:8000`. Ma su 8010 il server serve la cartella intera, e `/` senza nome di

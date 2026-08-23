@@ -224,11 +224,17 @@ const Passi = (() => {
     const dentro = (sec, i) => sec && i > sec.inizio && i < sec.fine;
 
     const idee = [], daFare = [], fatte = [];
+    const tutte = [];          // ogni casella, spuntata o no, in ordine di file
+
+    righe.forEach((riga, i) => {
+      const c0 = riga.match(CASELLA);
+      if (c0) tutte.push({ riga: i, rientro: c0[1].length, fatto: c0[2].toLowerCase() === 'x' });
+    });
 
     righe.forEach((riga, i) => {
       const c = riga.match(CASELLA);
       if (c){
-        const voce = { riga: i, testo: c[3].trim() };
+        const voce = { riga: i, testo: c[3].trim(), rientro: c[1].length };
         if (c[2].toLowerCase() === 'x'){
           const d = voce.testo.match(DATATA);
           if (d){ voce.data = d[1]; voce.testo = d[2]; }
@@ -242,6 +248,24 @@ const Passi = (() => {
       }
       const p = riga.match(PUNTO);
       if (p && dentro(secIdee, i) && p[2].trim()) idee.push({ riga: i, testo: p[2].trim() });
+    });
+
+    /* I figli di un passo: le caselle rientrate che gli stanno sotto, fino
+       alla prossima allo stesso rientro o piu' esterna. Servono al conto che
+       la Bacheca mette accanto alla mossa — «Indagine · 2 di 5» — e sono il
+       motivo per cui un passo grosso puo' restare in cima per due settimane
+       senza che la riga sembri ferma. */
+    daFare.forEach(v => {
+      if (v.rientro > 0) return;
+      const da = tutte.findIndex(x => x.riga === v.riga);
+      if (da === -1) return;
+      let totali = 0, fatti = 0;
+      for (let k = da + 1; k < tutte.length; k++){
+        if (tutte[k].rientro <= v.rientro) break;
+        totali++;
+        if (tutte[k].fatto) fatti++;
+      }
+      if (totali) v.figli = { fatti, totali };
     });
 
     return {
@@ -259,6 +283,23 @@ const Passi = (() => {
   }
 
   /* ── scritto: sempre una riga alla volta ─────────────────────────────── */
+
+  /* Un modello e' un `prossimi-passi.md` gia' scritto: per farne un progetto
+     basta cambiargli il titolo e, se ne hai uno, il perche'. Niente formato
+     nuovo da mantenere, e il modello si corregge come qualunque altro file —
+     la correzione vale dal prossimo progetto in poi.
+
+     **Il legame finisce qui.** Il modello non resta agganciato: da adesso quei
+     passi sono tuoi, li rinomini e li togli. Tenere il filo vorrebbe dire
+     un'app che chiede «questo passo e' cambiato nel modello, lo aggiorno?», ed
+     e' un altro prodotto. */
+  function daModello(modello, nome, perche){
+    const righe = (modello || '').split('\n');
+    const i = righe.findIndex(r => r.match(TITOLO));
+    if (i !== -1) righe[i] = '# ' + nome;
+    const md = righe.join('\n');
+    return (perche || '').trim() ? scriviPerche(md, perche) : md;
+  }
 
   function nuovo(nome, perche){
     return '# ' + nome + '\n\n'
@@ -377,6 +418,13 @@ const Passi = (() => {
     if (!combacia(righe, numeroRiga, atteso)) return md;
     const c = (righe[numeroRiga] || '').match(CASELLA);
     if (!c || c[2].toLowerCase() === 'x') return md;
+
+    /* **Una casella rientrata resta dov'e'.** Scendere sotto `## Fatte`
+       lascerebbe orfano il passo che la conteneva, e il conto «2 di 5» non si
+       potrebbe piu' fare: la struttura vale piu' dell'uniformita'. Scendono
+       solo i passi di primo livello, che sotto non hanno nessuno. */
+    if (c[1].length > 0) return spuntaSulPosto(md, numeroRiga, true, atteso);
+
     righe.splice(numeroRiga, 1);
     return inserisci(righe.join('\n'), FATTE, '- [x] ' + (quando || oggi()) + ' · ' + c[3].trim(), true);
   }
@@ -407,7 +455,7 @@ const Passi = (() => {
   }
 
   return {
-    leggi, nuovo, scriviPerche,
+    leggi, nuovo, daModello, scriviPerche,
     aggiungiPasso, aggiungiIdea, rinomina, elimina,
     spunta, despunta, spuntaSulPosto, promuoviIdea,
     campi, scriviCampo, scadenza, tipo,

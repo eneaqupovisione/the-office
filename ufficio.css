@@ -438,6 +438,23 @@ details.fatte .data{
   font-size:12px; color:var(--tenue); flex:none; margin-top:2px;
 }
 
+/* ── i passi grossi, e le cose fini sotto ────────────────────────────────
+   Il modello porta una struttura — sei passi, e sotto ognuno quello che
+   serve a chiuderlo. Se a schermo restano ventiquattro righe uguali, quella
+   struttura non esiste: il passo pesa, la cosa fine rientra e si alleggerisce. */
+
+.voce.passo{ margin-top:14px; border-bottom:0; }
+.voce.passo:first-child{ margin-top:0; }
+.voce.passo .testo{ font-weight:600; letter-spacing:-.005em; }
+.voce.passo[data-figli]::after{
+  content:attr(data-figli); flex:none; font-size:12px; color:var(--tenue);
+  font-variant-numeric:tabular-nums; align-self:center;
+}
+
+.voce.fine{ margin-left:30px; border-bottom:0; padding:4px 2px; }
+.voce.fine .testo{ font-size:15px; color:var(--ink-2); }
+.voce.fine input[type=checkbox]{ width:15px; height:15px; }
+
 /* ── i tre tipi ──────────────────────────────────────────────────────────
    Tre bottoni e nessun «nessuno»: il non-detto si ottiene togliendo, cioè
    ripremendo quello scelto. Un quarto bottone «non so» sarebbe una risposta
