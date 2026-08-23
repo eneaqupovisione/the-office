@@ -75,17 +75,17 @@
      Ma **in locale** si caricano con un numero che cambia a ogni apertura, e
      non è un vezzo: senza, il browser tiene i `.js` in cache, tu modifichi un
      file, ricarichi, e non cambia niente. È lo stesso male del vecchio
-     `?v=12` da tenere allineato a mano fra `index.html` e `sw.js` — la
-     trappola che in questo progetto ha fatto perdere più tempo di tutte.
-     Qui il numero se lo scrive la macchina, quindi non si può sbagliare.
+     numero di versione da tenere allineato a mano in due file — la trappola
+     che in questo progetto ha fatto perdere più tempo di tutte. Qui il numero
+     se lo scrive la macchina, quindi non si può sbagliare.
 
      Fuori da localhost non si aggiunge niente: là la cache serve davvero.
      `async = false` tiene l'ordine di esecuzione, che conta — `radice.js`
-     usa `Passi`, e `ufficio.js` usa tutti e due. -->
+     usa `Passi`, e `ufficio.js` li usa tutti. -->
 <script>
 (function(){
   var v = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) ? '?v=' + Date.now() : '';
-  ['passi.js', 'seed.js', 'radice.js', 'ufficio.js'].forEach(function(f){
+  ['passi.js', 'seed.js', 'radice.js', 'domande.js', 'ufficio.js'].forEach(function(f){
     var s = document.createElement('script');
     s.src = f + v;
     s.async = false;

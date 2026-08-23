@@ -45,6 +45,10 @@ const Ufficio = (() => {
      sarebbe la cosa meno utile possibile. */
   const GIORNI_VIVI = 14, MINIMO_IN_BACHECA = 3;
 
+  /* Quanto dura il tick prima che il file venga scritto e la riga sostituita.
+     Mezzo secondo: sotto non lo vedi, sopra diventa un'attesa. */
+  const RESPIRO = 480;
+
   /* ═══ L'ORDINE DELLE COSE ═════════════════════════════════════════════════
 
      Qui sotto c'è la **struttura dell'interfaccia, scritta come dato** invece
@@ -64,7 +68,12 @@ const Ufficio = (() => {
      `PARTE_RIGA` e `PARTE_MOSSA` per le righe. **Un nome che non esiste viene
      saltato**, non rompe niente: si può togliere un pezzo commentandolo. */
 
-  /* Le sezioni, nell'ordine in cui compaiono in alto. */
+  /* Le sezioni, nell'ordine in cui compaiono in alto.
+
+     Le **domande** della Bacheca — «cosa sto dimenticando?» e le altre — sono
+     lo stesso genere di dato, ma stanno in `domande.js`: sono logica pura, e
+     tenendole qui `prova-domande.js` non potrebbe esistere, perché questo file
+     tocca il `document` e da `node` non si carica. */
   const SEZIONI = [
     { id: 'bacheca',   titolo: 'Bacheca'   },
     { id: 'scrivania', titolo: 'Scrivania' },
@@ -80,8 +89,8 @@ const Ufficio = (() => {
     'impostazioni',  // il pannello, quando è aperto
     'avviso',        // chiuso, oppure la data passata
     'perche',        // la prima cosa che leggi tornando dopo mesi
-    'idee',
     'daFare',
+    'idee',          // piegate: si aprono quando le vai a cercare
     'fatte',
     'figli',         // le cartelle qui dentro, da promuovere
     'altrove'        // le caselle che vivono negli altri file
@@ -90,7 +99,7 @@ const Ufficio = (() => {
   /* Una riga della Bacheca: prima **la cosa da fare**, e il nome del lavoro
      sotto e piccolo. Il verso conta — al contrario torna a essere un elenco
      di progetti, che è esattamente quello che la Bacheca non deve essere. */
-  const MOSSA       = ['spunta', 'testo', 'scadenza', 'silenzio', 'freccia'];
+  const MOSSA       = ['spunta', 'testo', 'scadenza', 'quante', 'info', 'perOraNo', 'freccia'];
   const MOSSA_TESTO = ['cosa', 'chi'];
 
   /* Una riga di Scrivania e Rubrica. */
@@ -101,6 +110,9 @@ const Ufficio = (() => {
   let sezione = localStorage.getItem('ufficio.sezione') || 'bacheca';
   let ordine  = localStorage.getItem('ufficio.ordine')  || 'scadenza';
   let mostraChiusi = false;          // i chiusi non accusano: escono dall'elenco
+  let domandaAperta = null;          // quale domanda della Bacheca è aperta
+  let ideeAperte = false;            // il cassetto delle belle idee, nella scheda
+  let anteprimaAperta = null;        // il percorso della riga con la «i» aperta
   let ultimoScandaglio = 0;
   let modificaAperta = false;   // il pannello delle impostazioni di un progetto
 
@@ -146,6 +158,43 @@ const Ufficio = (() => {
     if (p.fatte)  pezzi.push(p.fatte + ' fatte');
     return pezzi.join(' · ');
   }
+
+  /* ── «per ora no» ─────────────────────────────────────────────────────────
+     Una cosa messa via non è una cosa cancellata: torna da sola dopo una
+     settimana. È la differenza fra rimandare e decidere — e decidere si fa
+     nella scheda, dove c'è il × , non di sfuggita da un elenco.
+
+     Vive in `localStorage` e **non tocca il file**, ed è voluto: un `- [ ]`
+     nel `prossimi-passi.md` deve continuare a voler dire una cosa sola. Se
+     «rimandato» diventasse uno stato scritto lì dentro, il file smetterebbe di
+     essere leggibile da Claude Code senza sapere le regole di quest'app.
+
+     Il prezzo è che la memoria sta nel browser: cambi computer e le cose
+     rimandate riaffiorano. Per una settimana di rinvii è un prezzo giusto. */
+
+  const SETTIMANA = 7 * GIORNO;
+  const CHIAVE_VIA = 'ufficio.messeVia';
+
+  /* Legge, e già che c'è butta via le scadute: così l'elenco non cresce per
+     sempre e non serve nessuna pulizia da nessun'altra parte. */
+  function messeVia(){
+    let m = {};
+    try { m = JSON.parse(localStorage.getItem(CHIAVE_VIA) || '{}') || {}; }
+    catch (e){ m = {}; }
+    const ora = Date.now();
+    let cambiato = false;
+    Object.keys(m).forEach(k => { if (!(m[k] > ora)){ delete m[k]; cambiato = true; } });
+    if (cambiato) localStorage.setItem(CHIAVE_VIA, JSON.stringify(m));
+    return m;
+  }
+
+  function mettiVia(chiave){
+    const m = messeVia();
+    m[chiave] = Date.now() + SETTIMANA;
+    localStorage.setItem(CHIAVE_VIA, JSON.stringify(m));
+  }
+
+  const viaPerOra = (chiave) => Object.prototype.hasOwnProperty.call(messeVia(), chiave);
 
   /* ── i colori ─────────────────────────────────────────────────────────────
      Una tinta per cartella di lavoro, e ogni progetto dentro una **gradazione
@@ -307,7 +356,46 @@ const Ufficio = (() => {
 
   /* ── l'avvio ─────────────────────────────────────────────────────────── */
 
+  /* Quali file non sono arrivati. Serve contro un guaio che si vede male: se
+     il browser si tiene in cache un `ufficio.html` vecchio, quella pagina
+     carica un elenco di script vecchio, e un file nuovo — `domande.js`,
+     quando è nato — semplicemente non c'è. L'app allora esplode dentro la
+     prima funzione che lo usa, e da fuori sembra soltanto che **cambiare
+     sezione non faccia niente**: nessun messaggio, nessun indizio.
+
+     Un `typeof` su un nome mai dichiarato non è un errore, e `Passi` e
+     compagnia sono `const` di primo livello: non stanno su `window`, quindi
+     `window.Passi` sarebbe `undefined` anche quando il file c'è. */
+  function mancano(){
+    const fuori = [];
+    if (typeof Passi   === 'undefined') fuori.push('passi.js');
+    if (typeof Radice  === 'undefined') fuori.push('radice.js');
+    if (typeof Domande === 'undefined') fuori.push('domande.js');
+    return fuori;
+  }
+
+  /* Ricarica saltando la cache, tenendosi `?prova` e tutto il resto. */
+  function ricarica(){
+    const q = new URLSearchParams(location.search);
+    q.set('_', String(Date.now()));
+    location.replace(location.pathname + '?' + q.toString());
+  }
+
   async function avvia(){
+    const senza = mancano();
+    if (senza.length){
+      const p = el('div', 'scheda');
+      p.append(el('h1', null, 'Manca un pezzo'));
+      p.append(el('p', 'occhiello',
+        'Non sono arrivati: ' + senza.join(', ') + '. Quasi sempre vuol dire che il ' +
+        'browser si è tenuto una versione vecchia di questa pagina.'));
+      const b = el('button', 'min', 'ricarica saltando la cache');
+      b.addEventListener('click', ricarica);
+      p.append(b);
+      mostra(p);
+      return;
+    }
+
     /* Il menu lo costruisce `SEZIONI`, non l'HTML: aggiungerne una, toglierla
        o cambiarle nome e' una riga in cima al file. */
     $('sezioni').replaceChildren(...SEZIONI.map(({ id, titolo }) => {
@@ -454,13 +542,30 @@ const Ufficio = (() => {
     aperto = null;
     const fuori = [];
 
-    const tutti = progetti().filter(p => p.quando);
+    /* Ogni progetto porta in Bacheca **la prima mossa che non hai messo via**.
+       Se le ha messe via tutte esce dal tabellone finché non tornano: gliel'hai
+       detto tre volte. Chi una mossa non ce l'ha proprio resta, perché la sua
+       riga dice «aprilo e scrivine una», che è una cosa da fare. */
+    const conQuando = progetti().filter(p => p.quando);
+    const tutti = conQuando.map(p => {
+      const tutte = Domande.mosseDi(p);
+      const scelta = Domande.mossaDi(p, viaPerOra);
+      if (!scelta && tutte.length) return null;
+      /* Quale delle sue mosse è quella che finisce in Bacheca: rimandandone
+         una, la riga dice «2 di 5» invece di «1 di 5». È vero, ed è utile. */
+      const i = scelta ? tutte.findIndex(m => m.testo === scelta.testo) : -1;
+      return Object.assign({}, p, { mossa: scelta, indiceMossa: i, quanteMosse: tutte.length });
+    }).filter(Boolean);
+
     const vivi = tutti.filter(p => tace(p).giorni <= GIORNI_VIVI);
     const scelti = (vivi.length ? vivi : tutti.slice().sort(perSilenzio).slice(0, MINIMO_IN_BACHECA))
       .slice().sort(perSilenzio);
 
     if (!scelti.length){
-      fuori.push(el('p', 'vuoto', 'Non c\'è ancora niente. I progetti si dichiarano dalla Scrivania.'));
+      fuori.push(el('p', 'vuoto', conQuando.length
+        ? 'Per adesso hai rimandato tutto. Le cose messe via tornano da sole entro una settimana.'
+        : 'Non c\'è ancora niente. I progetti si dichiarano dalla Scrivania.'));
+      fileDomande(fuori, scelti);
       codaProva(fuori);
       mostra(...fuori);
       return;
@@ -470,9 +575,128 @@ const Ufficio = (() => {
       vivi.length ? 'Una mossa per progetto, di quelli toccati negli ultimi ' + GIORNI_VIVI + ' giorni.'
                   : 'Negli ultimi ' + GIORNI_VIVI + ' giorni non hai toccato niente. Questi sono gli ultimi che hai lasciato.'));
 
-    scelti.forEach(p => fuori.push(rigaMossa(p)));
+    scelti.forEach(p => {
+      const r = rigaMossa(p);
+      fuori.push(r);
+      if (anteprimaAperta === p.percorso){
+        r.classList.add('conAnteprima');   // perde il fondo: i due pezzi sono uno
+        fuori.push(anteprima(p));
+      }
+    });
+    fileDomande(fuori, scelti);
     codaProva(fuori);
     mostra(...fuori);
+  }
+
+  /* ── l'anteprima di un progetto ───────────────────────────────────────────
+     Quello che la scheda direbbe, detto sotto la riga. Non è una scorciatoia
+     per aprire il progetto — per quello c'è la freccia, ed è un clic: serve a
+     **decidere se aprirlo**, che è una domanda diversa e più frequente.
+
+     Una mossa scritta stringata tre settimane fa spesso non si capisce da sola;
+     il perché del progetto la rimette in piedi senza farti cambiare schermata e
+     perdere il posto in cui eri. */
+
+  function anteprima(p){
+    const box = tinteggia(el('div', 'anteprima'), p);
+
+    if (p.perche) box.append(el('blockquote', 'perche', soloTesto(p.perche)));
+
+    /* Una riga sola di fatti, e ci torna il silenzio: qui significa qualcosa,
+       perché lo stai chiedendo tu di un progetto preciso. */
+    const fatti = [];
+    if (p.tipo) fatti.push(p.tipo);
+    if (p.per)  fatti.push('per ' + p.per);
+    const s = Passi.scadenza(p.entro);
+    if (s) fatti.push(s.testo);
+    const t = tace(p);
+    if (t.giorni != null) fatti.push('tace da ' + t.testo);
+    const c = conti(p);
+    if (c) fatti.push(c);
+    if (fatti.length) box.append(el('p', 'fatti', fatti.join(' · ')));
+
+    if (p.idee && p.idee.length){
+      const d = el('div', 'ideine');
+      d.append(el('h3', null, p.idee.length === 1 ? 'una bella idea' : p.idee.length + ' belle idee'));
+      p.idee.forEach(i => d.append(el('p', null, soloTesto(i.testo))));
+      box.append(d);
+    }
+
+    const b = el('button', 'min', 'apri il progetto');
+    b.addEventListener('click', () => apri(p));
+    box.append(b);
+
+    return box;
+  }
+
+  /* ── le domande ───────────────────────────────────────────────────────────
+     Stanno **sotto** la Bacheca, e non è indifferente: prima leggi cosa fare,
+     poi semmai chiedi. Sopra sarebbero quattro bottoni davanti a una lista di
+     tre righe, e la sezione smetterebbe di rispondere alla sua domanda.
+
+     E non stanno nella testata, dove il `CLAUDE.md` vieta i bottoni di
+     servizio — ma la ragione vera è un'altra: questi non sono servizio. Sono
+     roba della Bacheca, e quando sei in Scrivania non vogliono dire niente. */
+
+  function fileDomande(fuori, suLaBacheca){
+    const fila = el('div', 'domande');
+    Domande.DOMANDE.forEach(d => {
+      const b = el('button', 'parola', d.parola);
+      b.setAttribute('aria-pressed', String(domandaAperta === d.id));
+      b.addEventListener('click', () => {
+        domandaAperta = (domandaAperta === d.id) ? null : d.id;   // ricliccare richiude
+        bacheca();
+      });
+      fila.append(b);
+    });
+    fuori.push(fila);
+    if (domandaAperta) fuori.push(risposta(domandaAperta, suLaBacheca));
+  }
+
+  /* Una risposta mostra ciò che **non** stai già vedendo: le chiavi di quello
+     che è in Bacheca escono, o la risposta ripeterebbe la domanda. */
+  function risposta(id, suLaBacheca){
+    const giaVisti = new Set((suLaBacheca || [])
+      .filter(p => p.mossa)
+      .map(p => Domande.chiaveDi('mossa', p, p.mossa.testo)));
+
+    const r = Domande.chiedi(id, progetti(), { adesso: Date.now(), via: viaPerOra, giaVisti });
+    const cassetto = el('div', 'risposta');
+    if (!r) return cassetto;
+
+    if (!r.proposte.length){
+      cassetto.append(el('p', 'vuoto', r.domanda.vuoto));
+      return cassetto;
+    }
+
+    r.proposte.forEach(x => cassetto.append(rigaProposta(x)));
+
+    /* Quante ne restano fuori. Dirlo è meglio che tacerlo: un elenco che
+       taglia in silenzio ti fa credere di aver visto tutto. */
+    const altre = r.quante - r.proposte.length;
+    if (altre > 0)
+      cassetto.append(el('p', 'altre', altre === 1 ? 'e un\'altra' : 'e altre ' + altre));
+
+    return cassetto;
+  }
+
+  function rigaProposta(x){
+    const r = tinteggia(el('div', 'proposta' + (x.tipo === 'idea' ? ' daIdea' : '')), x.p);
+
+    const mezzo = el('div', 'mezzo');
+    mezzo.append(el('div', 'cosa', soloTesto(x.testo)));
+    if (x.sotto) mezzo.append(el('div', 'chi', x.sotto));
+    r.append(mezzo);
+
+    const poi = el('button', 'poi', 'per ora no');
+    poi.title = 'la mette da parte per una settimana';
+    poi.addEventListener('click', (e) => { e.stopPropagation(); mettiVia(x.chiave); bacheca(); });
+    r.append(poi, el('span', 'apri', '›'));
+
+    r.addEventListener('click', (e) => { if (e.target.tagName !== 'BUTTON') apri(x.p); });
+    r.tabIndex = 0;
+    r.addEventListener('keydown', (e) => { if (e.key === 'Enter'){ e.preventDefault(); apri(x.p); } });
+    return r;
   }
 
   /* Una mossa, e sotto il progetto da cui viene. Il verso conta: quello che
@@ -481,21 +705,82 @@ const Ufficio = (() => {
 
   const PARTE_MOSSA = {
 
+    /* La casella, e **solo** la casella, spunta una mossa: il clic sulla riga
+       apre la scheda e non tocca niente. Ma il quadratino nudo è vent'anni di
+       pixel: sta dentro un'etichetta che gli fa da bersaglio, così ci prendi
+       senza mirare e senza che il gesto diventi «apri il progetto» per un
+       millimetro di scarto.
+
+       E il segno si vede **prima** della scrittura. Prima faceva il contrario —
+       scriveva il file e rifaceva subito lo scandaglio, che ridisegnava la
+       riga: la spunta c'era per un fotogramma e poi la sostituiva la mossa
+       dopo. Un gesto che non lascia traccia non sembra un gesto riuscito,
+       sembra un clic andato a vuoto. Ora la scrittura aspetta il tick. */
     spunta: (p) => {
       if (!p.mossa) return null;
+      const etichetta = el('label', 'casella');
       const c = document.createElement('input');
       c.type = 'checkbox';
       c.title = 'fatta';
-      c.addEventListener('click', (e) => e.stopPropagation());
+      etichetta.append(c);
+      etichetta.addEventListener('click', (e) => e.stopPropagation());
+
       c.addEventListener('change', async () => {
+        const r = etichetta.closest('.mossa');
+        if (r){
+          r.classList.add('fatta');
+          r.querySelectorAll('input, button').forEach(x => { x.disabled = true; });
+        }
+        await new Promise(f => setTimeout(f, RESPIRO));
+
         const dove = p.percorso + '/' + p.mossa.file;
         const { testo, riga, sua } = p.mossa;
-        const prima = (await Radice.leggi(dove)) || '';
-        const dopo = sua ? Passi.spunta(prima, riga, testo) : Passi.spuntaSulPosto(prima, riga, true, testo);
-        if (dopo !== prima) await Radice.scrivi(dove, dopo);
+        try {
+          const prima = (await Radice.leggi(dove)) || '';
+          const dopo = sua ? Passi.spunta(prima, riga, testo) : Passi.spuntaSulPosto(prima, riga, true, testo);
+          if (dopo !== prima) await Radice.scrivi(dove, dopo);
+        } catch (e){
+          /* Non è andata: la riga torna com'era, invece di restare barrata a
+             dire una cosa che sul disco non è successa. */
+          if (r){
+            r.classList.remove('fatta');
+            r.querySelectorAll('input, button').forEach(x => { x.disabled = false; });
+          }
+          c.checked = false;
+          return;
+        }
         await scandaglia();          // la mossa dopo prende il suo posto
       });
-      return c;
+      return etichetta;
+    },
+
+    /* «1 di 5» — a che punto sei dentro quel progetto. Sostituisce il silenzio,
+       che in Bacheca non diceva niente: qui dentro ci sono per costruzione solo
+       progetti toccati negli ultimi quattordici giorni, quindi quel numero
+       variava poco e non cambiava nessuna decisione. Quanto tace un progetto è
+       una cosa da Scrivania, e ora sta anche sotto la «i».
+
+       Con una mossa sola non compare: «1 di 1» è rumore. */
+    quante: (p) => {
+      if (!p.mossa || !(p.quanteMosse > 1)) return null;
+      return el('span', 'quante', (p.indiceMossa + 1) + ' di ' + p.quanteMosse);
+    },
+
+    /* La «i»: apre sotto la riga un'anteprima della scheda, senza cambiare
+       schermata. La freccia porta al progetto; questa ti fa decidere se
+       andarci. */
+    info: (p) => {
+      const b = el('button', 'info', 'i');
+      const aperta = anteprimaAperta === p.percorso;
+      b.title = aperta ? 'chiudi i dettagli' : 'dettagli del progetto';
+      b.setAttribute('aria-label', b.title);
+      b.setAttribute('aria-expanded', String(aperta));
+      b.addEventListener('click', (e) => {
+        e.stopPropagation();
+        anteprimaAperta = aperta ? null : p.percorso;
+        bacheca();
+      });
+      return b;
     },
 
     testo: (p) => {
@@ -525,6 +810,27 @@ const Ufficio = (() => {
       return el('span', 'tace ' + t.classe, t.testo);
     },
 
+    /* La valvola che sblocca il tabellone. Senza, una mossa che non fai — ma
+       che non vuoi nemmeno togliere — tiene il suo progetto fermo in cima per
+       tre settimane, e la Bacheca diventa una cosa che smetti di guardare.
+       Con questo, la mossa dopo dello stesso progetto prende il suo posto. */
+    perOraNo: (p) => {
+      if (!p.mossa) return null;
+      /* Un simbolo, non tre parole: «per ora no» scritto per esteso pesava
+         quanto la mossa e su ogni riga chiedeva di essere letto. Le doppie
+         parentesi angolari dicono *avanti, questa la salto* — e la frase intera
+         resta nel `title` e nell'etichetta per chi non vede il simbolo. */
+      const b = el('button', 'poi', '\u00BB');
+      b.title = 'per ora no — la mette da parte per una settimana';
+      b.setAttribute('aria-label', b.title);
+      b.addEventListener('click', (e) => {
+        e.stopPropagation();
+        mettiVia(Domande.chiaveDi('mossa', p, p.mossa.testo));
+        bacheca();
+      });
+      return b;
+    },
+
     freccia: () => el('span', 'apri', '›')
   };
 
@@ -537,7 +843,9 @@ const Ufficio = (() => {
       if (nodo) r.append(nodo);
     });
 
-    r.addEventListener('click', (e) => { if (e.target.tagName !== 'INPUT') apri(p); });
+    r.addEventListener('click', (e) => {
+      if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON') apri(p);
+    });
     r.tabIndex = 0;
     r.addEventListener('keydown', (e) => { if (e.key === 'Enter'){ e.preventDefault(); apri(p); } });
     return r;
@@ -669,6 +977,27 @@ const Ufficio = (() => {
     silenzio: (p) => {
       const t = tace(p);
       return el('span', 'tace ' + t.classe, t.testo);
+    },
+
+    /* La valvola che sblocca il tabellone. Senza, una mossa che non fai — ma
+       che non vuoi nemmeno togliere — tiene il suo progetto fermo in cima per
+       tre settimane, e la Bacheca diventa una cosa che smetti di guardare.
+       Con questo, la mossa dopo dello stesso progetto prende il suo posto. */
+    perOraNo: (p) => {
+      if (!p.mossa) return null;
+      /* Un simbolo, non tre parole: «per ora no» scritto per esteso pesava
+         quanto la mossa e su ogni riga chiedeva di essere letto. Le doppie
+         parentesi angolari dicono *avanti, questa la salto* — e la frase intera
+         resta nel `title` e nell'etichetta per chi non vede il simbolo. */
+      const b = el('button', 'poi', '\u00BB');
+      b.title = 'per ora no — la mette da parte per una settimana';
+      b.setAttribute('aria-label', b.title);
+      b.addEventListener('click', (e) => {
+        e.stopPropagation();
+        mettiVia(Domande.chiaveDi('mossa', p, p.mossa.testo));
+        bacheca();
+      });
+      return b;
     },
 
     freccia: () => el('span', 'apri', '›')
@@ -1284,7 +1613,17 @@ const Ufficio = (() => {
       return q;
     },
 
-    /* Le belle idee — quelle che «mi ero dimenticato di aver avuto». */
+    /* Le belle idee — quelle che «mi ero dimenticato di aver avuto».
+
+       Stanno **sotto** le cose da fare e **piegate**, e il motivo è che non
+       pesano allo stesso modo: una cosa da fare è un impegno, un'idea è un
+       cassetto da cui attingi quando ti va. Aperte e per prime, la scheda
+       apriva chiedendoti di guardare cose che non devi fare — e la cosa da
+       fare, che è il motivo per cui hai aperto la scheda, stava sotto.
+
+       Piegate ma **sempre presenti**: anche a cassetto vuoto la riga c'è, o il
+       campo per scriverne una diventerebbe irraggiungibile proprio nel momento
+       in cui l'idea ti viene. */
     idee: ({ letto }) => {
       if (!letto) return null;
       const dentro = letto.idee.map(v => {
@@ -1302,7 +1641,15 @@ const Ufficio = (() => {
       });
       if (!dentro.length) dentro.push(el('p', 'vuoto', 'Niente ancora. Le idee che ti vengono su questo progetto vanno qui.'));
       dentro.push(campoAppendi('un\'idea che ti è venuta…', (t) => cambiaPassi(md => Passi.aggiungiIdea(md, t))));
-      return blocco(Passi.IDEE, ...dentro);
+
+      const d = el('details', 'idee');
+      d.open = ideeAperte;
+      d.addEventListener('toggle', () => { ideeAperte = d.open; });
+      const n = letto.idee.length;
+      d.append(el('summary', null,
+        n === 0 ? 'nessuna bella idea, ancora' : n === 1 ? 'una bella idea' : n + ' belle idee'));
+      d.append(...dentro);
+      return d;
     },
 
     /* Da fare — le caselle di casa, quelle che The Office puo' muovere. */

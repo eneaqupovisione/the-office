@@ -99,15 +99,118 @@ button{ font:inherit; color:inherit; }
 }
 .mossa:hover{ border-color:var(--linea-forte); }
 .mossa:focus-visible{ outline:2px solid var(--acc-forte); outline-offset:2px; }
+/* La casella dentro un'etichetta che le fa da bersaglio: si clicca senza
+   mirare, e il quadratino resta della misura giusta per l'occhio. Il margine
+   negativo si riprende lo spazio, così la riga non si gonfia. */
+.mossa .casella{
+  display:flex; align-items:center; flex:none; cursor:pointer;
+  padding:12px; margin:-12px 0 -12px -8px; border-radius:10px;
+}
+.mossa .casella:hover{ background:var(--carta-2); }
 .mossa input[type=checkbox]{
   width:20px; height:20px; margin:0; flex:none; cursor:pointer; accent-color:var(--acc-forte);
 }
+
+/* Spuntata: il segno si vede per mezzo secondo prima che la riga se ne vada.
+   È l'unica conferma che il gesto è arrivato — senza, sembra un clic a vuoto. */
+.mossa{ transition:opacity .28s ease, background-color .28s ease; }
+.mossa.fatta{ opacity:.5; }
+.mossa.fatta .cosa{ text-decoration:line-through; text-decoration-thickness:1.5px; }
+
+/* «1 di 5» — a che punto sei dentro quel progetto. */
+.mossa .quante{ font-size:12.5px; color:var(--tenue); white-space:nowrap; flex:none; }
 .mossa .mezzo{ flex:1; min-width:0; }
 .mossa .cosa{ font-size:16px; line-height:1.35; letter-spacing:-.005em; }
 .mossa .chi{ font-size:12.5px; color:var(--tenue); margin-top:3px; }
 .mossa .chi .nome{ font-weight:600; color:var(--ink-2); }
 .mossa .apri{ color:var(--linea-forte); font-size:19px; line-height:1; flex:none; }
 .mossa:hover .apri{ color:var(--ink-2); }
+
+/* ── le domande ──────────────────────────────────────────────────────────
+   Parole, non comandi, e in fondo alla bacheca: prima leggi cosa fare, poi
+   semmai chiedi. Pastiglie tenui finché non le premi — devono essere lì senza
+   chiamare, o diventano la prima cosa che guardi invece delle mosse. */
+
+.domande{ display:flex; flex-wrap:wrap; gap:8px; margin-top:24px; }
+.parola{
+  font-family:inherit; font-size:13.5px; cursor:pointer;
+  background:none; border:1px solid var(--linea); border-radius:999px;
+  padding:7px 14px; color:var(--tenue);
+}
+.parola:hover{ color:var(--ink); border-color:var(--linea-forte); }
+.parola[aria-pressed="true"]{
+  background:var(--acc); border-color:transparent; color:var(--su-acc); font-weight:600;
+}
+
+/* La risposta è un cassetto che si apre sotto, non una schermata: la bacheca
+   resta dov'è, e questa se ne va com'è venuta. */
+.risposta{
+  margin-top:12px; padding:4px 12px 12px;
+  background:var(--carta-2); border-radius:12px;
+}
+.risposta .vuoto{ margin:14px 4px 8px; }
+.risposta .altre{ margin:10px 4px 0; color:var(--tenue); font-size:12.5px; }
+
+.proposta{
+  display:flex; align-items:center; gap:12px;
+  background:var(--carta); border:1px solid var(--linea);
+  border-left:4px solid var(--tinta, transparent);
+  border-radius:10px; padding:11px 14px; margin-top:8px; cursor:pointer;
+}
+.proposta:hover{ border-color:var(--linea-forte); border-left-color:var(--tinta, transparent); }
+.proposta:focus-visible{ outline:2px solid var(--acc-forte); outline-offset:2px; }
+.proposta .mezzo{ flex:1; min-width:0; }
+.proposta .cosa{ font-size:15px; line-height:1.35; letter-spacing:-.005em; }
+.proposta .chi{ font-size:12px; color:var(--tenue); margin-top:3px; }
+.proposta .apri{ color:var(--linea-forte); font-size:18px; line-height:1; flex:none; }
+.proposta:hover .apri{ color:var(--ink-2); }
+
+/* Un'idea non è una cosa da fare, e non deve sembrarlo: corsivo, che è il
+   modo più leggero di dire «questa è un pensiero, non un impegno». */
+.proposta.daIdea .cosa{ font-style:italic; }
+
+/* I due tondi a destra: «i» apre i dettagli, «»» rimanda di una settimana.
+   Ci sono ma non chiamano — rimandare deve costare un tocco e non deve essere
+   la cosa più visibile della riga, o diventa quello che fai. */
+.poi, .info{
+  font-family:inherit; cursor:pointer; flex:none;
+  width:26px; height:26px; padding:0; border-radius:50%;
+  background:none; border:1px solid transparent; color:var(--tenue);
+  line-height:1; opacity:.4;
+}
+.poi{ font-size:15px; }
+.info{ font-size:13px; font-style:italic; font-weight:600; }
+.mossa:hover .poi, .mossa:hover .info,
+.proposta:hover .poi, .poi:focus-visible, .info:focus-visible{ opacity:1; }
+.poi:hover, .info:hover{ background:var(--carta-2); border-color:var(--linea); color:var(--ink); }
+.info[aria-expanded="true"]{
+  opacity:1; background:var(--acc); border-color:transparent; color:var(--su-acc);
+}
+
+/* ── l'anteprima di un progetto ──────────────────────────────────────────
+   Sta attaccata sotto la sua riga e ne porta la tinta: si deve vedere che è
+   una costola di quella riga, non un blocco nuovo che parla d'altro. */
+.mossa.conAnteprima{
+  margin-bottom:0; border-bottom-color:transparent;
+  border-bottom-left-radius:0; border-bottom-right-radius:0; box-shadow:none;
+}
+.anteprima{
+  margin:0 0 10px; padding:4px 16px 14px;
+  background:var(--carta-2); border-radius:0 0 12px 12px;
+  border-left:4px solid var(--tinta, transparent);
+}
+.anteprima .perche{
+  margin:0 0 8px; padding-left:12px; border-left:2px solid var(--linea-forte);
+  font-size:14px; line-height:1.45; color:var(--ink-2);
+}
+.anteprima .fatti{ margin:0; font-size:12.5px; color:var(--tenue); }
+.anteprima .ideine{ margin-top:12px; }
+.anteprima .ideine h3{
+  font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase;
+  color:var(--tenue); margin:0 0 5px;
+}
+.anteprima .ideine p{ margin:0 0 3px; font-size:13.5px; font-style:italic; color:var(--ink-2); }
+.anteprima .min{ margin-top:12px; }
 
 /* Una riga di servizio, in fondo e in punta di piedi. */
 .sottile{
@@ -320,13 +423,15 @@ button{ font:inherit; color:inherit; }
 }
 .appendi button:active{ background:var(--acc-forte); }
 
-details.fatte summary{
+details.fatte, details.idee{ margin-bottom:26px; }
+details.fatte summary, details.idee summary{
   cursor:pointer; color:var(--tenue); font-size:13.5px; padding:6px 0;
   list-style:none;
 }
-details.fatte summary::-webkit-details-marker{ display:none; }
-details.fatte summary::before{ content:'▸ '; }
-details.fatte[open] summary::before{ content:'▾ '; }
+details.fatte summary::-webkit-details-marker,
+details.idee summary::-webkit-details-marker{ display:none; }
+details.fatte summary::before, details.idee summary::before{ content:'▸ '; }
+details.fatte[open] summary::before, details.idee[open] summary::before{ content:'▾ '; }
 details.fatte .voce{ opacity:.72; }
 details.fatte .data{
   font-family:ui-monospace, SFMono-Regular, Menlo, monospace;

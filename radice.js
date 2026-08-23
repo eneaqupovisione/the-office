@@ -212,6 +212,7 @@ const Radice = (() => {
        due volte in due file sarebbe il modo più veloce di farli divergere. */
     let c = {};
     let mossa = m.prima;
+    let mosse = [], idee = [], perche = '';
     if (dichiarato){
       try {
         const testo = await (await (await maniglia.getFileHandle(FILE_PASSI)).getFile()).text();
@@ -221,17 +222,28 @@ const Radice = (() => {
            il ripiego per i progetti che un `prossimi-passi.md` non ce l'hanno
            ancora — meglio una mossa presa da `consegna.md` che nessuna. */
         const letto = Passi.leggi(testo);
-        if (letto.daFare.length)
-          mossa = { file: FILE_PASSI, riga: letto.daFare[0].riga, testo: letto.daFare[0].testo, sua: true };
+        /* **Tutte** le mosse, non solo la prima, e le belle idee: costano zero
+           — il file è già aperto e già letto — e senza di loro due cose non si
+           possono fare. Se metti via la mossa in cima alla Bacheca, la
+           successiva dello stesso progetto deve prendere il suo posto: con una
+           sola mossa in mano non ci sarebbe niente da mettere. E le idee, che
+           oggi si vedono solo aprendo la scheda del progetto che non stai
+           aprendo, non uscirebbero mai da lì. */
+        mosse = letto.daFare.map(v =>
+          ({ file: FILE_PASSI, riga: v.riga, testo: v.testo, sua: true }));
+        idee = letto.idee.map(v => ({ riga: v.riga, testo: v.testo }));
+        perche = letto.perche || '';
+        if (mosse.length) mossa = mosse[0];
       } catch (e){ /* illeggibile: il progetto resta, senza campi */ }
     }
+    if (!mosse.length && m.prima) mosse = [m.prima];
 
     return {
       nome: nomeCartella, dentro: dentroA, dichiarato,
       tipo: dichiarato ? 'progetto' : (await indiziDiLavoro(maniglia)) ? 'candidato' : 'materiale',
       percorso: (dentroA ? dentroA + '/' : '') + nomeCartella,
       quando: m.quando, aperte: m.aperte, fatte: m.fatte, troncato: m.troncato,
-      mossa,
+      mossa, mosse, idee, perche,
       per: c.per || '', entro: c.entro || '', chiuso: c.chiuso || '', colore: c.colore || '',
       tipo: Passi.tipo(c.tipo),
       soloRadice: !!soloRadice
@@ -273,10 +285,31 @@ const Radice = (() => {
       /* La tinta della cartella è quella dichiarata dal suo progetto-radice, se
          ce l'ha: così i figli la ereditano invece di prendersene una a testa.
          Se non c'è, chi disegna la deduce dal nome. */
+      /* Anche la riga del lavoro intero porta con sé una mossa: quella del suo
+         progetto-radice se ce l'ha, se no la prima casella trovata da qualche
+         parte lì dentro. Senza, un lavoro in cui non hai ancora dichiarato
+         niente compariva con scritto «nessuna mossa scritta» pur avendone
+         dieci — e le domande non potevano proporlo affatto, cioè proprio i
+         lavori che stai dimenticando.
+         E da un progetto **chiuso** non si prende niente: chiuderlo voleva dire
+         toglierlo di mezzo, e vederselo tornare in Bacheca travestito da nome
+         del lavoro sarebbe il contrario di quello che avevi chiesto. */
+      let mosse = (suo.mosse && suo.mosse.length) ? suo.mosse : [];
+      if (!mosse.length){
+        /* Da un figlio vivo, col percorso rifatto rispetto al lavoro: la riga
+           del lavoro scrive in `tramonto/…`, non in `tramonto/ricerca/…`, e
+           una spunta finita nel file sbagliato non si vede finché non è tardi. */
+        const vivo = progetti.find(p => p.dentro && !p.chiuso && p.mosse && p.mosse.length);
+        if (vivo) mosse = vivo.mosse.map(m =>
+          Object.assign({}, m, { file: vivo.nome + '/' + m.file }));
+      }
+      if (!mosse.length && tutto.prima) mosse = [tutto.prima];
+
       fuori.push({
         nome: c.nome, percorso: c.nome, progetti,
         quando: tutto.quando, aperte: tutto.aperte, fatte: tutto.fatte,
         colore: suo.colore || '',
+        mossa: mosse[0] || null, mosse, idee: suo.idee || [], perche: suo.perche || '',
         dichiarato: progetti.some(p => p.dichiarato && p.dentro === null)
       });
       fatti++;
