@@ -80,8 +80,44 @@ const Passi = (() => {
 
   /* `colore` è il quarto, ed è l'unico che non dice niente sul lavoro: dice
      come riconoscerlo. Sta qui e non nell'app perché una tinta scelta e poi
-     persa svuotando il browser sarebbe peggio di una tinta non scelta. */
-  const CAMPI = ['per', 'entro', 'chiuso', 'colore'];
+     persa svuotando il browser sarebbe peggio di una tinta non scelta.
+
+     ## `tipo`, e perché un campo per il tipo esiste dopo tutto
+
+     Avevo scritto qui che un campo per il tipo di progetto non doveva
+     esistere, e per quel tipo era vero: *commissione o demo* era già scritto
+     in `per` e `entro`, quindi era un dato ripetuto. Questi tre no.
+
+         commissione    qualcuno l'ha chiesto, e aspetta
+         personale      lo uso io, e nessuno aspettera' mai
+         sperimentale   nessuno l'ha chiesto, ma se funziona ha un pubblico
+
+     La differenza fra `personale` e `sperimentale` **non sta in nessun dato
+     che si possa leggere dal disco**, e non ci starà mai: sono due intenzioni.
+     E ognuno dei tre chiede all'app una cosa diversa — il primo la scadenza e
+     poi silenzio, il secondo di non accusarti mai, il terzo di essere
+     risvegliato. È l'unica prova che un campo si merita di esistere.
+
+     **Non si deduce dalla cartella.** Verrebbe comodo: un progetto dentro un
+     cliente è una commissione. Ma il caso che rompe la regola è il più
+     prezioso — una dashboard nata per un ristorante che, se funziona, si
+     vende ad altri ristoranti restando esattamente dov'è. Quel passaggio
+     nessuna cartella lo sa dire.
+
+     **Assente vuol dire assente**, e si comporta come prima che questo campo
+     esistesse. Niente cambia finché non lo dichiari: un default che indovina
+     e' un default che sbaglia in silenzio. */
+
+  const TIPI = ['commissione', 'personale', 'sperimentale'];
+
+  const CAMPI = ['per', 'entro', 'chiuso', 'colore', 'tipo'];
+
+  /* Un tipo scritto male non e' un tipo: meglio nessuno che uno finto, o
+     l'app comincerebbe a comportarsi diversamente per un refuso. */
+  const tipo = (valore) => {
+    const v = String(valore || '').trim().toLowerCase();
+    return TIPI.includes(v) ? v : '';
+  };
 
   function frontMatter(righe){
     if ((righe[0] || '').trim() !== '---') return null;
@@ -211,6 +247,7 @@ const Passi = (() => {
     return {
       perche, idee, daFare, fatte,
       per: c.per || '', entro: c.entro || '', chiuso: c.chiuso || '', colore: c.colore || '',
+      tipo: tipo(c.tipo),
       haSezioni: !!(secFare || secFatte),
       /* Le caselle fuori da `## Da fare` vengono da file che The Office non ha
          scritto — `consegna.md`, gli handoff. Vanno spuntate sul posto, senza
@@ -373,7 +410,7 @@ const Passi = (() => {
     leggi, nuovo, scriviPerche,
     aggiungiPasso, aggiungiIdea, rinomina, elimina,
     spunta, despunta, spuntaSulPosto, promuoviIdea,
-    campi, scriviCampo, scadenza,
-    oggi, CAMPI, DA_FARE, FATTE, IDEE
+    campi, scriviCampo, scadenza, tipo,
+    oggi, CAMPI, TIPI, DA_FARE, FATTE, IDEE
   };
 })();

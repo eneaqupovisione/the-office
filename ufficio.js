@@ -115,11 +115,19 @@ const Ufficio = (() => {
   function mostra(...nodi){ $('palco').replaceChildren(...nodi); }
 
   /* Il silenzio, detto come lo diresti a voce. Sopra i trenta giorni pesa,
-     sopra i novanta grida. */
-  function tace(quando){
+     sopra i novanta grida — **tranne sui progetti personali**, dove non grida
+     mai. Un progetto che fai per te non deve accusarti di niente: tacere da
+     duecento giorni e' una cosa che gli e' permessa, e colorarla di rosso
+     sarebbe un rimprovero per una cosa che non e' una colpa.
+
+     Chi non ha dichiarato un tipo si comporta come prima che il tipo
+     esistesse: niente cambia finche' non lo dici. */
+  function tace(p){
+    const quando = p && p.quando;
     if (!quando) return { testo: '—', classe: '' };
     const g = Math.floor((Date.now() - quando) / GIORNO);
     const testo = g <= 0 ? 'oggi' : g === 1 ? 'ieri' : g + ' giorni';
+    if (p.tipo === 'personale') return { giorni: g, testo, classe: '' };
     return { giorni: g, testo, classe: g >= 90 ? 'troppo' : g >= 30 ? 'tanto' : '' };
   }
 
@@ -226,6 +234,40 @@ const Ufficio = (() => {
       b.title = nome;
       b.style.setProperty('--tinta', scuro() ? 'hsl(' + h + ' 48% 62%)' : 'hsl(' + h + ' 54% 46%)');
       b.addEventListener('click', () => salva(nome));
+      t.append(b);
+    });
+    return t;
+  }
+
+  /* ── i tre tipi ───────────────────────────────────────────────────────────
+     Ognuno chiede all'app una cosa diversa, ed e' per questo che esistono:
+     la commissione ha gia' la sua pressione e basta mostrarla, il personale
+     non deve accusarti mai, lo sperimentale e' l'unico che va risvegliato —
+     nessuno lo aspetta, ma ci tieni, ed e' esattamente il caso per cui questa
+     app e' stata scritta. */
+
+  const DETTO = {
+    commissione:  { corto: 'commissione',  lungo: 'qualcuno l\'ha chiesto, e aspetta' },
+    personale:    { corto: 'personale',    lungo: 'lo usi tu, e nessuno aspettera\' mai' },
+    sperimentale: { corto: 'sperimentale', lungo: 'nessuno l\'ha chiesto — ma se funziona ha un pubblico' }
+  };
+
+  /* La stessa domanda cambia parole col tipo. A una commissione «per chi»
+     significa chi paga; a uno sperimentale significa chi lo userebbe **se**
+     funzionasse — ed e' quella la domanda che trasforma un desiderio in una
+     cosa che pesa. */
+  const chiedePerChi = (tipo) =>
+    tipo === 'sperimentale' ? 'per chi lo faresti, se funzionasse'
+    : tipo === 'personale'  ? 'per chi (sei tu, di solito)'
+    : 'per chi';
+
+  function selettoreTipo(scelto, salva){
+    const t = el('div', 'tipi');
+    Passi.TIPI.forEach(nome => {
+      const b = el('button', 'min' + (scelto === nome ? ' scelto' : ''), DETTO[nome].corto);
+      b.type = 'button';
+      b.title = DETTO[nome].lungo;
+      b.addEventListener('click', () => salva(scelto === nome ? '' : nome));
       t.append(b);
     });
     return t;
@@ -412,7 +454,7 @@ const Ufficio = (() => {
     const fuori = [];
 
     const tutti = progetti().filter(p => p.quando);
-    const vivi = tutti.filter(p => tace(p.quando).giorni <= GIORNI_VIVI);
+    const vivi = tutti.filter(p => tace(p).giorni <= GIORNI_VIVI);
     const scelti = (vivi.length ? vivi : tutti.slice().sort(perSilenzio).slice(0, MINIMO_IN_BACHECA))
       .slice().sort(perSilenzio);
 
@@ -478,7 +520,7 @@ const Ufficio = (() => {
     },
 
     silenzio: (p) => {
-      const t = tace(p.quando);
+      const t = tace(p);
       return el('span', 'tace ' + t.classe, t.testo);
     },
 
@@ -530,8 +572,12 @@ const Ufficio = (() => {
       /* Due mucchi, perché sono due cose diverse: quello che qualcuno aspetta,
          e quello che nessuno aspetta. Il secondo non è in ritardo — non ha una
          data, e non deve sembrare in colpa per questo. */
+      /* Tre mucchi, e sono i tre tipi visti dal verso della pressione.
+         «Nessuno aspetterà» non è una mancanza: è una scelta, e va detta con
+         parole che non suonino come un rimprovero. */
       const conData = tutti.filter(p => p.entro).sort(perScadenza);
-      const senza   = tutti.filter(p => !p.entro).sort(perSilenzio);
+      const mai     = tutti.filter(p => !p.entro && p.tipo === 'personale').sort(perSilenzio);
+      const ancora  = tutti.filter(p => !p.entro && p.tipo !== 'personale').sort(perSilenzio);
 
       const g1 = el('div', 'gruppo');
       g1.append(el('h2', null, 'qualcuno aspetta'));
@@ -539,11 +585,18 @@ const Ufficio = (() => {
       else g1.append(el('p', 'vuoto', 'Nessun progetto ha una data. È l\'unica cosa che fa pressione: aprine uno e mettigliela.'));
       fuori.push(g1);
 
-      if (senza.length){
+      if (ancora.length){
         const g2 = el('div', 'gruppo');
-        g2.append(el('h2', null, 'nessuno aspetta'));
-        senza.forEach(p => g2.append(riga(p, true)));
+        g2.append(el('h2', null, 'nessuno aspetta ancora'));
+        ancora.forEach(p => g2.append(riga(p, true)));
         fuori.push(g2);
+      }
+
+      if (mai.length){
+        const g3 = el('div', 'gruppo');
+        g3.append(el('h2', null, 'nessuno aspetterà, e va bene'));
+        mai.forEach(p => g3.append(riga(p, true)));
+        fuori.push(g3);
       }
     } else {
       const dentroA = new Map();
@@ -613,7 +666,7 @@ const Ufficio = (() => {
     },
 
     silenzio: (p) => {
-      const t = tace(p.quando);
+      const t = tace(p);
       return el('span', 'tace ' + t.classe, t.testo);
     },
 
@@ -690,11 +743,29 @@ const Ufficio = (() => {
       fuori.push(b);
     });
 
+    /* Quello che non e' per nessuno **non e' un buco**: sono le cose tue, e
+       si dividono in due che non vanno confuse. Chiamarle tutte «senza
+       destinatario» suonava come una mancanza — e per un progetto personale
+       non lo e' per niente. */
     if (senza && senza.progetti.length){
-      const b = el('div', 'gruppo');
-      b.append(el('h2', null, 'senza destinatario'));
-      senza.progetti.slice().sort(perSilenzio).forEach(p => b.append(riga(p, true)));
-      fuori.push(b);
+      const famiglie = [
+        ['sperimentale', 'le cose che potresti vendere',
+         'Nessuno le ha chieste. Se funzionano hanno un pubblico — ed è per questo che sono le sole che vanno risvegliate.'],
+        ['personale',    'le cose che usi tu',
+         'Non le aspetta nessuno, e va bene così: qui il silenzio non è una colpa.'],
+        ['',             'non l\'hai ancora detto',
+         'Apri una scheda e dille che tipo di lavoro è: da lì l\'app sa come trattarla.']
+      ];
+
+      famiglie.forEach(([tipo, titolo, spiega]) => {
+        const dentro = senza.progetti.filter(p => (p.tipo || '') === tipo);
+        if (!dentro.length) return;
+        const b = el('div', 'gruppo');
+        b.append(el('h2', null, titolo));
+        b.append(el('p', 'occhiello', spiega));
+        dentro.slice().sort(perSilenzio).forEach(p => b.append(riga(p, true)));
+        fuori.push(b);
+      });
     }
 
     /* Qui, e non nella testata: il posto dove nasce un'idea per qualcuno è
@@ -768,9 +839,25 @@ const Ufficio = (() => {
       .forEach(l => { const o = document.createElement('option'); o.value = l.nome; o.textContent = l.nome; dove.append(o); });
     lab.append(dove); f.append(lab);
 
-    const per      = campo('per chi', 'text', 'una persona, un\'azienda — facoltativo');
+    /* Il tipo si sceglie **prima** del destinatario, perche' e' lui a decidere
+       che domanda ha senso fare dopo. Dentro una cartella che ha gia' altri
+       progetti si propone `commissione`: e' quasi sempre giusto, e resta
+       cambiabile — il caso prezioso e' proprio quello che sfugge alla regola. */
+    let tipoScelto = '';
+    const labT = el('label', null, 'che tipo di lavoro è');
+    const casaT = el('div');
+    labT.append(casaT); f.append(labT);
+
+    const per = campo('per chi', 'text', 'una persona, un\'azienda — facoltativo');
     per.setAttribute('list', 'clienti-noti');
     f.append(elencoClienti());
+
+    const ridisegnaTipo = () => {
+      casaT.replaceChildren(selettoreTipo(tipoScelto, (v) => { tipoScelto = v; ridisegnaTipo(); }));
+      const etichetta = [...f.querySelectorAll('label')].find(l => l.contains(per));
+      if (etichetta) etichetta.childNodes[0].textContent = chiedePerChi(tipoScelto);
+    };
+    ridisegnaTipo();
 
     const problema = campo(daDove === 'scrivania' ? 'perché esiste' : 'che problema ha',
                            'text', 'una riga, quella che diresti a voce');
@@ -788,7 +875,10 @@ const Ufficio = (() => {
       casa.replaceChildren(tavolozza(colore, finto, (v) => { colore = v; ridisegnaTavolozza(); }));
     };
     ridisegnaTavolozza();
-    dove.addEventListener('change', ridisegnaTavolozza);
+    dove.addEventListener('change', () => {
+      ridisegnaTavolozza();
+      if (!tipoScelto && dove.value){ tipoScelto = 'commissione'; ridisegnaTipo(); }
+    });
 
     /* Il nome della cartella si scrive da sé, e resta correggibile: è una
        tecnicalità, non una decisione da prendere nel momento dell'idea. */
@@ -823,6 +913,7 @@ const Ufficio = (() => {
       esito.textContent = 'creo ' + percorso + '/…';
 
       let md = Passi.nuovo(cartella, problema.value.trim());
+      if (tipoScelto)       md = Passi.scriviCampo(md, 'tipo', tipoScelto);
       if (per.value.trim()) md = Passi.scriviCampo(md, 'per', per.value.trim());
       if (entro.value)      md = Passi.scriviCampo(md, 'entro', entro.value);
       if (colore)           md = Passi.scriviCampo(md, 'colore', colore);
@@ -933,7 +1024,7 @@ const Ufficio = (() => {
     testa: ({ p }) => {
       const testa = el('div', 'scheda');
       testa.append(el('h1', null, p.nome));
-      const t = tace(p.quando);
+      const t = tace(p);
       const sotto = el('p', 'sotto');
       if (p.dentro) sotto.append(el('span', null, 'in ' + p.dentro + ' · '));
       sotto.append(el('b', null,
@@ -965,8 +1056,11 @@ const Ufficio = (() => {
       const r = el('div', 'patto');
       const s = Passi.scadenza(letto.entro);
       r.append(tinteggia(el('span', 'pallino grande'), p));
-      r.append(el('span', 'detto',
-        (letto.per ? 'per ' + letto.per : 'nessuno aspetta') + (s ? ' · entro il ' + letto.entro : '')));
+      const pezzi = [];
+      if (letto.tipo) pezzi.push(DETTO[letto.tipo].corto);
+      pezzi.push(letto.per ? 'per ' + letto.per : 'nessuno aspetta');
+      if (s) pezzi.push('entro il ' + letto.entro);
+      r.append(el('span', 'detto', pezzi.join(' · ')));
       const tasto = el('button', 'min', modificaAperta ? 'chiudi le impostazioni' : 'modifica');
       tasto.addEventListener('click', () => { modificaAperta = !modificaAperta; scheda(); });
       r.append(tasto);
@@ -977,11 +1071,14 @@ const Ufficio = (() => {
       if (!letto || !modificaAperta) return null;
       const m = el('div', 'modifica');
 
+      const l0 = el('label', null, 'che tipo di lavoro è');
+      l0.append(selettoreTipo(letto.tipo, (v) => cambiaPassi(md => Passi.scriviCampo(md, 'tipo', v))));
+
       const perE = document.createElement('input');
       perE.type = 'text'; perE.value = letto.per; perE.placeholder = 'nessuno, per ora';
       perE.setAttribute('list', 'clienti-noti');
       perE.addEventListener('change', () => cambiaPassi(md => Passi.scriviCampo(md, 'per', perE.value)));
-      const l1 = el('label', null, 'per chi'); l1.append(perE);
+      const l1 = el('label', null, chiedePerChi(letto.tipo)); l1.append(perE);
 
       const entroE = document.createElement('input');
       entroE.type = 'date'; entroE.value = letto.entro;
@@ -995,7 +1092,7 @@ const Ufficio = (() => {
       chiudi.addEventListener('click', () =>
         cambiaPassi(md => Passi.scriviCampo(md, 'chiuso', letto.chiuso ? '' : Passi.oggi())));
 
-      m.append(l1, l2, l3, elencoClienti(), chiudi);
+      m.append(l0, l1, l2, l3, elencoClienti(), chiudi);
       return m;
     },
 

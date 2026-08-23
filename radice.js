@@ -233,6 +233,7 @@ const Radice = (() => {
       quando: m.quando, aperte: m.aperte, fatte: m.fatte, troncato: m.troncato,
       mossa,
       per: c.per || '', entro: c.entro || '', chiuso: c.chiuso || '', colore: c.colore || '',
+      tipo: Passi.tipo(c.tipo),
       soloRadice: !!soloRadice
     };
   }

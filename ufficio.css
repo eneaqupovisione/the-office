@@ -333,6 +333,17 @@ details.fatte .data{
   font-size:12px; color:var(--tenue); flex:none; margin-top:2px;
 }
 
+/* ── i tre tipi ──────────────────────────────────────────────────────────
+   Tre bottoni e nessun «nessuno»: il non-detto si ottiene togliendo, cioè
+   ripremendo quello scelto. Un quarto bottone «non so» sarebbe una risposta
+   da dare, e questa è una domanda a cui si può non rispondere. */
+
+.tipi{ display:flex; gap:6px; flex-wrap:wrap; }
+.tipi .min{ text-transform:none; letter-spacing:normal; font-weight:400; }
+.tipi .min.scelto{
+  background:var(--acc); border-color:transparent; color:var(--su-acc); font-weight:600;
+}
+
 /* ── un'idea per qualcuno ────────────────────────────────────────────────── */
 
 form.nuovo{ display:flex; flex-direction:column; gap:2px; max-width:520px; }

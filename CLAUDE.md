@@ -82,22 +82,52 @@ Su `prossimi-passi.md` The Office comanda e può spostare righe. **Su ogni altro
 `.md` spunta e basta**: `sol-y-mar/sito/consegna.md` ha le caselle numerate e
 intrecciate alla prosa, e spostarle distruggerebbe il documento.
 
-## I tre campi, e perché non ce n'è un quarto
+## I tre tipi di lavoro
+
+```
+commissione     qualcuno l'ha chiesto, e aspetta
+personale       lo usi tu, e nessuno aspetterà mai
+sperimentale    nessuno l'ha chiesto — ma se funziona ha un pubblico
+```
+
+**Ognuno chiede all'app una cosa diversa**, ed è l'unica prova che un campo si
+merita di esistere: la commissione ha già la sua pressione e basta mostrarla;
+il personale non deve accusarti **mai**; lo sperimentale è l'unico che va
+**risvegliato** — nessuno lo aspetta, ma ci tieni, ed è esattamente il caso per
+cui questa app è stata scritta.
+
+Cosa cambia davvero:
+
+| | |
+|---|---|
+| **il silenzio** | rosso solo dove significa qualcosa. Un `personale` fermo da 240 giorni resta grigio: tacere gli è permesso, e colorarlo sarebbe un rimprovero per una cosa che non è una colpa |
+| **la Scrivania per scadenza** | tre mucchi invece di due — *qualcuno aspetta* · *nessuno aspetta ancora* · *nessuno aspetterà, e va bene* |
+| **la Rubrica** | quello che non è per nessuno non è più un buco chiamato «senza destinatario»: sono *le cose che potresti vendere* e *le cose che usi tu*, più *non l'hai ancora detto* |
+| **la domanda «per chi»** | cambia parole col tipo. A uno sperimentale diventa **«per chi lo faresti, se funzionasse»** — ed è quella la domanda che trasforma un desiderio in una cosa che pesa |
+
+**Non si deduce dalla cartella.** Verrebbe comodo — un progetto dentro un
+cliente è una commissione — ma il caso che rompe la regola è il più prezioso:
+una dashboard nata per un ristorante che, se funziona, si vende ad altri
+ristoranti *restando esattamente dov'è*. Quel passaggio nessuna cartella lo sa
+dire. L'app lo **propone** alla creazione e tu lo cambi quando la realtà cambia.
+
+**Assente vuol dire assente**: senza `tipo:` tutto si comporta come prima che
+il campo esistesse. Un default che indovina è un default che sbaglia in
+silenzio.
+
+## Gli altri campi, e perché non ce n'è un quinto
 
 In front matter, in cima al `prossimi-passi.md`:
 
 ```markdown
 ---
+tipo: sperimentale       # commissione · personale · sperimentale
 per: Hotel Riva          # chi aspetta — facoltativo
 entro: 2026-09-05        # l'unica cosa che genera pressione
 chiuso: 2026-08-21       # una data, non un sì/no: sai anche quando hai deciso
+colore: blu              # facoltativo: se manca, si deduce dalla cartella
 ---
 ```
-
-**Non esiste un campo per il tipo di progetto, e non deve esistere.**
-Commissione o demo cambia la conseguenza nel mondo, non cosa fa il programma:
-una data è una data. Una categoria da tenere aggiornata a mano sarebbe solo una
-cosa in più da sbagliare, e sarebbe sbagliata proprio sui progetti abbandonati.
 
 Lo stato si deduce: `entro` futuro → **in corsa**; `entro` passato →
 **scaduta**; niente `entro` → **libero**; c'è `chiuso` → **fuori dall'elenco**.

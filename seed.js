@@ -27,6 +27,7 @@
    | `faro` | un lavoro senza figli, mai dichiarato, fermo da quattro mesi |
    | `tramonto/app` | chiuso: fuori dall'elenco, ma non cancellato |
    | `tramonto/ricerca` | candidato con caselle sparse, dentro un lavoro che sembra morto |
+   | `taccuino` | **personale**, fermo da 240 giorni: il silenzio non dev'essere rosso |
 
    ## Quando non serve più
 
@@ -50,6 +51,7 @@ const Seed = (() => {
 
 ['bottega/sito/prossimi-passi.md', 2,
 `---
+tipo: commissione
 per: Bottega Marconi
 entro: ${fra(6)}
 ---
@@ -85,7 +87,11 @@ compaia da nessuna parte.
 `],
 
 ['bottega/menu-digitale/prossimi-passi.md', 5,
-`# menu-digitale
+`---
+tipo: commissione
+---
+
+# menu-digitale
 
 > il menu che si aggiorna dal telefono, senza chiamare nessuno
 
@@ -107,6 +113,7 @@ compaia da nessuna parte.
 
 ['cartolina/demo/prossimi-passi.md', 11,
 `---
+tipo: sperimentale
 per: Hotel Riva
 entro: ${fra(-9)}
 ---
@@ -167,6 +174,7 @@ scheda propone di farne un progetto.</p>
 
 ['tramonto/app/prossimi-passi.md', 200,
 `---
+tipo: sperimentale
 chiuso: ${fra(-30)}
 ---
 
@@ -185,6 +193,26 @@ chiuso: ${fra(-30)}
 ## Fatte
 
 - [x] ${fra(-210)} · prototipo della prima schermata
+`],
+
+['taccuino/prossimi-passi.md', 240,
+`---
+tipo: personale
+---
+
+# taccuino
+
+> il posto dove tengo i conti di casa, e non lo vedrà mai nessuno
+
+## Belle idee
+
+- la ricerca per mese
+
+## Da fare
+
+- [ ] sistemare l'esportazione
+
+## Fatte
 `],
 
 ['tramonto/ricerca/note.md', 65,
