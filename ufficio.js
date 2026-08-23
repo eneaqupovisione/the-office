@@ -68,7 +68,8 @@ const Ufficio = (() => {
   const SEZIONI = [
     { id: 'bacheca',   titolo: 'Bacheca'   },
     { id: 'scrivania', titolo: 'Scrivania' },
-    { id: 'rubrica',   titolo: 'Rubrica'   }
+    { id: 'rubrica',   titolo: 'Rubrica'   },
+    { id: 'caccia',    titolo: 'Caccia'    }
   ];
 
   /* La scheda di un progetto, dall'alto in basso. */
@@ -430,7 +431,7 @@ const Ufficio = (() => {
   function disegna(){
     $('sezioni').querySelectorAll('button').forEach(b =>
       b.setAttribute('aria-current', String(b.dataset.sezione === sezione)));
-    const viste = { bacheca, scrivania, rubrica };
+    const viste = { bacheca, scrivania, rubrica, caccia };
     (viste[sezione] || bacheca)();
   }
 
@@ -778,6 +779,140 @@ const Ufficio = (() => {
     mostra(...fuori);
   }
 
+  /* ═══ CACCIA — chi non è ancora mio ══════════════════════════════════════
+
+     Le altre tre sezioni guardano quello che c'è: le mosse, i progetti, i
+     clienti. Questa guarda **quello che non c'è ancora** — le persone a cui
+     vorresti proporre qualcosa, e le cose che stai facendo sperando che
+     qualcuno le voglia.
+
+     ## Perché una preda non è un progetto
+
+     Avevamo detto che un'idea per qualcuno **è già un progetto, gli manca solo
+     la cartella**, ed è vero — quando l'idea c'è. Ma una preda spesso è solo
+     un nome e un aggancio: *«a quella pasticceria il menu lo stampano male»*.
+     Farne subito un progetto vorrebbe dire creare una cartella vuota che da
+     quel momento invecchia e ti accusa. Sarebbe l'app che si spara nei piedi.
+
+     Quindi la caccia tiene i nomi **prima** che diventino progetti, e li
+     promuove quando l'idea arriva. Il passaggio è un tocco, e lascia una
+     traccia: la preda scende fra le prese, con la data.
+
+     ## Il formato non è nuovo
+
+     `_caccia.md` è un `prossimi-passi.md` come tutti gli altri: le sue caselle
+     sono nomi invece che mosse. `Passi` lo sa già leggere e scrivere, quindi
+     qui non c'è nessun formato in più da mantenere — e il file si legge e si
+     corregge da Claude Code come qualunque altro. */
+
+  const FILE_CACCIA = '_caccia.md';
+
+  /* Le sezioni del file sono quelle di sempre — `## Da fare` e `## Fatte` —
+     e non e' pigrizia: `_caccia.md` **e'** un `prossimi-passi.md`, e un
+     formato solo vuol dire che `Passi` lo sa gia' fare tutto e che il file si
+     corregge da Claude Code come qualunque altro. Le parole diverse stanno a
+     schermo, dove servono: sulla lista non e' «da fare», e presa non e'
+     «fatta». (Provato il contrario il 2026-08-23: chiamando le sezioni
+     «Prese» nel file, spuntare ne creava una seconda in fondo.) */
+  const SULLA_LISTA = 'Sulla lista', PRESE = 'Prese';
+
+  let caccioMd = null;    // il file, letto una volta per disegnata
+
+  const nuovaCaccia = () =>
+    '# Caccia\n\n'
+    + '> chi mi interessa, prima che diventi un progetto\n\n'
+    + '## ' + Passi.DA_FARE + '\n\n'
+    + '## ' + Passi.FATTE + '\n';
+
+  /* «Pasticceria Bosè — il menu lo stampano male» → nome e aggancio, che sono
+     le due cose che il modulo di creazione vuole. Se il trattino non c'è, è
+     tutto nome: meglio un campo vuoto che un taglio inventato. */
+  function spezza(testo){
+    const m = String(testo || '').split(/\s+[—–-]\s+/);
+    return { nome: (m[0] || '').trim(), aggancio: m.slice(1).join(' — ').trim() };
+  }
+
+  async function cambiaCaccia(trasforma){
+    const prima = (await Radice.leggi(FILE_CACCIA)) || nuovaCaccia();
+    const dopo = trasforma(prima);
+    if (dopo !== prima) await Radice.crea(FILE_CACCIA, dopo);
+    await caccia();
+  }
+
+  async function caccia(){
+    aperto = null;
+    caccioMd = await Radice.leggi(FILE_CACCIA);
+    const letto = Passi.leggi(caccioMd || nuovaCaccia());
+    const fuori = [];
+
+    fuori.push(el('p', 'occhiello',
+      'Chi ti interessa e non è ancora un progetto, e le cose che stai provando sperando che qualcuno le voglia.'));
+
+    /* ── sulla lista ────────────────────────────────────────────────── */
+    const lista = letto.daFare.map(v => {
+      const r = el('div', 'voce');
+      r.append(testoModificabile(v.testo, (nuovo) =>
+        cambiaCaccia(md => Passi.rinomina(md, v.riga, nuovo, v.testo))));
+
+      const su = el('button', 'su', 'fanne un progetto');
+      su.title = 'apre il modulo già compilato, e segna la preda come presa';
+      su.addEventListener('click', () => {
+        const { nome, aggancio } = spezza(v.testo);
+        nuovoProgetto('caccia', { per: nome, problema: aggancio, tipo: 'sperimentale', preda: v });
+      });
+
+      const presa = el('button', 'su', 'presa');
+      presa.title = 'diventata cliente per un\'altra strada: scende fra le prese';
+      presa.addEventListener('click', () => cambiaCaccia(md => Passi.spunta(md, v.riga, v.testo)));
+
+      const via = el('button', 'via', '×');
+      via.title = 'togli';
+      via.addEventListener('click', () => cambiaCaccia(md => Passi.elimina(md, v.riga, v.testo)));
+
+      r.append(su, presa, via);
+      return r;
+    });
+
+    if (!lista.length) lista.push(el('p', 'vuoto',
+      'Nessun nome. Quelli che tieni in testa non esistono da nessuna parte: è così che si perdono.'));
+    lista.push(campoAppendi('un nome, e perché ti interessa…',
+      (t) => cambiaCaccia(md => Passi.aggiungiPasso(md, t))));
+    fuori.push(blocco(SULLA_LISTA, ...lista));
+
+    /* ── cacce aperte: i progetti sperimentali ──────────────────────── */
+    const aperte = progetti().filter(p => p.tipo === 'sperimentale' && !p.chiuso).sort(perScadenza);
+    const dentro = aperte.map(p => riga(p, true));
+    if (!dentro.length) dentro.push(el('p', 'vuoto',
+      'Nessun progetto sperimentale. Sono quelli che nessuno ti ha chiesto — e che, se funzionano, hanno un pubblico.'));
+    else {
+      const muti = aperte.filter(p => !p.per || !p.entro);
+      if (muti.length) dentro.unshift(el('p', 'occhiello',
+        muti.length + (muti.length === 1 ? ' non ha' : ' non hanno')
+        + ' ancora un nome o una data. Senza quelli è un desiderio, e un desiderio perde contro una commissione tutte le volte.'));
+    }
+    fuori.push(blocco('Cacce aperte', ...dentro));
+
+    /* ── le prese ───────────────────────────────────────────────────── */
+    if (letto.fatte.length){
+      const d = el('details', 'fatte');
+      d.append(el('summary', null, letto.fatte.length + (letto.fatte.length === 1 ? ' presa' : ' prese')));
+      letto.fatte.forEach(v => {
+        const r = el('div', 'voce');
+        const c = document.createElement('input');
+        c.type = 'checkbox'; c.checked = true;
+        c.addEventListener('change', () => cambiaCaccia(md => Passi.despunta(md, v.riga, v.testo)));
+        r.append(c);
+        if (v.data) r.append(el('span', 'data', v.data));
+        r.append(el('span', 'testo', soloTesto(v.testo)));
+        d.append(r);
+      });
+      fuori.push(blocco(PRESE, d));
+    }
+
+    codaProva(fuori);
+    mostra(...fuori);
+  }
+
   /* ═══ UN'IDEA PER QUALCUNO ═══════════════════════════════════════════════
      Il caso vero, e il più difficile da catturare: *«mi è venuto in mente un
      problema, per una certa persona, e entro una certa data potrei prepararle
@@ -800,19 +935,26 @@ const Ufficio = (() => {
     .replace(/^-+|-+$/g, '')
     .slice(0, 40);
 
-  function nuovoProgetto(daDove){
+  function nuovoProgetto(daDove, pre){
     aperto = null;
+    pre = pre || {};
     const fuori = [];
-    const torna = daDove === 'scrivania' ? scrivania : rubrica;
+    const torna = daDove === 'scrivania' ? scrivania : daDove === 'caccia' ? caccia : rubrica;
 
-    const indietro = el('button', 'indietro', daDove === 'scrivania' ? '←  la scrivania' : '←  la rubrica');
+    const indietro = el('button', 'indietro',
+      daDove === 'scrivania' ? '←  la scrivania' : daDove === 'caccia' ? '←  la caccia' : '←  la rubrica');
     indietro.addEventListener('click', torna);
     fuori.push(indietro);
 
     const f = el('form', 'nuovo');
-    f.append(el('h1', null, daDove === 'scrivania' ? 'Un progetto nuovo' : 'Un\'idea per qualcuno'));
+    f.append(el('h1', null,
+      daDove === 'scrivania' ? 'Un progetto nuovo'
+      : daDove === 'caccia' ? 'Da preda a progetto'
+      : 'Un\'idea per qualcuno'));
     f.append(el('p', 'occhiello', daDove === 'scrivania'
       ? 'Nasce con la sua cartella e il suo file. Quello che non sai ancora si lascia vuoto.'
+      : daDove === 'caccia'
+      ? 'Quando l\'idea c\'è, la preda diventa un progetto — e scende fra le prese.'
       : 'Scrivila adesso che ce l\'hai in testa. Le soluzioni le aggiungi dopo.'));
 
     const campo = (etichetta, tipo, invito) => {
@@ -825,6 +967,7 @@ const Ufficio = (() => {
     };
 
     const nome     = campo('come si chiama', 'text', 'nome-del-progetto');
+    if (pre.per) nome.value = sciolto(pre.per);
 
     /* Dentro quale cartella. È il livello che ti fa dire «cantera e
        jesommelier sono due progetti della stessa cartella»: qui lo scegli
@@ -843,13 +986,14 @@ const Ufficio = (() => {
        che domanda ha senso fare dopo. Dentro una cartella che ha gia' altri
        progetti si propone `commissione`: e' quasi sempre giusto, e resta
        cambiabile — il caso prezioso e' proprio quello che sfugge alla regola. */
-    let tipoScelto = '';
+    let tipoScelto = pre.tipo || '';
     const labT = el('label', null, 'che tipo di lavoro è');
     const casaT = el('div');
     labT.append(casaT); f.append(labT);
 
     const per = campo('per chi', 'text', 'una persona, un\'azienda — facoltativo');
     per.setAttribute('list', 'clienti-noti');
+    if (pre.per) per.value = pre.per;
     f.append(elencoClienti());
 
     const ridisegnaTipo = () => {
@@ -861,6 +1005,7 @@ const Ufficio = (() => {
 
     const problema = campo(daDove === 'scrivania' ? 'perché esiste' : 'che problema ha',
                            'text', 'una riga, quella che diresti a voce');
+    if (pre.problema) problema.value = pre.problema;
     const entro    = campo(daDove === 'scrivania' ? 'entro quando' : 'entro quando potresti mostrargli qualcosa', 'date');
 
     /* Il colore: si vede subito com'è, perché la pastiglia «come la cartella»
@@ -919,6 +1064,15 @@ const Ufficio = (() => {
       if (colore)           md = Passi.scriviCampo(md, 'colore', colore);
 
       await Radice.crea(percorso + '/' + Radice.FILE_PASSI, md);
+
+      /* La preda scende fra le prese, e la traccia resta: fra sei mesi vuoi
+         sapere che quel nome l'avevi inseguito e com'e' finita. */
+      if (pre.preda){
+        const c = (await Radice.leggi(FILE_CACCIA)) || '';
+        const dopoC = Passi.spunta(c, pre.preda.riga, pre.preda.testo);
+        if (dopoC !== c) await Radice.crea(FILE_CACCIA, dopoC);
+      }
+
       await scandaglia();
       const nato = progetti().find(x => x.nome === cartella && (x.dentro || null) === (dentroA || null));
       if (nato) await apri(nato);

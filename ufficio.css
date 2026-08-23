@@ -298,12 +298,12 @@ button{ font:inherit; color:inherit; }
 .idea{ display:flex; align-items:flex-start; gap:10px; padding:7px 2px; border-bottom:1px solid var(--linea); }
 .idea:last-of-type{ border-bottom:0; }
 .idea .testo{ flex:1; cursor:text; }
-.idea .su{
+.idea .su, .voce .su{
   background:transparent; border:1px solid var(--linea-forte); border-radius:7px;
   color:var(--ink-2); font-size:12px; padding:2px 9px; cursor:pointer; flex:none; opacity:.55;
 }
-.idea:hover .su{ opacity:1; }
-.idea .su:hover{ background:var(--acc); border-color:transparent; color:var(--su-acc); }
+.idea:hover .su, .voce:hover .su{ opacity:1; }
+.idea .su:hover, .voce .su:hover{ background:var(--acc); border-color:transparent; color:var(--su-acc); }
 /* Un gesto che si vede solo passandoci sopra, da fermo non esiste. Restano
    quieti — ma ci sono sempre, o non si scopre che l'idea puo' diventare una
    cosa da fare. */

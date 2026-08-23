@@ -28,6 +28,7 @@
    | `tramonto/app` | chiuso: fuori dall'elenco, ma non cancellato |
    | `tramonto/ricerca` | candidato con caselle sparse, dentro un lavoro che sembra morto |
    | `taccuino` | **personale**, fermo da 240 giorni: il silenzio non dev'essere rosso |
+   | `_caccia.md` | tre prede e una presa — la sezione che guarda quello che non c'è ancora |
 
    ## Quando non serve più
 
@@ -48,6 +49,22 @@ const Seed = (() => {
   /* [percorso, età in giorni, contenuto] */
   function origine(){
     return [
+
+['_caccia.md', 3,
+`# Caccia
+
+> chi mi interessa, prima che diventi un progetto
+
+## Da fare
+
+- [ ] Pasticceria Bosè — stampa il menu di Natale ogni anno e ogni anno sbaglia i prezzi
+- [ ] Officina Vialli — il preventivo lo scrivono a mano su un blocchetto
+- [ ] Libreria del Ponte — gli eventi li annunciano solo in vetrina
+
+## Fatte
+
+- [x] ${fra(-14)} · Bottega Marconi
+`],
 
 ['bottega/sito/prossimi-passi.md', 2,
 `---

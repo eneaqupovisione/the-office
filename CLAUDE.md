@@ -35,13 +35,14 @@ doppio numero di versione.
 | `ufficio.js` | le tre sezioni e la scheda | ogni gesto rilegge il file, scrive, rilegge |
 | `ufficio.css` | l'aspetto | stessi nomi di colore di `stile.css`, così le due si fondono quando il vecchio si spegne |
 
-## Le tre sezioni, e sono tre domande
+## Le quattro sezioni, e sono quattro domande
 
 | | risponde a | contiene |
 |---|---|---|
 | **Bacheca** | *cosa faccio adesso* | **una mossa per progetto**, e solo dei progetti toccati negli ultimi 14 giorni. Si spuntano lì: spuntata una, arriva la successiva dello stesso progetto |
 | **Scrivania** | *cosa ho in mano* | **tutti** i progetti, per scadenza (due mucchi: qualcuno aspetta / nessuno aspetta) o per appartenenza (dentro la loro cartella) |
-| **Rubrica** | *per chi lavoro* | i progetti raggruppati per `per:`, più quelli senza destinatario. È qui che nasce «un'idea per qualcuno» |
+| **Rubrica** | *per chi lavoro* | i progetti raggruppati per `per:`, più le cose tue divise per tipo. È qui che nasce «un'idea per qualcuno» |
+| **Caccia** | *chi non è ancora mio* | i nomi che non sono ancora progetti (`_caccia.md`), le cacce aperte (i progetti `sperimentale`), e le prese |
 
 **La bacheca non è un censimento.** Mostra le mosse, non i progetti — e il
 verso conta: quello che leggi per primo è la cosa da fare, il nome del lavoro
@@ -81,6 +82,33 @@ dentro la scheda di un lavoro.**
 Su `prossimi-passi.md` The Office comanda e può spostare righe. **Su ogni altro
 `.md` spunta e basta**: `sol-y-mar/sito/consegna.md` ha le caselle numerate e
 intrecciate alla prosa, e spostarle distruggerebbe il documento.
+
+## La Caccia, e perché una preda non è un progetto
+
+Le altre tre sezioni guardano quello che c'è. Questa guarda **quello che non
+c'è ancora**: le persone a cui vorresti proporre qualcosa, e le cose che stai
+facendo sperando che qualcuno le voglia.
+
+Avevamo stabilito che un'idea per qualcuno **è già un progetto, gli manca solo
+la cartella** — ed è vero *quando l'idea c'è*. Ma una preda spesso è solo un
+nome e un aggancio: *«a quella pasticceria il menu lo stampano male»*. Farne
+subito un progetto vorrebbe dire creare una cartella vuota che da quel momento
+invecchia e ti accusa: l'app che si spara nei piedi.
+
+Quindi la Caccia tiene i nomi **prima** che diventino progetti, e li promuove
+quando l'idea arriva. *Fanne un progetto* apre il modulo già compilato — nome,
+aggancio come perché, `tipo: sperimentale` — e la preda **scende fra le prese
+con la data**: fra sei mesi vuoi sapere che quel nome l'avevi inseguito.
+
+**`_caccia.md` è un `prossimi-passi.md`**, con le sezioni di sempre (`## Da
+fare`, `## Fatte`): le sue caselle sono nomi invece che mosse. Un formato solo
+— `Passi` lo sa già fare tutto e il file si corregge da Claude Code. Le parole
+diverse stanno a schermo, dove servono: *sulla lista* non è «da fare», e
+*presa* non è «fatta».
+
+> Provato il contrario il 2026-08-23: chiamando le sezioni `## Prese` nel file,
+> spuntare una preda ne creava una seconda in fondo, perché `Passi` cerca
+> `## Fatte`. Il nome giusto per un file non è il nome giusto per una schermata.
 
 ## I tre tipi di lavoro
 
