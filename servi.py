@@ -4,11 +4,11 @@ cache niente**.
 
 `python3 -m http.server` non manda nessun `Cache-Control`. Il browser allora
 decide da solo per quanto tenersi una pagina, e la regola che usa guarda quanto
-è vecchio il file: un `ufficio.html` modificato l'ultima volta due giorni fa
+è vecchio il file: un `index.html` modificato l'ultima volta due giorni fa
 viene considerato buono per ore. Tu lo modifichi, ricarichi, e vedi quello di
 prima — senza nemmeno una domanda al server.
 
-Sui `.js` il problema non si vede, perché `ufficio.html` li chiama con un numero
+Sui `.js` il problema non si vede, perché `index.html` li chiama con un numero
 che cambia a ogni apertura. Ma quel numero sta **dentro** la pagina, e la pagina
 nessuno la busta: è il buco esatto in cui è caduto il 2026-08-23 l'elenco degli
 script quando ci è entrato `domande.js`. La pagina vecchia caricava i file nuovi,
@@ -47,7 +47,7 @@ if __name__ == '__main__':
     porta = int(sys.argv[1]) if len(sys.argv) > 1 else 8010
     socketserver.TCPServer.allow_reuse_address = True
     with socketserver.TCPServer(('', porta), SenzaCache) as server:
-        print('the-office · http://localhost:%d/ufficio.html' % porta)
+        print('the-office · http://localhost:%d' % porta)
         try:
             server.serve_forever()
         except KeyboardInterrupt:

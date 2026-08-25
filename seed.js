@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    IL SEED — un disco finto, per provare l'app senza toccare `~/Lavori`.
 
-   Si apre con `ufficio.html?prova`. Da lì in poi The Office lavora su una
+   Si apre con `index.html?prova`. Da lì in poi The Office lavora su una
    cartella che non esiste: legge, scrive, spunta, sposta le righe sotto
    `## Fatte` — tutto vero, ma dentro `localStorage`. Nessun file del disco
    viene aperto, e non serve nessun permesso del browser.
@@ -34,7 +34,7 @@
 
    ## Quando non serve più
 
-   Si cancella `seed.js` e la sua riga in `ufficio.html`. Non c'è nient'altro
+   Si cancella `seed.js` e la sua riga in `index.html`. Non c'è nient'altro
    da disfare: il resto del programma non sa che questo file esiste.
    ═══════════════════════════════════════════════════════════════════════ */
 

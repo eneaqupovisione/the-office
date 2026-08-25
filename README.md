@@ -13,7 +13,7 @@ Nessuna dipendenza, nessun passo di costruzione, nessun account.
 cd ~/Lavori/the-office && python3 servi.py 8010
 ```
 
-poi `http://localhost:8010/ufficio.html`. Per provarla su un disco finto —
+poi `http://localhost:8010`. Per provarla su un disco finto —
 senza toccare nessun file vero, e da qualunque browser — basta aggiungere
 `?prova`.
 

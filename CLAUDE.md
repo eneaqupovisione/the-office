@@ -18,9 +18,9 @@ cd ~/Lavori/the-office && python3 servi.py 8010
 
 | File | Ruolo | Note operative |
 |---|---|---|
-| `ufficio.html` | il documento | si apre dal computer e basta |
-| `servi.py` | **il server delle prove** | non è `http.server`: manda `no-store` e non manda `Last-Modified`. Senza, il browser si tiene `ufficio.html` per ore decidendolo da solo, la pagina vecchia carica i file nuovi, e l'app muore senza dire niente. È quello che lancia `.claude/launch.json` |
-| `seed.js` | **il disco finto di `?prova`** | un campionario dei casi, in `localStorage`. Si prova tutto senza toccare un file vero — e **anche su Safari**, dove `showDirectoryPicker` non esiste. Si cancella con la sua riga in `ufficio.html` quando non serve più |
+| `index.html` | il documento | si apre dal computer e basta |
+| `servi.py` | **il server delle prove** | non è `http.server`: manda `no-store` e non manda `Last-Modified`. Senza, il browser si tiene `index.html` per ore decidendolo da solo, la pagina vecchia carica i file nuovi, e l'app muore senza dire niente. È quello che lancia `.claude/launch.json` |
+| `seed.js` | **il disco finto di `?prova`** | un campionario dei casi, in `localStorage`. Si prova tutto senza toccare un file vero — e **anche su Safari**, dove `showDirectoryPicker` non esiste. Si cancella con la sua riga in `index.html` quando non serve più |
 | `radice.js` | `~/Lavori` collegata, e lo scandaglio | **calcola** il silenzio di ogni progetto dalla data di modifica dei file. Salta `node_modules` e compagnia — senza, `cantera` da sola sono 27.000 file — e si ferma a 400 file per progetto: il limite può far sembrare un progetto **più** silenzioso, mai più vivo. `attacca()` esiste solo per le prove |
 | `passi.js` | il formato di `prossimi-passi.md` | perché · belle idee · da fare · fatte. Spuntare fa **scendere** la riga sotto `## Fatte` con la data, non la cancella. Ogni operazione dichiara che testo si aspetta di trovare e non fa niente se non combacia. **Non tocca il DOM: si prova da solo** |
 | `domande.js` | le domande della Bacheca | «cosa sto dimenticando?» e le altre. Restituiscono due o tre proposte da una lista di progetti. **Non toccano il DOM e non scrivono niente: si provano da sole** |
@@ -122,7 +122,7 @@ il campo da sotto le dita), e l'unico «aggiungi» dell'app sta nella Rubrica,
 perché il posto dove nasce un'idea per qualcuno è l'elenco delle persone.
 
 **In locale i `.js` si caricano con un numero che cambia a ogni apertura**
-(`ufficio.html`, in fondo). Senza, modifichi un file, ricarichi e non cambia
+(`index.html`, in fondo). Senza, modifichi un file, ricarichi e non cambia
 niente — lo stesso male del vecchio `?v=12` da tenere allineato a mano, ma qui
 il numero se lo scrive la macchina e non si può sbagliare.
 
@@ -304,12 +304,12 @@ esisterebbe un posto in cui scriverlo.
 E l'aspetto si tocca con `~/Attrezzi/studio-web`:
 
 ```bash
-node ~/Attrezzi/studio-web/studio.mjs "~/Lavori/the-office" ufficio.html?prova
+node ~/Attrezzi/studio-web/studio.mjs "~/Lavori/the-office" index.html?prova
 ```
 
 Il `?prova` non è un dettaglio: senza, dentro lo studio l'app chiederebbe una
 cartella al browser invece di lasciarsi guardare. Da lì si toccano colori,
-misure, caratteri e spaziature, e **salva** riscrive `ufficio.html` lasciando
+misure, caratteri e spaziature, e **salva** riscrive `index.html` lasciando
 una copia datata.
 
 Lo studio **non sposta e non riordina** — per quello ci sono le liste. E i

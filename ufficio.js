@@ -336,6 +336,18 @@ const Ufficio = (() => {
     return d;
   }
 
+  /* Sulle schermate di primo avvio, una via d'uscita verso il disco finto.
+     Serve al sito pubblicato: chi lo apre da un altro computer non ha nessuna
+     `~/Lavori` da collegare, e senza questa riga vedrebbe solo una porta
+     chiusa. Non compare quando sei gia' in prova. */
+  function conProva(d){
+    if (inProva()) return d;
+    const a = el('a', 'sottile', 'oppure guardala con dei dati finti');
+    a.href = '?prova';
+    d.append(a);
+    return d;
+  }
+
   function dice(titolo, testo, etichettaBottone, azione, male){
     const d = el('div', 'dice' + (male ? ' male' : ''));
     d.append(el('h2', null, titolo), el('p', null, testo));
@@ -348,7 +360,7 @@ const Ufficio = (() => {
   }
 
   /* ── la modalità prova ───────────────────────────────────────────────────
-     `ufficio.html?prova` monta il disco finto di `seed.js` al posto della
+     `index.html?prova` monta il disco finto di `seed.js` al posto della
      cartella vera: si prova tutto senza rischiare un file, e **anche su
      Safari**, dove `showDirectoryPicker` non esiste. Cancellato `seed.js`,
      `inProva` resta falso da solo. */
@@ -358,7 +370,7 @@ const Ufficio = (() => {
   /* ── l'avvio ─────────────────────────────────────────────────────────── */
 
   /* Quali file non sono arrivati. Serve contro un guaio che si vede male: se
-     il browser si tiene in cache un `ufficio.html` vecchio, quella pagina
+     il browser si tiene in cache un `index.html` vecchio, quella pagina
      carica un elenco di script vecchio, e un file nuovo — `domande.js`,
      quando è nato — semplicemente non c'è. L'app allora esplode dentro la
      prima funzione che lo usa, e da fuori sembra soltanto che **cambiare
@@ -428,11 +440,11 @@ const Ufficio = (() => {
     }
 
     if (!Radice.possibile()){
-      mostra(dice(
-        'Serve Chrome o Edge, da localhost',
+      mostra(conProva(dice(
+        'Serve Chrome o Edge',
         'Per leggere e scrivere dentro ~/Lavori serve la funzione «cartella collegata», '
         + 'che esiste solo nei browser Chromium e solo da https o localhost.',
-        null, null, true));
+        null, null, true)));
       return;
     }
 
@@ -450,12 +462,12 @@ const Ufficio = (() => {
       return;
     }
 
-    mostra(dice(
+    mostra(conProva(dice(
       'Collega ~/Lavori',
       'The Office non ha dati suoi: legge le cartelle che hai già. Collega ~/Lavori una volta '
       + 'e da lì in poi si ricorda.',
       'Collega la cartella',
-      async () => { if (await Radice.collega()) await scandaglia(); }));
+      async () => { if (await Radice.collega()) await scandaglia(); })));
   }
 
   /* ── lo scandaglio ───────────────────────────────────────────────────── */
@@ -1780,7 +1792,7 @@ const Ufficio = (() => {
   return { avvia };
 })();
 
-/* Gli script si caricano da soli (vedi `ufficio.html`), quindi può capitare
+/* Gli script si caricano da soli (vedi `index.html`), quindi può capitare
    che `DOMContentLoaded` sia già passato quando questo file arriva: in quel
    caso l'ascoltatore non scatterebbe mai e l'app resterebbe bianca. */
 if (document.readyState === 'loading')

@@ -8,7 +8,7 @@ La più recente in alto.
 ---
 
 **Il numero che cambia a ogni apertura non busta la pagina che lo contiene.**
-`ufficio.html` chiama i suoi `.js` con un `?v=` ricalcolato a ogni caricamento,
+`index.html` chiama i suoi `.js` con un `?v=` ricalcolato a ogni caricamento,
 e sembra la fine del problema. Non lo è: quel numero sta **dentro** la pagina, e
 la pagina non la busta nessuno. `python3 -m http.server` non manda nessun
 `Cache-Control`, quindi il browser decide da solo per quanto tenersela — e la
@@ -35,7 +35,7 @@ Attenzione a una cosa: `servi.py` cura le pagine **da qui in avanti**. Una copia
 già in cache resta lì finché non la si sfratta, e un normale ricarica non basta
 — ci vuole ⌘⇧R, o il bottone. *(2026-08-23)*
 
-**Il numero che busta i `.js` lasciava fuori il foglio di stile.** `ufficio.html`
+**Il numero che busta i `.js` lasciava fuori il foglio di stile.** `index.html`
 carica gli script con un `?v=` ricalcolato a ogni apertura, e sembrava chiusa
 lì. Ma la CSS non arriva da quello script: arriva da un `<link>`, che il numero
 non lo vedeva. Risultato: una regola scritta, salvata e servita — verificata con
