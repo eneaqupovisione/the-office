@@ -181,5 +181,35 @@ t('e il rientro sopravvive', ln.daFare[0].figli.totali === 1);
 t('senza perché, resta quello del modello',
   Passi.leggi(Passi.daModello(modello, 'x', '')).perche.startsWith('a cosa serve'));
 
+
+/* ── 13 · un passo viaggia con i suoi ───────────────────────────────────── */
+const conBlocco = [
+  '## Da fare', '',
+  '- [ ] Fase A',
+  '      > perché esiste questa fase',
+  '      - [ ] uno',
+  '      - [x] due',
+  '- [ ] Fase B',
+  '', '## Fatte', ''
+].join('\n');
+
+const lb = Passi.leggi(conBlocco);
+t('la nota del passo si legge', lb.daFare[0].nota === 'perché esiste questa fase', lb.daFare[0].nota);
+t('la nota non è un figlio', lb.daFare[0].figli.totali === 2 && lb.daFare[0].figli.fatti === 1);
+t('un passo senza nota non ne inventa una', !lb.daFare.find(v => v.testo === 'Fase B').nota);
+
+const spuntato2 = Passi.spunta(conBlocco, lb.daFare[0].riga, 'Fase A', '2026-08-25');
+t('spuntando, i figli non restano orfani', !/^## Da fare\n\n {6}- \[/m.test(spuntato2), spuntato2);
+t('il blocco è sceso intero sotto Fatte',
+  /## Fatte\n\n- \[x\] 2026-08-25 · Fase A\n {6}> perché[\s\S]*?- \[x\] due/.test(spuntato2), spuntato2.split('## Fatte')[1]);
+t('e in Da fare resta solo Fase B', Passi.leggi(spuntato2).daFare.length === 1);
+
+const l3 = Passi.leggi(spuntato2);
+const tornato = Passi.despunta(spuntato2, l3.fatte.find(v => v.testo === 'Fase A').riga, 'Fase A');
+const l4 = Passi.leggi(tornato);
+t('despuntando torna su col suo blocco', l4.daFare.find(v => v.testo === 'Fase A').figli.totali === 2, tornato);
+t('e la nota è tornata con lui', l4.daFare.find(v => v.testo === 'Fase A').nota === 'perché esiste questa fase');
+t('la data non resta appiccicata', !/2026-08-25/.test(tornato));
+
 console.log((ko ? '\n' : '') + ok + ' prove passate' + (ko ? ', ' + ko + ' FALLITE' : ''));
 process.exit(ko ? 1 : 0);

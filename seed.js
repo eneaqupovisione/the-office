@@ -29,7 +29,6 @@
    | `tramonto/ricerca` | candidato con caselle sparse, dentro un lavoro che sembra morto |
    | `taccuino` | **personale**, fermo da 240 giorni: il silenzio non dev'essere rosso |
    | `_caccia.md` | tre prede e una presa — la sezione che guarda quello che non c'è ancora |
-   | `_modelli/sito.md` | il modello: un progetto vuoto ben scritto, da cui partire |
    | `bottega/sito` | ci ha gia' passato il modello: in Bacheca la riga dice «La faccia · 1 di 3» |
 
    ## Quando non serve più
@@ -51,38 +50,6 @@ const Seed = (() => {
   /* [percorso, età in giorni, contenuto] */
   function origine(){
     return [
-
-['_modelli/sito.md', 30,
-`# sito
-
-> a cosa serve, e qual è l'unica azione di chi arriva
-
-## Belle idee
-
-## Da fare
-
-- [ ] Indagine
-      - [ ] guardare cosa c'è oggi, e misurarlo
-      - [ ] l'unica azione, in una frase — senza «e anche»
-      - [ ] che dati girano, e in che forma — i finti sono il contratto
-- [ ] Le pagine senza stile
-      - [ ] i contenuti veri al loro posto, o i segnaposto dichiarati
-      - [ ] si legge dall'alto in basso a CSS spento
-- [ ] La faccia
-      - [ ] i caratteri, visti sullo sfondo vero e non su bianco
-      - [ ] sta in piedi a 375px
-- [ ] I comportamenti
-      - [ ] gli stati: vuoto, in caricamento, errore, troppi
-      - [ ] il movimento: uno, che ti ricordi il giorno dopo
-- [ ] La prova
-      - [ ] telefono vero, in mano, una mano sola
-      - [ ] solo tastiera: si arriva dappertutto
-- [ ] La consegna
-      - [ ] un indirizzo dove guardarlo, non indicizzabile
-      - [ ] il contratto: i dati finti, gli stati, e cosa **non** è tuo
-
-## Fatte
-`],
 
 ['_caccia.md', 3,
 `# Caccia

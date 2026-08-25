@@ -257,6 +257,21 @@ const Passi = (() => {
        senza che la riga sembri ferma. */
     daFare.forEach(v => {
       if (v.rientro > 0) return;
+
+      /* La nota: le righe `>` rientrate subito sotto il passo. E' il perche'
+         di quella fase — «il passaggio piu' sottovalutato: non stai
+         consegnando file, stai consegnando un contratto» — e senza di lei un
+         modello e' un elenco di comandi. */
+      const note = [];
+      for (let k = v.riga + 1; k < righe.length; k++){
+        const r = righe[k];
+        if (r.trim() === '') continue;
+        const q = r.match(/^\s+>\s?(.*)$/);
+        if (!q) break;
+        note.push(q[1].trim());
+      }
+      if (note.length) v.nota = note.join(' ');
+
       const da = tutte.findIndex(x => x.riga === v.riga);
       if (da === -1) return;
       let totali = 0, fatti = 0;
@@ -359,6 +374,25 @@ const Passi = (() => {
   const aggiungiIdea = (md, testo) =>
     (testo || '').trim() ? inserisci(md, IDEE, '- ' + testo.trim(), false) : md;
 
+  /* Dove finisce il blocco di un passo: la sua riga, piu' tutto quello che gli
+     sta sotto rientrato — le note `>` e le cose fini. Serve perche' **un passo
+     viaggia con i suoi**: spuntarlo e lasciare i figli in mezzo alla sezione
+     li renderebbe orfani, e con un modello da dodici fasi lo vedi subito. */
+  function finoA(righe, i){
+    const c = (righe[i] || '').match(CASELLA);
+    const base = c ? c[1].length : 0;
+    let j = i + 1;
+    while (j < righe.length){
+      const r = righe[j];
+      if (r.match(TITOLO)) break;                    // un titolo chiude sempre
+      if (r.trim() === ''){ j++; continue; }         // una riga vuota da sola no
+      if (r.match(/^(\s*)/)[1].length <= base) break;
+      j++;
+    }
+    while (j > i + 1 && (righe[j - 1] || '').trim() === '') j--;
+    return j;                                        // esclusivo
+  }
+
   /* ── la riga è ancora quella che credevi? ────────────────────────────── */
   /* Ogni scrittura rilegge il file un istante prima, perché Claude Code può
      averlo cambiato mentre l'app era aperta. Ma rileggere non basta: se nel
@@ -425,8 +459,10 @@ const Passi = (() => {
        solo i passi di primo livello, che sotto non hanno nessuno. */
     if (c[1].length > 0) return spuntaSulPosto(md, numeroRiga, true, atteso);
 
-    righe.splice(numeroRiga, 1);
-    return inserisci(righe.join('\n'), FATTE, '- [x] ' + (quando || oggi()) + ' · ' + c[3].trim(), true);
+    const fine = finoA(righe, numeroRiga);
+    const blocco = righe.splice(numeroRiga, fine - numeroRiga);
+    blocco[0] = '- [x] ' + (quando || oggi()) + ' · ' + c[3].trim();
+    return inserisci(righe.join('\n'), FATTE, blocco.join('\n'), true);
   }
 
   /* E il ripensamento deve costare quanto lo spuntare, o non lo si usa. */
@@ -438,8 +474,10 @@ const Passi = (() => {
     let testo = c[3].trim();
     const d = testo.match(DATATA);
     if (d) testo = d[2];
-    righe.splice(numeroRiga, 1);
-    return inserisci(righe.join('\n'), DA_FARE, '- [ ] ' + testo, false);
+    const fine = finoA(righe, numeroRiga);
+    const blocco = righe.splice(numeroRiga, fine - numeroRiga);
+    blocco[0] = c[1] + '- [ ] ' + testo;
+    return inserisci(righe.join('\n'), DA_FARE, blocco.join('\n'), false);
   }
 
   /* Un'idea che diventa una mossa: è il gesto per cui esiste la sezione delle

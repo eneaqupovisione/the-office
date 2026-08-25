@@ -1285,7 +1285,11 @@ const Ufficio = (() => {
   async function nuovoProgetto(daDove, pre){
     aperto = null;
     pre = pre || {};
-    try { modelliNoti = await Radice.modelli(); } catch (e){ modelliNoti = []; }
+    /* Prima quelli incorporati — viaggiano col repo e ci sono sempre — poi
+       gli eventuali `.md` in `~/Lavori/_modelli/`, che sono un'aggiunta e non
+       una dipendenza: se la cartella non c'è, non manca niente. */
+    modelliNoti = (typeof Modelli !== 'undefined' ? Modelli.tutti() : []);
+    try { modelliNoti = modelliNoti.concat(await Radice.modelli()); } catch (e){}
     const fuori = [];
     const torna = daDove === 'scrivania' ? scrivania : daDove === 'caccia' ? caccia : rubrica;
 
@@ -1361,7 +1365,8 @@ const Ufficio = (() => {
     mod.append(senza);
     modelliNoti.forEach(m => {
       const o = document.createElement('option');
-      o.value = m.percorso; o.textContent = m.nome;
+      o.value = m.id || m.percorso;
+      o.textContent = m.nome + (m.descrizione ? ' — ' + m.descrizione : '');
       mod.append(o);
     });
     labM.append(mod);
@@ -1421,7 +1426,9 @@ const Ufficio = (() => {
       via.disabled = true;
       esito.textContent = 'creo ' + percorso + '/…';
 
-      const partenza = mod.value ? await Radice.leggi(mod.value) : null;
+      const partenza = !mod.value ? null
+        : mod.value.startsWith('incorporato:') ? Modelli.testoDi(mod.value)
+        : await Radice.leggi(mod.value);
       let md = partenza
         ? Passi.daModello(partenza, cartella, problema.value.trim())
         : Passi.nuovo(cartella, problema.value.trim());
@@ -1709,6 +1716,14 @@ const Ufficio = (() => {
         via.title = 'togli';
         via.addEventListener('click', () => cambiaPassi(md => Passi.elimina(md, v.riga, v.testo)));
         r.append(via);
+
+        /* La nota della fase, sotto di lei. È il perché di quel passo, e senza
+           un modello resta un elenco di comandi. */
+        if (grosso && v.nota){
+          const con = el('div', 'conNota');
+          con.append(r, el('p', 'nota', v.nota));
+          return con;
+        }
         return r;
       });
       if (!dentro.length) dentro.push(el('p', 'vuoto', 'Niente da fare qui dentro. Una mossa sola basta.'));

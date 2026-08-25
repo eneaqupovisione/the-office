@@ -26,7 +26,8 @@ cd ~/Lavori/the-office && python3 servi.py 8010
 | `domande.js` | le domande della Bacheca | «cosa sto dimenticando?» e le altre. Restituiscono due o tre proposte da una lista di progetti. **Non toccano il DOM e non scrivono niente: si provano da sole** |
 | `ufficio.js` | le quattro sezioni e la scheda | ogni gesto rilegge il file, scrive, rilegge |
 | `ufficio.css` | l'aspetto | impaginazione San Francisco, palette 06. L'acido è l'unico accento, ed è il colore di ciò che si tocca |
-| `prova-passi.js` · `prova-radice.js` · `prova-domande.js` | le prove | `node prova-passi.js` e via. Niente dipendenze, niente `npm test` |
+| `modelli.js` | **i modelli incorporati** | un modello è un `prossimi-passi.md` scritto bene. Oggi: `sito`, dodici fasi. Non tocca il DOM: si prova da solo |
+| `prova-passi.js` · `prova-radice.js` · `prova-domande.js` · `prova-modelli.js` | le prove | `node prova-passi.js` e via. Niente dipendenze, niente `npm test` |
 
 ## Le quattro sezioni, e sono quattro domande
 
@@ -180,51 +181,60 @@ diverse stanno a schermo, dove servono: *sulla lista* non è «da fare», e
 
 ## I modelli, e i passi grossi con le cose fini sotto
 
-Un **modello** è un `prossimi-passi.md` già scritto bene, in `~/Lavori/_modelli/`.
-Non ha un formato suo: **un modello è un progetto vuoto**, e per questo si
-corregge da Claude Code come qualunque altro file. Creando un progetto lo
+I modelli stanno **nel codice**, in `modelli.js`, e non in una cartella sul
+disco: così l'app non dipende da niente, viaggiano col repo, e chi la apre su
+un altro computer se li trova. Un `.md` in `~/Lavori/_modelli/` compare nel
+menu accanto a quelli incorporati — ma è un'aggiunta, non una dipendenza.
+
+Oggi ce n'è uno: **`sito`, dodici fasi dal brief all'online.**
+
+Un modello **è** un `prossimi-passi.md` scritto bene. Creando un progetto lo
 scegli da un menu; l'app gli cambia il titolo, ci mette il tuo perché al posto
-di quello del modello, e i campi del front matter.
+di quello del modello, e i campi del front matter. **Il legame finisce lì**: da
+quel momento quei passi sono tuoi. Correggere un modello vale dal prossimo
+progetto in poi — tenere il filo vorrebbe dire un'app che chiede «questo passo
+è cambiato nel modello, lo aggiorno?», ed è un altro prodotto.
 
-**Il legame finisce lì.** Il modello non resta agganciato: da quel momento
-quei passi sono tuoi, li rinomini e li togli. Tenere il filo vorrebbe dire
-un'app che chiede *«questo passo è cambiato nel modello, lo aggiorno?»*, ed è
-un altro prodotto.
+### Fase · nota · cose fini
 
-Le cartelle di primo livello che cominciano con `_` **non sono lavori**:
-`_modelli` è un magazzino dell'app. Al secondo livello invece `_assets` e
-`_trascrizioni` restano materiale del progetto, e lì si vogliono vedere.
+```markdown
+- [ ] 08 · Consegna al back end
+      > Il passaggio più sottovalutato. Non stai consegnando file: stai
+      > consegnando un contratto su quali dati arrivano e in che forma.
+      - [ ] Contratto dati: per ogni blocco, quali campi, tipo, obbligatorietà — ⚑ critico
+```
+
+**La nota non è decorazione**: è la differenza fra un elenco di comandi e un
+modo di lavorare. Letta al momento giusto ti fa fare la cosa nell'ordine
+giusto, ed è il motivo per cui i modelli valgono la pena. La legge `Passi` come
+le righe `>` rientrate subito sotto la fase, e la scheda la mostra sotto di lei.
+
+I **marcatori** — `⚑ critico`, `◆ nodo` — viaggiano nel testo della casella e
+non hanno bisogno di nessun meccanismo. Niente grassetto attorno: gli asterischi
+si vedrebbero a schermo, perché una riga modificabile non si può ripulire dal
+markdown senza perderlo salvando.
 
 ### Un passo è finito quando qualcosa che prima non c'era adesso c'è
 
 È la regola che ha buttato via due liste di passi prima di questa. «Capire a
 cosa serve» e «decidere l'aria» non sono passi: sono stati mentali, e per
-spuntarli devi giudicarti invece che guardare. Sono scesi dentro l'**indagine**,
-che è un passo perché produce due cose — quello che hai trovato, e i dati finti
-che diventeranno il contratto col back end.
+spuntarli devi giudicarti invece che guardare.
 
-`_modelli/sito.md` ha sei passi: *Indagine · Le pagine senza stile · La faccia ·
-I comportamenti · La prova · La consegna*. Coprono dall'inizio alla **consegna
-al back end**, che è dove finisce il lavoro di chi fa il front.
+### In Bacheca va la fase, non la cosa fine
 
-### Le cose fini stanno sotto, rientrate
-
-```markdown
-- [ ] Indagine
-      - [ ] l'unica azione, in una frase
-      - [ ] che dati girano, e in che forma
-```
-
-**In Bacheca va il passo grosso**, non la cosa fine: «Indagine», non «guardare
-cosa c'è oggi». Ma la riga porta il conto dei suoi figli — **«2 di 5»** — e
-quello si muove ogni giorno. Senza, un passo grosso resterebbe in cima due
-settimane sembrando fermo, e la Bacheca smetterebbe di dare la soddisfazione
-che la fa aprire.
+«00 · Inquadramento», non «scrivere l'obiettivo di business». Ma la riga porta
+il conto dei suoi figli — **«2 di 7»** — e quello si muove ogni giorno. Senza,
+una fase resterebbe in cima due settimane sembrando ferma, e la Bacheca
+smetterebbe di dare la soddisfazione che la fa aprire.
 
 **Una casella rientrata si spunta sul posto.** Scendere sotto `## Fatte`
 lascerebbe orfano il passo che la conteneva e il conto non si potrebbe più
-fare: qui la struttura vale più dell'uniformità. Scendono solo i passi di
-primo livello, che sotto non hanno nessuno.
+fare: qui la struttura vale più dell'uniformità.
+
+**Una fase invece viaggia con i suoi.** Spuntandola scendono sotto `## Fatte`
+la sua riga, la sua nota e tutte le sue cose fini, in blocco. Prima scendeva
+solo la riga e i figli restavano orfani a metà sezione: con un modello da
+dodici fasi si vedeva al primo clic.
 
 ## I tre tipi di lavoro
 

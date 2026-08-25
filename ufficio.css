@@ -451,6 +451,12 @@ details.fatte .data{
   font-variant-numeric:tabular-nums; align-self:center;
 }
 
+.nota{
+  margin:2px 0 10px 30px; font-size:14px; line-height:1.45;
+  color:var(--tenue); max-width:60ch;
+}
+.conNota{ display:block; }
+
 .voce.fine{ margin-left:30px; border-bottom:0; padding:4px 2px; }
 .voce.fine .testo{ font-size:15px; color:var(--ink-2); }
 .voce.fine input[type=checkbox]{ width:15px; height:15px; }
