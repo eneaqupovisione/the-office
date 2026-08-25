@@ -115,7 +115,9 @@ const Ufficio = (() => {
   let anteprimaAperta = null;        // il percorso della riga con la «i» aperta
   let ultimoScandaglio = 0;
   let modelliNoti = [];         // i `_modelli/*.md`, letti aprendo il modulo
-  let modificaAperta = false;   // il pannello delle impostazioni di un progetto
+  let modificaAperta = false;
+  let apriNota = -1;            // la riga di cui stai scrivendo la nota
+  const aperte = new Set();     // le fasi aperte in Bacheca            // la riga di cui stai scrivendo la nota   // il pannello delle impostazioni di un progetto
 
   /* ── mattoncini ──────────────────────────────────────────────────────── */
 
@@ -852,6 +854,32 @@ const Ufficio = (() => {
     freccia: () => el('span', 'apri', '›')
   };
 
+  /* ── la fase si apre ─────────────────────────────────────────────────────
+     Una fase di un modello sta in cima alla Bacheca per giorni, ed e' giusto:
+     e' quella che stai facendo. Ma allora dev'esserci un modo di **lavorarci
+     dentro senza uscire** — se per spuntare «l'obiettivo in una frase» devi
+     entrare nella scheda, la Bacheca smette di essere il posto dove si fa e
+     torna a essere un indice. */
+
+  function sottoMossa(p, v){
+    const r = el('div', 'sotto');
+    const c = document.createElement('input');
+    c.type = 'checkbox';
+    c.addEventListener('click', (e) => e.stopPropagation());
+    c.addEventListener('change', async () => {
+      const dove = p.percorso + '/' + p.mossa.file;
+      const prima = (await Radice.leggi(dove)) || '';
+      const dopo = Passi.spunta(prima, v.riga, v.testo);
+      if (dopo !== prima) await Radice.scrivi(dove, dopo);
+      await scandaglia();
+    });
+    const et = el('label', 'casella'); et.append(c);
+    r.append(et, el('span', 'cosa', soloTesto(v.testo)));
+    if (v.nota) r.append(el('span', 'segno', '❞'));
+    r.title = v.nota || '';
+    return r;
+  }
+
   function rigaMossa(p){
     const r = tinteggia(el('div', 'mossa'), p);
     MOSSA.forEach(n => {
@@ -866,7 +894,32 @@ const Ufficio = (() => {
     });
     r.tabIndex = 0;
     r.addEventListener('keydown', (e) => { if (e.key === 'Enter'){ e.preventDefault(); apri(p); } });
-    return r;
+
+    const sotto = (p.mossa && p.mossa.sotto) || [];
+    if (!sotto.length && !(p.mossa && p.mossa.nota)) return r;
+
+    /* Aperta, la riga si porta dietro la sua nota e i suoi punti. Chiusa
+       resta una riga sola: la Bacheca deve restare corta. */
+    const chiave = p.percorso + '·' + (p.mossa ? p.mossa.riga : '');
+    const con = el('div', 'conSotto');
+    con.append(r);
+
+    const apri_ = aperte.has(chiave);
+    const t = el('button', 'apriSotto', apri_ ? '▾ chiudi' : '▸ ' + sotto.length + ' punti');
+    t.addEventListener('click', (e) => {
+      e.stopPropagation();
+      apri_ ? aperte.delete(chiave) : aperte.add(chiave);
+      bacheca();
+    });
+    if (sotto.length) r.insertBefore(t, r.querySelector('.apri'));
+
+    if (apri_){
+      const d = el('div', 'dentroMossa');
+      if (p.mossa.nota) d.append(el('p', 'nota', p.mossa.nota));
+      sotto.forEach(v => d.append(sottoMossa(p, v)));
+      con.append(d);
+    }
+    return con;
   }
 
   /* ═══ SCRIVANIA — cosa ho in mano ════════════════════════════════════════ */
@@ -1464,6 +1517,7 @@ const Ufficio = (() => {
   async function apri(p){
     if (!p) return;
     modificaAperta = false;
+    apriNota = -1;
     aperto = { p, md: null, altrove: [] };
     mostra(el('p', 'attesa', 'apro ' + p.nome + '…'));
     await ricarica();
@@ -1715,16 +1769,44 @@ const Ufficio = (() => {
         const via = el('button', 'via', '×');
         via.title = 'togli';
         via.addEventListener('click', () => cambiaPassi(md => Passi.elimina(md, v.riga, v.testo)));
-        r.append(via);
+        /* Il gancio: appende un pensiero a **questa** riga. È qui che vivono
+           le belle idee — un'idea che sa a cosa appartiene vale il doppio di
+           una in un elenco a parte, perché la ritrovi nel momento in cui
+           quella cosa la stai facendo. */
+        const gancio = el('button', 'su', v.nota ? 'nota' : '+ nota');
+        gancio.title = v.nota ? 'cambia la nota' : 'aggancia un pensiero a questa riga';
+        gancio.addEventListener('click', () => { apriNota = apriNota === v.riga ? -1 : v.riga; scheda(); });
+        r.append(gancio, via);
 
-        /* La nota della fase, sotto di lei. È il perché di quel passo, e senza
-           un modello resta un elenco di comandi. */
-        if (grosso && v.nota){
-          const con = el('div', 'conNota');
-          con.append(r, el('p', 'nota', v.nota));
-          return con;
+        if (!v.nota && apriNota !== v.riga) return r;
+
+        const con = el('div', 'conNota');
+        con.append(r);
+
+        if (v.nota && apriNota !== v.riga){
+          const p = el('p', 'nota' + (grosso ? '' : ' fine'), v.nota);
+          p.title = 'tocca per cambiarla';
+          p.addEventListener('click', () => { apriNota = v.riga; scheda(); });
+          con.append(p);
         }
-        return r;
+
+        if (apriNota === v.riga){
+          const f = el('form', 'appendi nota-scrivi');
+          const i = document.createElement('textarea');
+          i.value = v.nota || '';
+          i.rows = 2;
+          i.placeholder = 'cosa ti è venuto in mente su questa riga…';
+          const b = el('button', null, 'salva'); b.type = 'submit';
+          f.append(i, b);
+          f.addEventListener('submit', (e) => {
+            e.preventDefault();
+            apriNota = -1;
+            cambiaPassi(md => Passi.scriviNota(md, v.riga, i.value, v.testo));
+          });
+          con.append(f);
+          setTimeout(() => i.focus(), 0);
+        }
+        return con;
       });
       if (!dentro.length) dentro.push(el('p', 'vuoto', 'Niente da fare qui dentro. Una mossa sola basta.'));
       dentro.push(campoAppendi('la prossima mossa…', (t) => cambiaPassi(md => Passi.aggiungiPasso(md, t))));

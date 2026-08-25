@@ -220,6 +220,21 @@ markdown senza perderlo salvando.
 cosa serve» e «decidere l'aria» non sono passi: sono stati mentali, e per
 spuntarli devi giudicarti invece che guardare.
 
+### La nota è dove vivono le belle idee
+
+**Ogni riga può avere la sua nota** — le righe `>` rientrate sotto di lei — e
+non solo le fasi. Sulle fasi di un modello arriva già scritta ed è il perché di
+quella fase; su una riga qualunque la scrivi tu, dal bottone `+ nota`.
+
+Ed è lì che vivono le belle idee. Se ti viene in mente qualcosa per
+«03 · Direzione visiva» la agganci a quella riga; se riguarda il suo terzo
+punto, a quello. **Un'idea che sa a cosa appartiene vale il doppio di una in un
+elenco a parte**, perché la ritrovi nel momento in cui quella cosa la stai
+facendo — invece che aprendo una sezione che non stai aprendo.
+
+`## Belle idee` resta, ed è la casella d'ingresso: ci va quello che non sa
+ancora dove appartiene.
+
 ### In Bacheca va la fase, non la cosa fine
 
 «00 · Inquadramento», non «scrivere l'obiettivo di business». Ma la riga porta
@@ -231,7 +246,13 @@ smetterebbe di dare la soddisfazione che la fa aprire.
 lascerebbe orfano il passo che la conteneva e il conto non si potrebbe più
 fare: qui la struttura vale più dell'uniformità.
 
-**Una fase invece viaggia con i suoi.** Spuntandola scendono sotto `## Fatte`
+**La fase in Bacheca si apre.** Un bottone `▸ 7 punti` la espande sotto la
+riga: la sua nota, e i suoi punti spuntabili lì. Una fase di un modello sta in
+cima per giorni — è quella che stai facendo — e se per spuntarne un punto
+dovessi entrare nella scheda, la Bacheca tornerebbe a essere un indice invece
+del posto dove si fa. Chiusa resta una riga sola: corta com'era.
+
+**Una fase viaggia con i suoi.** Spuntandola scendono sotto `## Fatte`
 la sua riga, la sua nota e tutte le sue cose fini, in blocco. Prima scendeva
 solo la riga e i figli restavano orfani a metà sezione: con un modello da
 dodici fasi si vedeva al primo clic.

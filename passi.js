@@ -247,7 +247,8 @@ const Passi = (() => {
         return;
       }
       const p = riga.match(PUNTO);
-      if (p && dentro(secIdee, i) && p[2].trim()) idee.push({ riga: i, testo: p[2].trim() });
+      if (p && dentro(secIdee, i) && p[2].trim())
+        idee.push({ riga: i, testo: p[2].trim(), rientro: p[1].length });
     });
 
     /* I figli di un passo: le caselle rientrate che gli stanno sotto, fino
@@ -255,23 +256,31 @@ const Passi = (() => {
        la Bacheca mette accanto alla mossa — «Indagine · 2 di 5» — e sono il
        motivo per cui un passo grosso puo' restare in cima per due settimane
        senza che la riga sembri ferma. */
-    daFare.forEach(v => {
-      if (v.rientro > 0) return;
+    /* ── la nota, e perche' vale a ogni livello ────────────────────────────
 
-      /* La nota: le righe `>` rientrate subito sotto il passo. E' il perche'
-         di quella fase — «il passaggio piu' sottovalutato: non stai
-         consegnando file, stai consegnando un contratto» — e senza di lei un
-         modello e' un elenco di comandi. */
+       Una nota e' quello che pensi di **quella riga**: le righe `>` rientrate
+       subito sotto. Sulle fasi di un modello arriva gia' scritta ed e' il
+       perche' di quella fase; su una riga qualunque la scrivi tu.
+
+       Ed e' li' che vivono le belle idee. Se ti viene in mente qualcosa per
+       «03 · Direzione visiva» la scrivi su quella riga; se riguarda il suo
+       terzo punto, la scrivi su quello. Un'idea che sa a cosa appartiene vale
+       il doppio di un'idea in un elenco a parte, perche' la ritrovi nel
+       momento in cui quella cosa la stai facendo. */
+    [].concat(daFare, fatte, idee).forEach(v => {
       const note = [];
       for (let k = v.riga + 1; k < righe.length; k++){
         const r = righe[k];
         if (r.trim() === '') continue;
-        const q = r.match(/^\s+>\s?(.*)$/);
-        if (!q) break;
-        note.push(q[1].trim());
+        const q = r.match(/^(\s*)>\s?(.*)$/);
+        if (!q || q[1].length <= (v.rientro || 0)) break;
+        note.push(q[2].trim());
       }
       if (note.length) v.nota = note.join(' ');
+    });
 
+    daFare.forEach(v => {
+      if (v.rientro > 0) return;
       const da = tutte.findIndex(x => x.riga === v.riga);
       if (da === -1) return;
       let totali = 0, fatti = 0;
@@ -480,6 +489,35 @@ const Passi = (() => {
     return inserisci(righe.join('\n'), DA_FARE, blocco.join('\n'), false);
   }
 
+  /* La nota di una riga: si riscrive tutta, perche' e' un pensiero solo e non
+     un elenco. Vuota, sparisce. Le righe vanno rientrate piu' della riga a cui
+     appartengono, o alla rilettura diventerebbero la nota di qualcun altro. */
+  function scriviNota(md, numeroRiga, testo, atteso){
+    const righe = (md || '').split('\n');
+    if (!combacia(righe, numeroRiga, atteso)) return md;
+    const r = righe[numeroRiga] || '';
+    const m = r.match(CASELLA) || r.match(PUNTO);
+    if (!m) return md;
+    const rientro = m[1].length;
+
+    /* via la nota di prima */
+    let fine = numeroRiga + 1;
+    while (fine < righe.length){
+      const q = (righe[fine] || '').match(/^(\s*)>/);
+      if (!q || q[1].length <= rientro) break;
+      fine++;
+    }
+    righe.splice(numeroRiga + 1, fine - numeroRiga - 1);
+
+    const pulito = (testo || '').trim();
+    if (!pulito) return righe.join('\n');
+
+    const spazi = ' '.repeat(rientro + 6);
+    const nuove = pulito.split(/\n+/).map(x => spazi + '> ' + x.trim());
+    righe.splice(numeroRiga + 1, 0, ...nuove);
+    return righe.join('\n');
+  }
+
   /* Un'idea che diventa una mossa: è il gesto per cui esiste la sezione delle
      idee. Torni su un progetto dopo mesi, rileggi cosa ti era venuto in mente,
      e ne scegli una da fare adesso. */
@@ -495,7 +533,7 @@ const Passi = (() => {
   return {
     leggi, nuovo, daModello, scriviPerche,
     aggiungiPasso, aggiungiIdea, rinomina, elimina,
-    spunta, despunta, spuntaSulPosto, promuoviIdea,
+    spunta, despunta, spuntaSulPosto, promuoviIdea, scriviNota,
     campi, scriviCampo, scadenza, tipo,
     oggi, CAMPI, TIPI, DA_FARE, FATTE, IDEE
   };

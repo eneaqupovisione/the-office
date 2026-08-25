@@ -239,8 +239,22 @@ const Radice = (() => {
            Se un file ha tutto rientrato — non dovrebbe, ma non si sa mai —
            valgono tutte, o la Bacheca resterebbe vuota. */
         const grossi = letto.daFare.filter(v => v.rientro === 0);
-        mosse = (grossi.length ? grossi : letto.daFare).map(v =>
-          ({ file: FILE_PASSI, riga: v.riga, testo: v.testo, sua: true, figli: v.figli || null }));
+
+        /* Ogni fase si porta dietro i suoi sottopassi e la sua nota: costano
+           zero — il file e' gia' letto — e servono alla Bacheca, dove una
+           riga si apre e li spunti li' senza entrare nella scheda. */
+        const sottoDi = (v) => {
+          const dopo = letto.daFare.filter(x => x.riga > v.riga);
+          const fine = dopo.find(x => x.rientro <= v.rientro);
+          return letto.daFare
+            .filter(x => x.riga > v.riga && x.rientro > v.rientro && (!fine || x.riga < fine.riga))
+            .map(x => ({ riga: x.riga, testo: x.testo, nota: x.nota || '' }));
+        };
+
+        mosse = (grossi.length ? grossi : letto.daFare).map(v => ({
+          file: FILE_PASSI, riga: v.riga, testo: v.testo, sua: true,
+          figli: v.figli || null, nota: v.nota || '', sotto: sottoDi(v)
+        }));
         idee = letto.idee.map(v => ({ riga: v.riga, testo: v.testo }));
         perche = letto.perche || '';
         if (mosse.length) mossa = mosse[0];

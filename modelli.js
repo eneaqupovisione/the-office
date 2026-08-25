@@ -25,7 +25,7 @@
    nessun meccanismo:
 
        ⚑ critico   se lo salti, il problema torna dopo e costa dieci volte tanto
-       ◆ nodo      punto di snodo fra fasi: decide il lavoro a valle
+       ▲ nodo      punto di snodo fra fasi: decide il lavoro a valle
 
    ## Il legame finisce alla creazione
 
@@ -76,7 +76,7 @@ const Modelli = (() => {
       - [ ] Proposta di valore e messaggio principale in una frase
       - [ ] Mappa del sito: pagine, gerarchia, cosa sta nella navigazione
       - [ ] Percorsi utente: i 2–3 flussi che portano all'azione principale
-      - [ ] Modello dei contenuti: tipi, campi, relazioni, obbligatorietà — ◆ nodo
+      - [ ] Modello dei contenuti: tipi, campi, relazioni, obbligatorietà — ▲ nodo
       - [ ] Struttura degli URL e regole dei permalink
       - [ ] Decidere sito statico, CMS o headless — e perché
       - [ ] Requisiti tecnici: form, lingue, pagamenti, prenotazioni, integrazioni
@@ -125,7 +125,7 @@ const Modelli = (() => {
 - [ ] 07 · Costruzione front end
       > Tradurre il sistema in codice, componente per componente. I token diventano custom properties: se il design system è fatto bene, questa fase è quasi meccanica.
       - [ ] Setup: repository, struttura cartelle, convenzioni di nomi, ambiente locale
-      - [ ] Token tradotti in CSS custom properties, un unico file sorgente — ◆ nodo
+      - [ ] Token tradotti in CSS custom properties, un unico file sorgente — ▲ nodo
       - [ ] Reset e stili di base: tipografia, colori, focus
       - [ ] Markup semantico: landmark, gerarchia dei titoli, liste, form
       - [ ] Componenti uno alla volta, con tutti gli stati previsti

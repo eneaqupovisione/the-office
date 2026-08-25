@@ -211,5 +211,48 @@ t('despuntando torna su col suo blocco', l4.daFare.find(v => v.testo === 'Fase A
 t('e la nota è tornata con lui', l4.daFare.find(v => v.testo === 'Fase A').nota === 'perché esiste questa fase');
 t('la data non resta appiccicata', !/2026-08-25/.test(tornato));
 
+
+/* ── 14 · una nota su ogni livello: è lì che vivono le belle idee ───────── */
+let nn = [
+  '## Da fare', '',
+  '- [ ] 00 · Inquadramento',
+  '      > perché questa fase esiste',
+  '      - [ ] l\'obiettivo in una frase',
+  '      - [ ] chi approva',
+  '', '## Fatte', ''
+].join('\n');
+
+let ln2 = Passi.leggi(nn);
+const fase = ln2.daFare[0], sotto = ln2.daFare[1];
+t('la fase ha la sua nota', fase.nota === 'perché questa fase esiste');
+t('il sottopasso non se la prende', !sotto.nota, sotto.nota);
+t('la nota non conta come figlio', fase.figli.totali === 2);
+
+/* l'idea si aggancia al sottopasso */
+nn = Passi.scriviNota(nn, sotto.riga, 'e se lo chiedessimo a chi risponde al telefono?', sotto.testo);
+ln2 = Passi.leggi(nn);
+t('la nota del sottopasso si legge',
+  ln2.daFare[1].nota === 'e se lo chiedessimo a chi risponde al telefono?', ln2.daFare[1].nota);
+t('quella della fase è ancora sua', ln2.daFare[0].nota === 'perché questa fase esiste');
+t('è rientrata più del suo passo', /^ {12}> e se lo chiedessimo/m.test(nn), nn);
+t('i figli restano due', ln2.daFare[0].figli.totali === 2);
+
+/* riscriverla la sostituisce, non la accumula */
+nn = Passi.scriviNota(nn, ln2.daFare[1].riga, 'meglio: chiedere in cassa', ln2.daFare[1].testo);
+t('riscritta, non accumulata', (nn.match(/> e se lo chiedessimo/g) || []).length === 0
+  && (nn.match(/> meglio: chiedere in cassa/g) || []).length === 1, nn);
+
+/* vuota, sparisce */
+ln2 = Passi.leggi(nn);
+nn = Passi.scriviNota(nn, ln2.daFare[1].riga, '', ln2.daFare[1].testo);
+t('svuotata, sparisce', !Passi.leggi(nn).daFare[1].nota);
+t('e il resto è intatto', Passi.leggi(nn).daFare[0].nota === 'perché questa fase esiste'
+  && Passi.leggi(nn).daFare.length === 3);
+
+/* e viaggia col blocco quando la fase scende */
+const conNote = Passi.scriviNota(nn, Passi.leggi(nn).daFare[1].riga, 'un pensiero', 'l\'obiettivo in una frase');
+const scesa = Passi.spunta(conNote, Passi.leggi(conNote).daFare[0].riga, '00 · Inquadramento', '2026-08-25');
+t('la nota del sottopasso scende con la fase', scesa.split('## Fatte')[1].includes('un pensiero'), scesa.split('## Fatte')[1]);
+
 console.log((ko ? '\n' : '') + ok + ' prove passate' + (ko ? ', ' + ko + ' FALLITE' : ''));
 process.exit(ko ? 1 : 0);
