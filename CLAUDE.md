@@ -25,7 +25,8 @@ cd ~/Lavori/the-office && python3 servi.py 8010
 | `passi.js` | il formato di `prossimi-passi.md` | perché · belle idee · da fare · fatte. Spuntare fa **scendere** la riga sotto `## Fatte` con la data, non la cancella. Ogni operazione dichiara che testo si aspetta di trovare e non fa niente se non combacia. **Non tocca il DOM: si prova da solo** |
 | `domande.js` | le domande della Bacheca | «cosa sto dimenticando?» e le altre. Restituiscono due o tre proposte da una lista di progetti. **Non toccano il DOM e non scrivono niente: si provano da sole** |
 | `ufficio.js` | le quattro sezioni e la scheda | ogni gesto rilegge il file, scrive, rilegge |
-| `ufficio.css` | l'aspetto | impaginazione San Francisco, palette 06. L'acido è l'unico accento, ed è il colore di ciò che si tocca |
+| `ufficio.css` | l'aspetto | impaginazione San Francisco, e la palette che viene da `design/mockup-bacheca.html`. Solo regole: i token stanno nel `:root` di `index.html` |
+| `design/mockup-bacheca.html` | **il riferimento** | il mockup della nuova Bacheca. Non si tocca e non si serve: da qui sono usciti i token, i raggi e i gradi di tinta |
 | `modelli.js` | **i modelli incorporati** | un modello è un `prossimi-passi.md` scritto bene. Oggi: `sito`, dodici fasi. Non tocca il DOM: si prova da solo |
 | `prova-passi.js` · `prova-radice.js` · `prova-domande.js` · `prova-modelli.js` | le prove | `node prova-passi.js` e via. Niente dipendenze, niente `npm test` |
 
@@ -369,6 +370,52 @@ Limite noto: la tinta di una cartella che **non è anche un progetto** (come
 `cantera`, che ha solo sottocartelle) oggi si può solo dedurre, non scegliere.
 Per sceglierla servirebbe un `prossimi-passi.md` alla sua radice, che la
 farebbe comparire fra i progetti.
+
+## I token, e perché un grado di tinta non è un colore
+
+Tutto quello con cui è fatto l'aspetto sta in un posto solo: il `:root` di
+`index.html`. Non in `ufficio.css`, e non è pigrizia — `studio-web` legge e
+riscrive **un file solo**, quello che gli passi, e cerca il primo `:root` nel
+suo testo. Spostare i token in un `.css` a parte spegnerebbe l'unico modo che
+hai di toccare i colori senza passare da qui.
+
+I valori vengono da `design/mockup-bacheca.html`, portati dentro il
+**2026-08-26**. Il mockup resta com'è: è il riferimento, non una copia da
+tenere allineata. Dove aveva un nome suo per una cosa che qui c'era già ha
+vinto il nome di qui — `--inch` → `--ink`, `--giallo` → `--acc`, `--rosso` →
+`--male`. **Il nome descrittivo dice com'è fatto, quello semantico cosa fa**:
+il giorno che l'accento diventasse arancione, `--giallo` sarebbe una bugia
+sparsa in quaranta regole.
+
+I raggi sono passati da dodici valori scritti a mano a quattro
+(`--r-carta` · `--r-campo` · `--r-min` · `--r-tondo`). Dodici non è una scala:
+è una serie di decisioni prese a settimane di distanza e mai riguardate
+insieme.
+
+### I gradi di tinta, e i due assi che convivono
+
+`--tono-sito: 214` **non è un colore, è un numero**: la H di `oklch(L C H)`.
+Da un grado solo si ricavano fondo, bordo, pieno e testo che restano parenti,
+e non c'è nessuna palette da tenere allineata. La scala sta in `--gradino-*`,
+come coppie «chiarezza croma», e si compone così:
+
+```css
+.riga{ --h:var(--tono-sito); background:oklch(var(--gradino-velo) var(--h)); }
+```
+
+**E non si può impacchettare come colore finito.** Una custom property risolve
+i suoi `var()` sull'elemento dove è *dichiarata*: scrivendo
+`--tinta-velo: oklch(95% .035 var(--h))` dentro `:root`, il valore si congela
+sulla `--h` di `:root` e tutte le righe escono dello stesso colore. Provato il
+2026-08-26, fa esattamente questo. Tenendo nel token solo «chiarezza croma» il
+grado resta libero — ed è la ragione per cui la scala può stare nel sistema
+invece che sparsa in dodici `oklch()` dentro le regole.
+
+Restano **due assi di colore**, e oggi convivono: `TINTE` in `ufficio.js` dà
+un grado alla **cartella** (di chi è), `--tono-*` lo dà al **modello** (di che
+tipo è). Non sono in conflitto — `--tono-sito` **è** `blu` (214) — ma nessuna
+riga li usa ancora tutti e due, e il giorno che succederà va deciso quale dei
+due vince sul fianco sinistro.
 
 ## Le impostazioni stanno dietro un bottone
 

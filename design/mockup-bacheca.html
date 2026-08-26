@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Office — Bacheca</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Azeret+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --fondo:#EFEEEA; --carta:#FAFAF8;
+  --inch:#2E3033; --tenue:#6E7278; --debole:#9AA0A6; --linea:#D9D8D2;
+  --giallo:#E8FF33; --rosso:#D23B2E;
+  --m-sito:214; --m-app:168; --m-marca:340; --m-ricerca:288; --m-liberi:60;
+  --r:14px; --r2:8px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--fondo);color:var(--inch);
+  font-family:"Instrument Sans",system-ui,sans-serif;font-size:15px;line-height:1.45;
+  padding:22px 20px 84px}
+.schermo{max-width:960px;margin:0 auto}
+
+.nav{display:flex;gap:22px;align-items:baseline;margin-bottom:24px;
+  border-bottom:1px solid var(--linea);padding-bottom:12px}
+.nav a{font-size:14px;color:var(--debole);text-decoration:none;font-weight:500}
+.nav a.qui{color:var(--inch);font-weight:700}
+.nav a:hover{color:var(--inch)}
+
+/* ── segretaria ── */
+.segr{background:var(--carta);border:1px solid var(--linea);border-radius:var(--r);
+  margin-bottom:20px;overflow:hidden}
+.segr-testa{display:flex;gap:14px;align-items:flex-start;padding:16px 18px;cursor:pointer}
+.segr-testa:hover{background:#F4F4F1}
+.segr-testa:focus-visible{outline:2px solid var(--inch);outline-offset:-2px}
+.pallino{flex:0 0 auto;width:8px;height:8px;border-radius:50%;
+  background:var(--giallo);border:1px solid #B9CE1E;margin-top:7px}
+.segr.muta .pallino{background:transparent;border-color:var(--linea)}
+.segr-testo{flex:1;font-size:15.5px;line-height:1.5}
+.segr-testo b{font-weight:600}
+.segr.muta .segr-testo{color:var(--debole)}
+.segr-piu{font-family:"Azeret Mono",monospace;font-size:11px;color:var(--debole);
+  letter-spacing:.06em;white-space:nowrap;margin-top:3px}
+.segr-corpo{display:none;border-top:1px solid var(--linea);padding:16px 18px}
+.segr[aperta] .segr-corpo{display:block}
+.dett{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:16px}
+.dett div{font-size:13px;color:var(--tenue)}
+.dett b{display:block;font-family:"Azeret Mono",monospace;font-size:20px;font-weight:500;
+  color:var(--inch);line-height:1.2;margin-bottom:2px}
+.domande{display:flex;flex-wrap:wrap;gap:8px}
+.dom{appearance:none;border:1px solid var(--linea);background:var(--carta);border-radius:99px;
+  padding:7px 14px;font-family:inherit;font-size:13px;color:var(--inch);cursor:pointer}
+.dom:hover{background:var(--giallo);border-color:#B9CE1E}
+.dom:focus-visible{outline:2px solid var(--inch);outline-offset:2px}
+
+/* ── paginazione, in alto e sempre presente ── */
+.pag{display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:0 2px}
+.pag-n{font-family:"Azeret Mono",monospace;font-size:11.5px;color:var(--tenue);
+  letter-spacing:.05em;margin-right:auto;font-variant-numeric:tabular-nums}
+.pb{appearance:none;width:34px;height:34px;flex:0 0 34px;border-radius:var(--r2);
+  border:1px solid var(--linea);background:var(--carta);cursor:pointer;color:var(--inch);
+  font-size:14px;line-height:1}
+.pb:hover:not(:disabled){background:var(--giallo);border-color:#B9CE1E}
+.pb:disabled{opacity:.3;cursor:default}
+.pb:focus-visible{outline:2px solid var(--inch);outline-offset:2px}
+.tuttob{appearance:none;border:1px solid var(--linea);background:var(--carta);border-radius:99px;
+  padding:8px 14px;font-family:"Azeret Mono",monospace;font-size:10.5px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--tenue);cursor:pointer;white-space:nowrap}
+.tuttob:hover{background:var(--giallo);border-color:#B9CE1E;color:var(--inch)}
+.tuttob[aria-pressed="true"]{background:var(--giallo);color:var(--inch);border-color:#B9CE1E}
+.tuttob:focus-visible{outline:2px solid var(--inch);outline-offset:2px}
+
+/* ── elenco ── */
+.righe{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.righe.tutto{max-height:60vh;overflow-y:auto;padding-right:4px}
+.riga{--h:var(--m-sito);
+  background:oklch(95% .035 var(--h));
+  border:1px solid oklch(88% .05 var(--h));
+  border-radius:var(--r);transition:background .12s}
+.riga[data-m="app"]{--h:var(--m-app)}
+.riga[data-m="marca"]{--h:var(--m-marca)}
+.riga[data-m="ricerca"]{--h:var(--m-ricerca)}
+.riga[data-m="liberi"]{--h:var(--m-liberi)}
+.riga:hover{background:oklch(96.5% .045 var(--h))}
+.riga.nascosta{display:none}
+
+.riga-testa{display:flex;align-items:center;gap:14px;padding:13px 16px}
+.presa-b{flex:0 0 auto;appearance:none;width:28px;height:28px;border-radius:var(--r2);
+  border:1.5px solid oklch(64% .08 var(--h));background:rgba(255,255,255,.6);
+  cursor:pointer;position:relative}
+.presa-b:hover{background:var(--giallo);border-color:#A8BC17}
+.presa-b:focus-visible{outline:2px solid var(--inch);outline-offset:2px}
+.presa-b[aria-pressed="true"]{background:var(--giallo);border-color:#A8BC17}
+.presa-b[aria-pressed="true"]::after{content:"";position:absolute;left:9.5px;top:4.5px;
+  width:6px;height:13px;border:solid var(--inch);border-width:0 2.5px 2.5px 0;transform:rotate(42deg)}
+
+.info{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:2px}
+.b-prog,.b-passo{appearance:none;background:none;border:0;padding:0;font-family:inherit;
+  cursor:pointer;color:inherit;text-align:left;max-width:100%}
+.b-prog{font-size:17.5px;font-weight:600;letter-spacing:-.015em;line-height:1.2}
+.b-prog:hover{text-decoration:underline;text-decoration-thickness:1.5px;text-underline-offset:3px}
+.b-passo{font-size:14px;color:var(--tenue);display:flex;align-items:center;gap:8px}
+.b-passo:hover{color:var(--inch);text-decoration:underline;text-underline-offset:3px}
+.b-prog:focus-visible,.b-passo:focus-visible{outline:2px solid var(--inch);outline-offset:3px;border-radius:3px}
+.n{font-family:"Azeret Mono",monospace;font-size:12.5px;font-weight:600;color:oklch(46% .11 var(--h))}
+
+.meta{flex:0 0 auto;display:flex;align-items:center;gap:14px;
+  font-family:"Azeret Mono",monospace;font-size:12px;color:var(--tenue)}
+.stima{color:var(--inch);font-weight:500}
+.conta{font-variant-numeric:tabular-nums}
+/* ── stima: solo su richiesta ── */
+.tempo{appearance:none;cursor:pointer;min-width:62px;background:none;border:0;
+  padding:6px 2px;text-align:right;
+  font-family:"Azeret Mono",monospace;font-size:10px;letter-spacing:.11em;
+  text-transform:uppercase;color:transparent;transition:color .12s}
+.riga:hover .tempo{color:var(--debole)}
+.tempo:hover,.tempo:focus-visible{color:var(--tenue)}
+.tempo:focus-visible{outline:2px solid var(--inch);outline-offset:2px;border-radius:4px}
+.tempo-txt{display:none;text-transform:none;letter-spacing:.03em;font-size:10.5px;
+  color:var(--tenue);white-space:nowrap}
+.tempo[aperto]{color:var(--tenue)}
+.tempo[aperto] .tempo-eti{display:none}
+.tempo[aperto] .tempo-txt{display:block}
+
+.tag-slot{width:38px;flex:0 0 38px;display:flex;justify-content:center;align-items:center}
+.tag{font-family:"Azeret Mono",monospace;font-size:9.5px;letter-spacing:.1em;
+  text-transform:uppercase;padding:3px 8px;border-radius:99px;font-weight:600;white-space:nowrap}
+.bollo{appearance:none;border:0;background:none;padding:5px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;border-radius:99px}
+.bollo::before{content:"";width:15px;height:15px;border-radius:50%;flex:0 0 auto}
+.bollo.scade::before{background:var(--rosso)}
+.bollo.zitto::before{background:transparent;border:2px solid var(--debole)}
+.bollo.corso::before{background:oklch(58% .14 var(--h))}
+.bollo.corso .bollo-txt{color:oklch(44% .12 var(--h));font-weight:600}
+.bollo:hover{background:rgba(255,255,255,.7)}
+.bollo:focus-visible{outline:2px solid var(--inch);outline-offset:1px}
+.bollo-txt{display:none;font-family:"Azeret Mono",monospace;font-size:10px;
+  letter-spacing:.09em;text-transform:uppercase;white-space:nowrap}
+.bollo.scade .bollo-txt{color:var(--rosso);font-weight:600}
+.bollo.zitto .bollo-txt{color:var(--debole)}
+.bollo[aperto]::before{display:none}
+.bollo[aperto] .bollo-txt{display:block}
+.tag-slot:has(.bollo[aperto]){width:auto;flex:0 0 auto}
+.b-frec{appearance:none;background:none;border:0;padding:6px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;border-radius:var(--r2)}
+.b-frec:hover{background:rgba(255,255,255,.7)}
+.b-frec:focus-visible{outline:2px solid var(--inch);outline-offset:1px}
+.frec{width:8px;height:8px;border-right:1.5px solid var(--tenue);border-bottom:1.5px solid var(--tenue);
+  transform:rotate(45deg) translateY(-2px);transition:transform .18s}
+.riga[aperta] .frec{transform:rotate(-135deg) translateY(1px)}
+
+/* ── sottopassi ── */
+.sotto{display:none;padding:2px 17px 15px 58px;border-top:1px dashed oklch(86% .045 var(--h))}
+.riga[aperta] .sotto{display:block}
+.sp{display:flex;align-items:flex-start;gap:11px;padding:8px 0;font-size:14px;
+  border-bottom:1px solid oklch(91% .025 var(--h))}
+.sp:last-of-type{border-bottom:0}
+.box{flex:0 0 auto;width:15px;height:15px;border-radius:4px;margin-top:2px;
+  border:1.5px solid oklch(72% .055 var(--h));background:rgba(255,255,255,.6);position:relative}
+.sp-txt{flex:1;min-width:0}
+.sp-meta{flex:0 0 auto;font-family:"Azeret Mono",monospace;font-size:11px;
+  color:var(--tenue);white-space:nowrap;padding-top:2px}
+.sp.fatto .box{background:oklch(52% .12 var(--h));border-color:oklch(52% .12 var(--h))}
+.sp.fatto .box::after{content:"";position:absolute;left:4.5px;top:1px;width:4px;height:8px;
+  border:solid #fff;border-width:0 2px 2px 0;transform:rotate(42deg)}
+.sp.fatto .sp-txt{color:var(--tenue)}
+.sp.saltato .box{border-style:dashed;background:transparent}
+.sp.saltato .box::after{content:"⤫";position:absolute;left:1px;top:-4px;font-size:13px;
+  color:var(--tenue);line-height:1}
+.sp.saltato .sp-txt{color:var(--tenue)}
+.sp.cancellato .box{border-color:var(--linea);background:transparent}
+.sp.cancellato .box::after{content:"";position:absolute;left:2px;top:5.5px;width:9px;height:1.5px;
+  background:var(--debole)}
+.sp.cancellato .sp-txt{color:var(--debole);text-decoration:line-through;text-decoration-thickness:1px}
+.sp.affidato .box{border-color:#A8BC17;background:var(--giallo)}
+.marc{font-family:"Azeret Mono",monospace;font-size:9.5px;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--tenue);margin-left:7px;white-space:nowrap}
+.sp.affidato .marc{color:#5C6B00;font-weight:600}
+.gesti{display:flex;gap:6px;margin-top:13px;flex-wrap:wrap}
+.gesto{appearance:none;border:1px solid oklch(86% .045 var(--h));background:rgba(255,255,255,.6);
+  border-radius:99px;padding:6px 12px;font-family:"Azeret Mono",monospace;font-size:10.5px;
+  letter-spacing:.07em;text-transform:uppercase;color:var(--tenue);cursor:pointer}
+.gesto:hover{background:var(--giallo);border-color:#B9CE1E;color:var(--inch)}
+.gesto:focus-visible{outline:2px solid var(--inch);outline-offset:2px}
+
+/* ── dimenticati ── */
+.dimenticati{margin-top:28px;border-top:1px solid var(--linea);padding-top:16px}
+.apri-dim{appearance:none;background:none;border:0;padding:0;cursor:pointer;
+  font-family:"Azeret Mono",monospace;font-size:11px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--debole)}
+.apri-dim:hover{color:var(--inch)}
+.apri-dim:focus-visible{outline:2px solid var(--inch);outline-offset:3px}
+.lista-dim{display:none;margin-top:12px}
+.dimenticati[aperta] .lista-dim{display:block}
+
+/* ── legenda ── */
+.legenda{margin-top:30px;padding-top:15px;border-top:1px solid var(--linea);
+  display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center}
+.leg-tit{font-family:"Azeret Mono",monospace;font-size:10px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--debole);margin-right:4px}
+.leg{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--tenue)}
+.sw{--h:var(--m-sito);width:24px;height:14px;border-radius:5px;
+  background:oklch(95% .035 var(--h));border:1px solid oklch(78% .07 var(--h))}
+.sw[data-m="app"]{--h:var(--m-app)} .sw[data-m="marca"]{--h:var(--m-marca)}
+.sw[data-m="ricerca"]{--h:var(--m-ricerca)} .sw[data-m="liberi"]{--h:var(--m-liberi)}
+
+/* ── scheda finta ── */
+.velo{position:fixed;inset:0;background:rgba(46,48,51,.38);display:none;
+  align-items:center;justify-content:center;padding:24px;z-index:20}
+.velo[aperto]{display:flex}
+.scheda{background:var(--carta);border-radius:var(--r);max-width:430px;width:100%;
+  padding:24px;border:1px solid var(--linea)}
+.scheda-occhiello{font-family:"Azeret Mono",monospace;font-size:10px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--debole);margin:0 0 8px}
+.scheda h3{margin:0 0 10px;font-size:22px;font-weight:600;letter-spacing:-.02em;line-height:1.15}
+.scheda p{margin:0 0 18px;font-size:14px;color:var(--tenue)}
+.chiudi{appearance:none;border:1px solid var(--linea);background:var(--fondo);border-radius:99px;
+  padding:8px 16px;font-family:inherit;font-size:13px;cursor:pointer;color:var(--inch)}
+.chiudi:hover{background:var(--giallo);border-color:#B9CE1E}
+
+.prova{position:fixed;left:0;right:0;bottom:0;background:#3A3C40;color:#EDEDEA;
+  padding:9px 20px;display:flex;gap:18px;align-items:center;font-family:"Azeret Mono",monospace;
+  font-size:11px;letter-spacing:.05em;z-index:9}
+.prova button{appearance:none;background:none;border:1px solid #494B4F;color:inherit;font:inherit;
+  padding:4px 10px;border-radius:99px;cursor:pointer}
+.prova button:hover{background:var(--giallo);color:var(--inch);border-color:var(--giallo)}
+.prova span{color:#8B8F94}
+
+@media (max-width:700px){
+  .meta .conta{display:none}
+  .tag-slot{width:auto}
+  .riga-testa{gap:11px;padding:12px 13px}
+  .sotto{padding-left:24px}
+  .segr-piu{display:none}
+  .b-prog{font-size:16px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="schermo">
+
+<nav class="nav">
+  <a href="#">Scrivania</a><a href="#">Rubrica</a><a href="#">Mappa</a>
+  <a href="#" class="qui">Bacheca</a>
+</nav>
+
+<div class="segr" id="segr">
+  <div class="segr-testa" role="button" tabindex="0" id="segrTesta">
+    <span class="pallino"></span>
+    <span class="segr-testo" id="segrTesto">
+      <b>Bottega Marconi</b> consegna venerdì ed è ferma da nove giorni.
+      Le altre due scadenze della settimana sono più avanti.
+    </span>
+    <span class="segr-piu">dettagli</span>
+  </div>
+  <div class="segr-corpo">
+    <div class="dett">
+      <div><b>3</b>scadenze entro sette giorni</div>
+      <div><b>11</b>progetti aperti</div>
+      <div><b>4h 20m</b>lavorate oggi</div>
+      <div><b>2</b>in attesa di risposta</div>
+    </div>
+    <div class="domande">
+      <button class="dom">Cosa sto dimenticando</button>
+      <button class="dom">Che idee avevo avuto</button>
+      <button class="dom">Chi sta aspettando</button>
+    </div>
+  </div>
+</div>
+
+<div class="pag">
+  <span class="pag-n" id="pagN">1–6 di 8</span>
+  <button class="pb" id="pPrec" aria-label="Precedenti">&#9666;</button>
+  <button class="pb" id="pSucc" aria-label="Successivi">&#9656;</button>
+  <button class="tuttob" id="bTutto" aria-pressed="false">Mostra tutto</button>
+</div>
+
+<ul class="righe" id="elenco">
+
+  <li class="riga" data-m="marca">
+    <div class="riga-testa">
+      <button class="presa-b" aria-pressed="false" aria-label="Prendi in commissione"></button>
+      <div class="info">
+        <button class="b-prog" data-prog="Bottega Marconi">Bottega Marconi</button>
+        <button class="b-passo" data-passo="07 · Applicazioni difficili" data-prog="Bottega Marconi"><span class="n">07</span>Applicazioni difficili</button>
+      </div>
+      <div class="meta">
+        <span class="conta">2 di 5</span>
+        <button class="tempo" aria-label="Stima di tempo"><span class="tempo-eti">tempo</span><span class="tempo-txt">2h 10m</span></button>
+        <span class="tag-slot"><button class="bollo scade" aria-label="In scadenza"><span class="bollo-txt">venerdì</span></button></span>
+        <button class="b-frec" aria-label="Mostra i passi"><span class="frec"></span></button>
+      </div>
+    </div>
+    <div class="sotto">
+      <div class="sp fatto"><span class="box"></span><span class="sp-txt">Una fattura, un modulo, un'email di servizio, un PDF lungo</span><span class="sp-meta">25-08 · 52m</span></div>
+      <div class="sp fatto"><span class="box"></span><span class="sp-txt">Prova con nome lungo, foto scadente, testo eccessivo</span><span class="sp-meta">25-08 · 18m</span></div>
+      <div class="sp affidato"><span class="box"></span><span class="sp-txt">Sistema corretto dove si è rotto, e solo lì<span class="marc">&#9881; agente</span></span><span class="sp-meta">~45m</span></div>
+      <div class="sp"><span class="box"></span><span class="sp-txt">Un materiale prodotto da qualcun altro con le sole regole scritte<span class="marc">&#9873; critico</span></span><span class="sp-meta">~1h 25m</span></div>
+      <div class="sp saltato"><span class="box"></span><span class="sp-txt">Prova su insegna vista da lontano<span class="marc">&#10540; saltato</span></span><span class="sp-meta">&mdash;</span></div>
+      <div class="gesti"><button class="gesto">Affida all'agente</button><button class="gesto">Salta</button><button class="gesto">Cancella dal progetto</button><button class="gesto">Rinvia di una settimana</button></div>
+    </div>
+  </li>
+
+  <li class="riga" data-m="sito">
+    <div class="riga-testa">
+      <button class="presa-b" aria-pressed="false" aria-label="Prendi in commissione"></button>
+      <div class="info">
+        <button class="b-prog" data-prog="Pescheria Rondelli">Pescheria Rondelli</button>
+        <button class="b-passo" data-passo="09 · Verifiche pre-lancio" data-prog="Pescheria Rondelli"><span class="n">09</span>Verifiche pre-lancio</button>
+      </div>
+      <div class="meta">
+        <span class="conta">4 di 10</span>
+        <button class="tempo" aria-label="Stima di tempo"><span class="tempo-eti">tempo</span><span class="tempo-txt">3h 40m</span></button>
+        <span class="tag-slot"><button class="bollo scade" aria-label="In scadenza"><span class="bollo-txt">lunedì</span></button></span>
+        <button class="b-frec" aria-label="Mostra i passi"><span class="frec"></span></button>
+      </div>
+    </div>
+    <div class="sotto">
+      <div class="sp fatto"><span class="box"></span><span class="sp-txt">Link rotti, pagina 404, redirect dai vecchi indirizzi</span><span class="sp-meta">24-08 · 40m</span></div>
+      <div class="sp affidato"><span class="box"></span><span class="sp-txt">SEO tecnico: sitemap, robots, canonical<span class="marc">&#9881; agente</span></span><span class="sp-meta">~30m</span></div>
+      <div class="sp"><span class="box"></span><span class="sp-txt">Ogni form testato fino alla casella email</span><span class="sp-meta">~50m</span></div>
+      <div class="sp cancellato"><span class="box"></span><span class="sp-txt">Conformità privacy: banner cookie e base giuridica<span class="marc">&#9003; cancellato 26-08</span></span><span class="sp-meta">&mdash;</span></div>
+      <div class="gesti"><button class="gesto">Affida all'agente</button><button class="gesto">Salta</button><button class="gesto">Cancella dal progetto</button><button class="gesto">Rinvia di una settimana</button></div>
+    </div>
+  </li>
+
+  <li class="riga" data-m="app">
+    <div class="riga-testa">
+      <button class="presa-b" aria-pressed="true" aria-label="Togli dalla commissione"></button>
+      <div class="info">
+        <button class="b-prog" data-prog="Cantera">Cantera</button>
+        <button class="b-passo" data-passo="03 · Modello dei dati" data-prog="Cantera"><span class="n">03</span>Modello dei dati</button>
+      </div>
+      <div class="meta">
+        <span class="conta">3 di 5</span>
+        <button class="tempo" aria-label="Stima di tempo"><span class="tempo-eti">tempo</span><span class="tempo-txt">1h 15m</span></button>
+        <span class="tag-slot"><button class="bollo corso" aria-label="In corso"><span class="bollo-txt">in corso</span></button></span>
+        <button class="b-frec" aria-label="Mostra i passi"><span class="frec"></span></button>
+      </div>
+    </div>
+    <div class="sotto">
+      <div class="sp fatto"><span class="box"></span><span class="sp-txt">Entità nominate con le parole del dominio</span><span class="sp-meta">26-08 · 35m</span></div>
+      <div class="sp fatto"><span class="box"></span><span class="sp-txt">Campi, relazioni, obbligatorietà</span><span class="sp-meta">26-08 · 1h 08m</span></div>
+      <div class="sp fatto"><span class="box"></span><span class="sp-txt">Regola di separazione dei dati fra clienti</span><span class="sp-meta">26-08 · 22m</span></div>
+      <div class="sp affidato"><span class="box"></span><span class="sp-txt">Stati di ogni entità e transizioni ammesse<span class="marc">&#9881; agente &middot; &#9670; nodo</span></span><span class="sp-meta">~45m</span></div>
+      <div class="sp"><span class="box"></span><span class="sp-txt">Cinque scenari veri percorsi passo per passo</span><span class="sp-meta">~30m</span></div>
+      <div class="gesti"><button class="gesto">Togli all'agente</button><button class="gesto">Salta</button><button class="gesto">Cancella dal progetto</button><button class="gesto">Rinvia di una settimana</button></div>
+    </div>
+  </li>
+
+  <li class="riga" data-m="liberi">
+    <div class="riga-testa">
+      <button class="presa-b" aria-pressed="true" aria-label="Togli dalla commissione"></button>
+      <div class="info">
+        <button class="b-prog" data-prog="Sol y Mar">Sol y Mar</button>
+        <button class="b-passo" data-passo="Rifare le foto dei tavoli esterni" data-prog="Sol y Mar">Rifare le foto dei tavoli esterni</button>
+      </div>
+      <div class="meta">
+        <span class="conta">0 di 3</span>
+        <button class="tempo" aria-label="Stima di tempo"><span class="tempo-eti">tempo</span><span class="tempo-txt">senza stima</span></button>
+        <span class="tag-slot"></span>
+        <button class="b-frec" aria-label="Mostra i passi"><span class="frec"></span></button>
+      </div>
+    </div>
+    <div class="sotto">
+      <div class="sp"><span class="box"></span><span class="sp-txt">Aspettare una giornata senza vento</span><span class="sp-meta">&mdash;</span></div>
+      <div class="sp"><span class="box"></span><span class="sp-txt">Scatti al tramonto, tavoli apparecchiati</span><span class="sp-meta">&mdash;</span></div>
+      <div class="sp"><span class="box"></span><span class="sp-txt">Selezione e ritaglio per il sito</span><span class="sp-meta">&mdash;</span></div>
+      <div class="gesti"><button class="gesto">Affida all'agente</button><button class="gesto">Salta</button><button class="gesto">Cancella dal progetto</button><button class="gesto">Rinvia di una settimana</button></div>
+    </div>
+  </li>
+
+  <li class="riga" data-m="sito">
+    <div class="riga-testa">
+      <button class="presa-b" aria-pressed="false" aria-label="Prendi in commissione"></button>
+      <div class="info">
+        <button class="b-prog" data-prog="Studio Ferrini">Studio Ferrini</button>
+        <button class="b-passo" data-passo="05 · Contenuti" data-prog="Studio Ferrini"><span class="n">05</span>Contenuti</button>
+      </div>
+      <div class="meta">
+        <span class="conta">1 di 8</span>
+        <button class="tempo" aria-label="Stima di tempo"><span class="tempo-eti">tempo</span><span class="tempo-txt">4h 05m</span></button>
+        <span class="tag-slot"></span>
+        <button class="b-frec" aria-label="Mostra i passi"><span class="frec"></span></button>
+      </div>
+    </div>
+    <div class="sotto">
+      <div class="sp fatto"><span class="box"></span><span class="sp-txt">Richiesta formale al cliente con elenco e scadenza</span><span class="sp-meta">19-08 · 15m</span></div>
+      <div class="sp"><span class="box"></span><span class="sp-txt">Copy delle pagine chiave: titoli, corpo, chiamate all'azione</span><span class="sp-meta">~2h 30m</span></div>
+      <div class="sp affidato"><span class="box"></span><span class="sp-txt">Testi SEO: title, meta description, alt<span class="marc">&#9881; agente</span></span><span class="sp-meta">~40m</span></div>
+      <div class="gesti"><button class="gesto">Affida all'agente</button><button class="gesto">Salta</button><button class="gesto">Cancella dal progetto</button><button class="gesto">Rinvia di una settimana</button></div>
+    </div>
+  </li>
+
+  <li class="riga" data-m="ricerca">
+    <div class="riga-testa">
+      <button class="presa-b" aria-pressed="false" aria-label="Prendi in commissione"></button>
+      <div class="info">
+        <button class="b-prog" data-prog="Previsione coperti">Previsione coperti</button>
+        <button class="b-passo" data-passo="03 · Primo giro" data-prog="Previsione coperti"><span class="n">03</span>Primo giro</button>
+      </div>
+      <div class="meta">
+        <span class="conta">1 di 4</span>
+        <button class="tempo" aria-label="Stima di tempo"><span class="tempo-eti">tempo</span><span class="tempo-txt">55m</span></button>
+        <span class="tag-slot"></span>
+        <button class="b-frec" aria-label="Mostra i passi"><span class="frec"></span></button>
+      </div>
+    </div>
+    <div class="sotto">
+      <div class="sp fatto"><span class="box"></span><span class="sp-txt">Ipotesi e risultato atteso, scritti prima di girare</span><span class="sp-meta">22-08 · 20m</span></div>
+      <div class="sp affidato"><span class="box"></span><span class="sp-txt">La prova più piccola che potrebbe falsificarla<span class="marc">&#9881; agente</span></span><span class="sp-meta">~25m</span></div>
+      <div class="sp"><span class="box"></span><span class="sp-txt">Misura contro la baseline, registrata</span><span class="sp-meta">~15m</span></div>
+      <div class="sp"><span class="box"></span><span class="sp-txt">Riga di confronto fra atteso e ottenuto</span><span class="sp-meta">~15m</span></div>
+      <div class="gesti"><button class="gesto">Affida all'agente</button><button class="gesto">Salta</button><button class="gesto">Cancella dal progetto</button><button class="gesto">Rinvia di una settimana</button></div>
+    </div>
+  </li>
+
+  <li class="riga" data-m="app">
+    <div class="riga-testa">
+      <button class="presa-b" aria-pressed="false" aria-label="Prendi in commissione"></button>
+      <div class="info">
+        <button class="b-prog" data-prog="Tablewise">Tablewise</button>
+        <button class="b-passo" data-passo="02 · Perimetro della v1" data-prog="Tablewise"><span class="n">02</span>Perimetro della v1</button>
+      </div>
+      <div class="meta">
+        <span class="conta">0 di 4</span>
+        <button class="tempo" aria-label="Stima di tempo"><span class="tempo-eti">tempo</span><span class="tempo-txt">1h 30m</span></button>
+        <span class="tag-slot"></span>
+        <button class="b-frec" aria-label="Mostra i passi"><span class="frec"></span></button>
+      </div>
+    </div>
+    <div class="sotto">
+      <div class="sp"><span class="box"></span><span class="sp-txt">Il momento di valore, in una riga</span><span class="sp-meta">~20m</span></div>
+      <div class="sp"><span class="box"></span><span class="sp-txt">Elenco di cosa NON entra<span class="marc">&#9873; critico</span></span><span class="sp-meta">~40m</span></div>
+      <div class="sp"><span class="box"></span><span class="sp-txt">Elenco di cosa resta manuale all'inizio</span><span class="sp-meta">~20m</span></div>
+      <div class="sp"><span class="box"></span><span class="sp-txt">Data del primo utilizzo reale, in calendario</span><span class="sp-meta">~10m</span></div>
+      <div class="gesti"><button class="gesto">Affida all'agente</button><button class="gesto">Salta</button><button class="gesto">Cancella dal progetto</button><button class="gesto">Rinvia di una settimana</button></div>
+    </div>
+  </li>
+
+  <li class="riga" data-m="sito">
+    <div class="riga-testa">
+      <button class="presa-b" aria-pressed="false" aria-label="Prendi in commissione"></button>
+      <div class="info">
+        <button class="b-prog" data-prog="Enoteca Vasari">Enoteca Vasari</button>
+        <button class="b-passo" data-passo="06 · UI ad alta fedeltà" data-prog="Enoteca Vasari"><span class="n">06</span>UI ad alta fedeltà</button>
+      </div>
+      <div class="meta">
+        <span class="conta">2 di 6</span>
+        <button class="tempo" aria-label="Stima di tempo"><span class="tempo-eti">tempo</span><span class="tempo-txt">6h 20m</span></button>
+        <span class="tag-slot"></span>
+        <button class="b-frec" aria-label="Mostra i passi"><span class="frec"></span></button>
+      </div>
+    </div>
+    <div class="sotto">
+      <div class="sp fatto"><span class="box"></span><span class="sp-txt">Pagine chiave complete, desktop e mobile</span><span class="sp-meta">21-08 · 3h 40m</span></div>
+      <div class="sp fatto"><span class="box"></span><span class="sp-txt">Casi limite: titolo lunghissimo, lista vuota, prezzo assente</span><span class="sp-meta">21-08 · 55m</span></div>
+      <div class="sp"><span class="box"></span><span class="sp-txt">Presentazione e approvazione formale del cliente<span class="marc">&#9873; firma</span></span><span class="sp-meta">~1h</span></div>
+      <div class="sp saltato"><span class="box"></span><span class="sp-txt">Specifica di transizioni e animazioni<span class="marc">&#10540; saltato</span></span><span class="sp-meta">&mdash;</span></div>
+      <div class="gesti"><button class="gesto">Affida all'agente</button><button class="gesto">Salta</button><button class="gesto">Cancella dal progetto</button><button class="gesto">Rinvia di una settimana</button></div>
+    </div>
+  </li>
+
+</ul>
+
+<div class="dimenticati" id="dim">
+  <button class="apri-dim" id="apriDim">&#9656; Progetti dimenticati &mdash; 2</button>
+  <div class="lista-dim">
+    <ul class="righe">
+      <li class="riga" data-m="marca">
+        <div class="riga-testa">
+          <button class="presa-b" aria-pressed="false" aria-label="Prendi in commissione"></button>
+          <div class="info">
+            <button class="b-prog" data-prog="Cantina Ridolfi">Cantina Ridolfi</button>
+            <button class="b-passo" data-passo="04 · Attributi e voce" data-prog="Cantina Ridolfi"><span class="n">04</span>Attributi e voce</button>
+          </div>
+          <div class="meta">
+        <span class="conta">0 di 4</span>
+        <button class="tempo" aria-label="Stima di tempo"><span class="tempo-eti">tempo</span><span class="tempo-txt">2h 15m</span></button>
+        <span class="tag-slot"><button class="bollo zitto" aria-label="Fermo da tempo"><span class="bollo-txt">62 giorni</span></button></span>
+        <button class="b-frec" aria-label="Mostra i passi"><span class="frec"></span></button>
+      </div>
+        </div>
+        <div class="sotto">
+          <div class="sp"><span class="box"></span><span class="sp-txt">Tre o quattro attributi in forma «X ma non Y»</span><span class="sp-meta">~45m</span></div>
+          <div class="sp"><span class="box"></span><span class="sp-txt">Frasi giuste e sbagliate in situazioni concrete</span><span class="sp-meta">~1h</span></div>
+          <div class="gesti"><button class="gesto">Affida all'agente</button><button class="gesto">Salta</button><button class="gesto">Cancella dal progetto</button></div>
+        </div>
+      </li>
+      <li class="riga" data-m="liberi">
+        <div class="riga-testa">
+          <button class="presa-b" aria-pressed="false" aria-label="Prendi in commissione"></button>
+          <div class="info">
+            <button class="b-prog" data-prog="Interno">Interno</button>
+            <button class="b-passo" data-passo="Sistemare il preventivo tipo" data-prog="Interno">Sistemare il preventivo tipo</button>
+          </div>
+          <div class="meta">
+        <span class="conta">0 di 2</span>
+        <button class="tempo" aria-label="Stima di tempo"><span class="tempo-eti">tempo</span><span class="tempo-txt">senza stima</span></button>
+        <span class="tag-slot"><button class="bollo zitto" aria-label="Fermo da tempo"><span class="bollo-txt">104 giorni</span></button></span>
+        <button class="b-frec" aria-label="Mostra i passi"><span class="frec"></span></button>
+      </div>
+        </div>
+        <div class="sotto">
+          <div class="sp"><span class="box"></span><span class="sp-txt">Rivedere le voci e i tempi di pagamento</span><span class="sp-meta">&mdash;</span></div>
+          <div class="sp"><span class="box"></span><span class="sp-txt">Versione modificabile da inviare</span><span class="sp-meta">&mdash;</span></div>
+          <div class="gesti"><button class="gesto">Affida all'agente</button><button class="gesto">Salta</button><button class="gesto">Cancella dal progetto</button></div>
+        </div>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="legenda">
+  <span class="leg-tit">Colore = modello</span>
+  <span class="leg"><span class="sw" data-m="sito"></span>sito</span>
+  <span class="leg"><span class="sw" data-m="app"></span>app</span>
+  <span class="leg"><span class="sw" data-m="marca"></span>marca</span>
+  <span class="leg"><span class="sw" data-m="ricerca"></span>ricerca</span>
+  <span class="leg"><span class="sw" data-m="liberi"></span>liberi</span>
+</div>
+
+</div>
+
+<div class="velo" id="velo">
+  <div class="scheda" role="dialog" aria-modal="true">
+    <p class="scheda-occhiello" id="schOcch">In Scrivania</p>
+    <h3 id="schTit">—</h3>
+    <p id="schTxt">—</p>
+    <button class="chiudi" id="schChiudi">Chiudi</button>
+  </div>
+</div>
+
+<div class="prova">
+  <span>?prova</span>
+  <button id="bMuta">Segretaria muta</button>
+  <button id="bTanti">Prendine sei</button>
+  <button id="bReset">Ricarica</button>
+</div>
+
+<script>
+(function(){
+  const PER = 6;
+  const elenco = document.getElementById('elenco');
+  const righe  = Array.from(elenco.children);
+  const pagN   = document.getElementById('pagN');
+  const pPrec  = document.getElementById('pPrec');
+  const pSucc  = document.getElementById('pSucc');
+  const bTutto = document.getElementById('bTutto');
+  let pagina = 0, tutto = false;
+
+  function disegna(){
+    if(tutto){
+      righe.forEach(r=>r.classList.remove('nascosta'));
+      elenco.classList.add('tutto');
+      pagN.textContent = righe.length + ' righe';
+      pPrec.disabled = pSucc.disabled = true;
+      return;
+    }
+    elenco.classList.remove('tutto');
+    const da = pagina*PER, a = Math.min(da+PER, righe.length);
+    righe.forEach((r,i)=>{
+      const dentro = i>=da && i<a;
+      r.classList.toggle('nascosta', !dentro);
+      if(!dentro) r.removeAttribute('aperta');
+    });
+    pagN.textContent = righe.length ? (da+1)+'\u2013'+a+' di '+righe.length : '0 righe';
+    pPrec.disabled = pagina===0;
+    pSucc.disabled = a>=righe.length;
+  }
+  pPrec.onclick = ()=>{ if(pagina>0){pagina--; disegna();} };
+  pSucc.onclick = ()=>{ if((pagina+1)*PER<righe.length){pagina++; disegna();} };
+  bTutto.onclick = ()=>{
+    tutto = !tutto;
+    bTutto.setAttribute('aria-pressed', String(tutto));
+    bTutto.textContent = tutto ? 'Mostra a gruppi' : 'Mostra tutto';
+    if(!tutto) pagina = 0;
+    disegna();
+  };
+
+  /* freccia: mostra i passi */
+  document.querySelectorAll('.b-frec').forEach(b=>{
+    b.onclick = ()=>{
+      const r = b.closest('.riga');
+      const ap = r.hasAttribute('aperta');
+      ap ? r.removeAttribute('aperta') : r.setAttribute('aperta','');
+      b.setAttribute('aria-label', ap ? 'Mostra i passi' : 'Nascondi i passi');
+    };
+  });
+
+
+
+  document.querySelectorAll('.bollo').forEach(b=>{
+    b.onclick = ()=> b.hasAttribute('aperto') ? b.removeAttribute('aperto') : b.setAttribute('aperto','');
+  });
+
+  document.querySelectorAll('.tempo').forEach(b=>{
+    b.onclick = ()=> b.hasAttribute('aperto') ? b.removeAttribute('aperto') : b.setAttribute('aperto','');
+  });
+
+  /* scheda finta */
+  const velo=document.getElementById('velo'), schOcch=document.getElementById('schOcch');
+  const schTit=document.getElementById('schTit'), schTxt=document.getElementById('schTxt');
+  function apriScheda(occh, tit, txt){
+    schOcch.textContent=occh; schTit.textContent=tit; schTxt.textContent=txt;
+    velo.setAttribute('aperto','');
+  }
+  document.getElementById('schChiudi').onclick = ()=> velo.removeAttribute('aperto');
+  velo.onclick = e=>{ if(e.target===velo) velo.removeAttribute('aperto'); };
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape') velo.removeAttribute('aperto'); });
+
+  document.querySelectorAll('.b-prog').forEach(b=>{
+    b.onclick = ()=> apriScheda('Scrivania \u00b7 scheda progetto', b.dataset.prog,
+      'Qui si aprirebbe la scheda completa del progetto: tutte le fasi, lo storico, il cliente, il tempo speso.');
+  });
+  document.querySelectorAll('.b-passo').forEach(b=>{
+    b.onclick = ()=> apriScheda('Scheda del passo \u00b7 ' + b.dataset.prog, b.dataset.passo,
+      'Qui si aprirebbe la scheda del passo: la nota del modello, i sottopassi, le stime, chi lo esegue.');
+  });
+
+  /* segretaria */
+  const segr = document.getElementById('segr'), testa = document.getElementById('segrTesta');
+  const apri = ()=> segr.hasAttribute('aperta') ? segr.removeAttribute('aperta') : segr.setAttribute('aperta','');
+  testa.onclick = apri;
+  testa.onkeydown = e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); apri(); } };
+
+  const dim = document.getElementById('dim'), apriDim = document.getElementById('apriDim');
+  apriDim.onclick = ()=>{
+    const a = dim.hasAttribute('aperta');
+    a ? dim.removeAttribute('aperta') : dim.setAttribute('aperta','');
+    apriDim.innerHTML = (a?'\u25B8':'\u25BE') + ' Progetti dimenticati \u2014 2';
+  };
+
+  const segrTesto = document.getElementById('segrTesto');
+  const base = segrTesto.innerHTML;
+  function conta(){
+    if(segr.classList.contains('muta')) return;
+    const n = document.querySelectorAll('.presa-b[aria-pressed="true"]').length;
+    segrTesto.innerHTML = n>=5
+      ? 'Hai preso <b>'+n+' cose</b> per oggi, per un totale di circa '+
+        (n*1.4).toFixed(1).replace('.',',')+' ore. Di solito ne chiudi tre.'
+      : base;
+  }
+  document.querySelectorAll('.presa-b').forEach(p=>{
+    p.onclick = ()=>{
+      const on = p.getAttribute('aria-pressed')==='true';
+      p.setAttribute('aria-pressed', String(!on));
+      p.setAttribute('aria-label', !on ? 'Togli dalla commissione' : 'Prendi in commissione');
+      conta();
+    };
+  });
+
+  document.getElementById('bMuta').onclick = ()=>{
+    segr.classList.toggle('muta');
+    if(segr.classList.contains('muta')){
+      segr.removeAttribute('aperta');
+      segrTesto.textContent = 'Niente di urgente. Buon lavoro.';
+    } else conta();
+  };
+  document.getElementById('bTanti').onclick = ()=>{
+    let n = document.querySelectorAll('.presa-b[aria-pressed="true"]').length;
+    document.querySelectorAll('.presa-b[aria-pressed="false"]').forEach(p=>{
+      if(n<6){ p.click(); n++; }
+    });
+  };
+  document.getElementById('bReset').onclick = ()=> location.reload();
+
+  disegna(); conta();
+})();
+</script>
+</body>
+</html>

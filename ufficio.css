@@ -1,9 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    L'UFFICIO — l'aspetto della vista sui lavori.
 
-   Stessa direzione di `stile.css` — impaginazione San Francisco, palette 06 —
-   e stessi nomi di colore, così le due si possono fondere quando il vecchio
-   viene spento. Qui cambia una cosa sola, ed è la gerarchia:
+   Impaginazione San Francisco, e la palette che viene da
+   `design/mockup-bacheca.html`. Qui cambia una cosa sola, ed è la gerarchia:
 
    **il numero che conta è il silenzio.** Non il nome del progetto, non quante
    cose ci sono da fare. Un progetto che tace da 150 giorni deve saltare
@@ -15,20 +14,46 @@
 
    ## Le variabili non stanno qui, e c'è un perché
 
-   I colori e le misure vivono in un `:root` dentro `ufficio.html`, **dopo**
+   I colori e le misure vivono in un `:root` dentro `index.html`, **dopo**
    il collegamento a questo foglio. Non è disordine: è l'unico posto in cui
    `~/Attrezzi/studio-web` le sa leggere e riscrivere — le cerca con una
-   regex su `:root` nel testo della pagina, e le regole che generi toccando
-   il sito le appende all'ultimo `<style>`. Stando dopo questo file, vincono.
+   regex su `:root` nel testo della pagina, e legge e salva **un file solo**,
+   quello che gli passi. Le regole che generi toccando il sito le appende
+   all'ultimo `<style>`: stando dopo questo file, vincono.
 
    Qui dentro si scrivono solo regole, e sempre in termini di `var(--...)`.
+
+   ## Le famiglie, e cosa vuol dire ognuna
+
+   | | |
+   |---|---|
+   | `--fondo` `--carta` `--carta-2` | le superfici |
+   | `--ink` `--ink-2` `--tenue` `--tenue-2` | i quattro gradi del testo |
+   | `--linea` `--linea-forte` | le linee |
+   | `--acc` e famiglia | **ciò che si tocca**, e nient'altro |
+   | `--vetro` `--velo` | il chiaro sopra una riga tinta, e il fondo del modale |
+   | `--tono-*` | i gradi di tinta per modello: numeri, non colori |
+   | `--gradino-*` | la scala della tinta, in coppie «chiarezza croma» |
+   | `--r-carta` `--r-campo` `--r-min` `--r-tondo` | i raggi, e sono quattro |
+   | `--font` `--font-mono` | i caratteri |
+
+   **`--acc` non si chiama `--giallo`**, e il mockup invece sì. Il nome
+   descrittivo racconta com'è fatto, quello semantico cosa fa: il giorno che
+   l'accento diventasse arancione, `--giallo` sarebbe una bugia sparsa in
+   quaranta regole. Stessa ragione per `--ink` invece di `--inch` e `--male`
+   invece di `--rosso`.
+
+   **I raggi sono quattro perché prima erano dodici**, che non è una scala ma
+   una serie di decisioni prese a distanza di settimane. Restano a mano solo
+   il `50%` dei tondi veri e i due raggi da un paio di pixel — un raggio così
+   non è una misura, è un modo di non fare l'angolo vivo.
    ═══════════════════════════════════════════════════════════════════════ */
 
 *{ box-sizing:border-box; }
 html,body{ margin:0; padding:0; }
 body{
   background:var(--fondo); color:var(--ink);
-  font:16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  font:16px/1.5 var(--font);
   -webkit-font-smoothing:antialiased;
 }
 button{ font:inherit; color:inherit; }
@@ -44,13 +69,13 @@ button{ font:inherit; color:inherit; }
 .testata h1{ font-size:19px; font-weight:640; letter-spacing:-.01em; margin:0; }
 .testata .dove{
   font-size:12.5px; color:var(--tenue);
-  font-family:ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family:var(--font-mono);
 }
 .testata .spinta{ margin-left:auto; display:flex; gap:8px; }
 
 .min{
   background:transparent; border:1px solid var(--linea-forte); color:var(--ink-2);
-  border-radius:8px; padding:5px 11px; font-size:13px; cursor:pointer;
+  border-radius:var(--r-campo); padding:5px 11px; font-size:13px; cursor:pointer;
 }
 .min:hover{ background:var(--carta-2); }
 .min[aria-pressed="true"]{
@@ -80,9 +105,9 @@ button{ font:inherit; color:inherit; }
 /* L'interruttore dentro la Scrivania — due modi, non due posti. */
 .scelta{
   display:inline-flex; gap:3px; margin-bottom:20px; padding:3px;
-  background:var(--carta-2); border-radius:10px;
+  background:var(--carta-2); border-radius:var(--r-campo);
 }
-.scelta .min{ border:0; border-radius:8px; padding:6px 13px; font-size:13.5px; color:var(--tenue); }
+.scelta .min{ border:0; border-radius:var(--r-campo); padding:6px 13px; font-size:13.5px; color:var(--tenue); }
 .scelta .min:hover{ background:transparent; color:var(--ink); }
 .scelta .min[aria-pressed="true"]{ background:var(--carta); color:var(--ink); box-shadow:var(--ombra-1); }
 
@@ -94,7 +119,7 @@ button{ font:inherit; color:inherit; }
 
 .mossa{
   display:flex; align-items:center; gap:14px;
-  background:var(--carta); border:1px solid var(--linea); border-radius:12px;
+  background:var(--carta); border:1px solid var(--linea); border-radius:var(--r-carta);
   padding:14px 16px; margin-bottom:8px; cursor:pointer; box-shadow:var(--ombra-1);
 }
 .mossa:hover{ border-color:var(--linea-forte); }
@@ -104,7 +129,7 @@ button{ font:inherit; color:inherit; }
    negativo si riprende lo spazio, così la riga non si gonfia. */
 .mossa .casella{
   display:flex; align-items:center; flex:none; cursor:pointer;
-  padding:12px; margin:-12px 0 -12px -8px; border-radius:10px;
+  padding:12px; margin:-12px 0 -12px -8px; border-radius:var(--r-campo);
 }
 .mossa .casella:hover{ background:var(--carta-2); }
 .mossa input[type=checkbox]{
@@ -138,13 +163,13 @@ button{ font:inherit; color:inherit; }
 
 .apriSotto{
   background:none; border:0; cursor:pointer; flex:none;
-  font-size:12.5px; color:var(--tenue); padding:4px 8px; border-radius:7px;
+  font-size:12.5px; color:var(--tenue); padding:4px 8px; border-radius:var(--r-campo);
   white-space:nowrap;
 }
 .apriSotto:hover{ background:var(--carta-2); color:var(--ink); }
 
 .dentroMossa{
-  background:var(--carta-2); border-radius:0 0 12px 12px;
+  background:var(--carta-2); border-radius:0 0 var(--r-carta) var(--r-carta);
   margin:-4px 0 0; padding:12px 16px 10px;
   border-left:4px solid var(--tinta, transparent);
 }
@@ -167,7 +192,7 @@ button{ font:inherit; color:inherit; }
 .domande{ display:flex; flex-wrap:wrap; gap:8px; margin-top:24px; }
 .parola{
   font-family:inherit; font-size:13.5px; cursor:pointer;
-  background:none; border:1px solid var(--linea); border-radius:999px;
+  background:none; border:1px solid var(--linea); border-radius:var(--r-tondo);
   padding:7px 14px; color:var(--tenue);
 }
 .parola:hover{ color:var(--ink); border-color:var(--linea-forte); }
@@ -179,7 +204,7 @@ button{ font:inherit; color:inherit; }
    resta dov'è, e questa se ne va com'è venuta. */
 .risposta{
   margin-top:12px; padding:4px 12px 12px;
-  background:var(--carta-2); border-radius:12px;
+  background:var(--carta-2); border-radius:var(--r-carta);
 }
 .risposta .vuoto{ margin:14px 4px 8px; }
 .risposta .altre{ margin:10px 4px 0; color:var(--tenue); font-size:12.5px; }
@@ -188,7 +213,7 @@ button{ font:inherit; color:inherit; }
   display:flex; align-items:center; gap:12px;
   background:var(--carta); border:1px solid var(--linea);
   border-left:4px solid var(--tinta, transparent);
-  border-radius:10px; padding:11px 14px; margin-top:8px; cursor:pointer;
+  border-radius:var(--r-carta); padding:11px 14px; margin-top:8px; cursor:pointer;
 }
 .proposta:hover{ border-color:var(--linea-forte); border-left-color:var(--tinta, transparent); }
 .proposta:focus-visible{ outline:2px solid var(--acc-forte); outline-offset:2px; }
@@ -229,7 +254,7 @@ button{ font:inherit; color:inherit; }
 }
 .anteprima{
   margin:0 0 10px; padding:4px 16px 14px;
-  background:var(--carta-2); border-radius:0 0 12px 12px;
+  background:var(--carta-2); border-radius:0 0 var(--r-carta) var(--r-carta);
   border-left:4px solid var(--tinta, transparent);
 }
 .anteprima .perche{
@@ -257,7 +282,7 @@ button{ font:inherit; color:inherit; }
    un'idea per qualcuno è l'elenco delle persone. */
 .aggiungi-riga{
   display:block; width:100%; text-align:left; margin-top:18px;
-  background:transparent; border:1px dashed var(--linea-forte); border-radius:11px;
+  background:transparent; border:1px dashed var(--linea-forte); border-radius:var(--r-carta);
   padding:13px 16px; color:var(--tenue); font-size:14.5px; cursor:pointer;
 }
 .aggiungi-riga:hover{ border-color:var(--ink-2); color:var(--ink); }
@@ -273,7 +298,7 @@ button{ font:inherit; color:inherit; }
 
 .riga{
   display:flex; align-items:center; gap:12px; width:100%; text-align:left;
-  background:var(--carta); border:1px solid var(--linea); border-radius:11px;
+  background:var(--carta); border:1px solid var(--linea); border-radius:var(--r-carta);
   padding:11px 14px; margin-bottom:6px; cursor:pointer;
   box-shadow:var(--ombra-1);
 }
@@ -322,7 +347,7 @@ button{ font:inherit; color:inherit; }
 /* La scadenza, che è l'unica cosa che fa pressione. Scaduta non urla: cambia
    colore quanto basta a farsi vedere, e la domanda vera sta nella scheda. */
 .scad{
-  font-size:12px; padding:2px 8px; border-radius:6px; white-space:nowrap; flex:none;
+  font-size:12px; padding:2px 8px; border-radius:var(--r-min); white-space:nowrap; flex:none;
   background:var(--carta-2); color:var(--ink-2); font-variant-numeric:tabular-nums;
 }
 .scad.scaduta{ background:var(--acc-tenue); color:var(--acc-ink); font-weight:600; }
@@ -369,7 +394,7 @@ button{ font:inherit; color:inherit; }
    perché per cui ti piaceva. */
 .modifica{
   display:flex; flex-direction:column; gap:16px; align-items:flex-start;
-  background:var(--carta); border:1px solid var(--linea); border-radius:12px;
+  background:var(--carta); border:1px solid var(--linea); border-radius:var(--r-carta);
   padding:18px; margin-bottom:26px; box-shadow:var(--ombra-1);
 }
 .modifica label{
@@ -379,7 +404,7 @@ button{ font:inherit; color:inherit; }
 }
 .modifica input{
   font:inherit; font-size:15px; color:var(--ink); background:var(--fondo);
-  border:1px solid var(--linea-forte); border-radius:8px; padding:8px 11px;
+  border:1px solid var(--linea-forte); border-radius:var(--r-campo); padding:8px 11px;
   text-transform:none; letter-spacing:normal; font-weight:400; max-width:320px;
 }
 .modifica input:focus{ outline:2px solid var(--acc-tenue); outline-offset:1px; border-color:var(--acc-forte); }
@@ -396,7 +421,7 @@ button{ font:inherit; color:inherit; }
 
 .perche{
   border-left:3px solid var(--acc); background:var(--carta);
-  padding:12px 15px; margin:0 0 26px; border-radius:0 9px 9px 0;
+  padding:12px 15px; margin:0 0 26px; border-radius:0 var(--r-campo) var(--r-campo) 0;
   font-size:16.5px; line-height:1.45; color:var(--ink-2); cursor:text;
 }
 .perche.vuoto{ color:var(--tenue); font-style:italic; border-left-color:var(--linea-forte); }
@@ -427,15 +452,15 @@ button{ font:inherit; color:inherit; }
 /* Una casella che vive in un altro file: si spunta sul posto, e va detto. */
 .voce .altrove{
   font-size:11px; color:var(--tenue); border:1px solid var(--linea);
-  border-radius:5px; padding:1px 6px; flex:none; margin-top:3px;
-  font-family:ui-monospace, SFMono-Regular, Menlo, monospace;
+  border-radius:var(--r-min); padding:1px 6px; flex:none; margin-top:3px;
+  font-family:var(--font-mono);
 }
 
 .idea{ display:flex; align-items:flex-start; gap:10px; padding:7px 2px; border-bottom:1px solid var(--linea); }
 .idea:last-of-type{ border-bottom:0; }
 .idea .testo{ flex:1; cursor:text; }
 .idea .su, .voce .su{
-  background:transparent; border:1px solid var(--linea-forte); border-radius:7px;
+  background:transparent; border:1px solid var(--linea-forte); border-radius:var(--r-campo);
   color:var(--ink-2); font-size:12px; padding:2px 9px; cursor:pointer; flex:none; opacity:.55;
 }
 .idea:hover .su, .voce:hover .su{ opacity:1; }
@@ -447,11 +472,11 @@ button{ font:inherit; color:inherit; }
 .appendi{ display:flex; gap:8px; margin-top:10px; }
 .appendi input{
   flex:1; background:var(--carta); color:var(--ink);
-  border:1px solid var(--linea-forte); border-radius:9px; padding:9px 12px; font:inherit; font-size:15px;
+  border:1px solid var(--linea-forte); border-radius:var(--r-campo); padding:9px 12px; font:inherit; font-size:15px;
 }
 .appendi input:focus{ outline:2px solid var(--acc-tenue); outline-offset:1px; border-color:var(--acc-forte); }
 .appendi button{
-  background:var(--acc); color:var(--su-acc); border:0; border-radius:9px;
+  background:var(--acc); color:var(--su-acc); border:0; border-radius:var(--r-campo);
   padding:9px 16px; font-weight:600; cursor:pointer;
 }
 .appendi button:active{ background:var(--acc-forte); }
@@ -467,7 +492,7 @@ details.fatte summary::before, details.idee summary::before{ content:'▸ '; }
 details.fatte[open] summary::before, details.idee[open] summary::before{ content:'▾ '; }
 details.fatte .voce{ opacity:.72; }
 details.fatte .data{
-  font-family:ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family:var(--font-mono);
   font-size:12px; color:var(--tenue); flex:none; margin-top:2px;
 }
 
@@ -495,7 +520,7 @@ details.fatte .data{
 .nota-scrivi{ margin:4px 0 12px 30px; align-items:flex-start; }
 .nota-scrivi textarea{
   flex:1; font:inherit; font-size:14.5px; line-height:1.45; color:var(--ink);
-  background:var(--carta); border:1px solid var(--linea-forte); border-radius:9px;
+  background:var(--carta); border:1px solid var(--linea-forte); border-radius:var(--r-campo);
   padding:9px 12px; resize:vertical;
 }
 .nota-scrivi textarea:focus{ outline:2px solid var(--acc-tenue); outline-offset:1px; border-color:var(--acc-forte); }
@@ -522,7 +547,7 @@ form.nuovo{ display:flex; flex-direction:column; gap:2px; max-width:520px; }
 form.nuovo h1{ font-size:24px; font-weight:680; letter-spacing:-.02em; margin:0 0 4px; }
 form.nuovo select{
   font:inherit; font-size:16px; color:var(--ink); background:var(--carta);
-  border:1px solid var(--linea-forte); border-radius:9px; padding:10px 12px;
+  border:1px solid var(--linea-forte); border-radius:var(--r-campo); padding:10px 12px;
   text-transform:none; letter-spacing:normal; font-weight:400;
 }
 form.nuovo label{
@@ -532,7 +557,7 @@ form.nuovo label{
 }
 form.nuovo input{
   font:inherit; font-size:16px; color:var(--ink); background:var(--carta);
-  border:1px solid var(--linea-forte); border-radius:9px; padding:10px 12px;
+  border:1px solid var(--linea-forte); border-radius:var(--r-campo); padding:10px 12px;
   text-transform:none; letter-spacing:normal; font-weight:400;
 }
 form.nuovo input:focus{ outline:2px solid var(--acc-tenue); outline-offset:1px; border-color:var(--acc-forte); }
@@ -541,7 +566,7 @@ form.nuovo .grosso{ margin-top:24px; align-self:flex-start; }
 /* ── stati dell'app ──────────────────────────────────────────────────────── */
 
 .dice{
-  background:var(--carta); border:1px solid var(--linea); border-radius:12px;
+  background:var(--carta); border:1px solid var(--linea); border-radius:var(--r-carta);
   padding:20px; color:var(--ink-2); box-shadow:var(--ombra-1);
 }
 .dice h2{ margin:0 0 8px; font-size:17px; font-weight:620; color:var(--ink);
@@ -549,7 +574,7 @@ form.nuovo .grosso{ margin-top:24px; align-self:flex-start; }
 .dice p{ margin:0 0 14px; font-size:14.5px; }
 .dice.male{ border-color:var(--male); }
 .grosso{
-  background:var(--acc); color:var(--su-acc); border:0; border-radius:10px;
+  background:var(--acc); color:var(--su-acc); border:0; border-radius:var(--r-campo);
   padding:11px 20px; font-weight:640; cursor:pointer;
 }
 .grosso:active{ background:var(--acc-forte); }

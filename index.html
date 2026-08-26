@@ -19,29 +19,124 @@
      Aprirlo:  node ~/Attrezzi/studio-web/studio.mjs "~/Lavori/the-office" ufficio.html?prova
 
      Lo studio tocca il tema chiaro: quello scuro sta nel `@media` qui sotto
-     e si scrive a mano. -->
+     e si scrive a mano.
+
+     I valori vengono da `design/mockup-bacheca.html`, che resta lì com'è: il
+     mockup è il riferimento, questo è il sistema. Dove il mockup aveva un
+     nome suo per una cosa che qui c'era già — `--inch`, `--giallo`, `--rosso`
+     — ha vinto il nome di qui, perché è quello che sanno le regole. -->
 <style>
 :root{
-  --fondo:#F3F1EA; --carta:#FDFCF9; --carta-2:#EBE9E1;
-  --ink:#14140F; --ink-2:#46453D; --tenue:#706E67;
-  --linea:rgba(20,20,15,.09); --linea-forte:rgba(20,20,15,.17);
-  --acc:#EDE93C; --acc-ink:#5E5900; --acc-tenue:rgba(224,219,60,.30);
-  --su-acc:#14140F; --acc-forte:#E2DD1C;
-  --male:#C2352A; --ok:#2E7548;
+  /* Le superfici: il tavolo, il foglio, e il foglio quando ci passi sopra. */
+  --fondo:#EFEEEA; --carta:#FAFAF8; --carta-2:#F4F4F1;
+
+  /* I quattro gradi del testo, dal nero al quasi-niente. `--tenue-2` è il
+     grado che il mockup chiamava `--debole`: serve a quello che c'è ma non
+     va letto — le etichette di servizio, una stima che compare al passaggio. */
+  --ink:#2E3033; --ink-2:#4A4E53; --tenue:#6E7278; --tenue-2:#9AA0A6;
+
+  --linea:#D9D8D2; --linea-forte:#C3C2BA;
+
+  /* Ciò che si tocca, ed è l'unico accento. Il mockup lo chiamava `--giallo`,
+     ma il nome descrittivo è più povero del ruolo: se domani diventasse
+     arancione, `--giallo` sarebbe una bugia e `--acc` no.
+     `--acc-orlo` è il bordo del giallo — un giallo pieno senza orlo, su carta
+     chiara, non ha contorno e sembra una macchia invece di un bottone. */
+  --acc:#E8FF33; --acc-forte:#D6EC1F;
+  --acc-orlo:#B9CE1E; --acc-orlo-forte:#A8BC17;
+  --acc-ink:#5C6B00; --acc-tenue:rgba(232,255,51,.30); --su-acc:#2E3033;
+
+  --male:#D23B2E; --ok:#2E7548;
+
+  /* Il vetro è la superficie chiara *sopra una riga tinta*: un controllo
+     dentro una riga colorata non può essere `--carta`, o si stacca dal
+     colore che dice di chi è la riga. Il velo è il fondo del modale. */
+  --vetro:rgba(255,255,255,.6); --vetro-su:rgba(255,255,255,.7);
+  --velo:rgba(46,48,51,.38);
+
   --ombra-1:0 1px 2px rgba(16,16,22,.05);
   --ombra-2:0 1px 3px rgba(16,16,22,.06), 0 10px 28px -14px rgba(16,16,22,.22);
+
+  /* ── i gradi di tinta per modello ──────────────────────────────────────
+     Sono **gradi di tinta**, non colori: il numero è la H di `oklch(L C H)`.
+     Un progetto nato dal modello `sito` è blu, uno da `marca` è rosa, e chi
+     non ha modello sta fra i `liberi`. Tenerli come numero e non come colore
+     è il punto: da un grado solo si ricavano fondo, bordo, pieno e testo che
+     restano parenti, e non c'è nessuna palette da tenere allineata a mano.
+
+     Sono la stessa cosa che `TINTE` in `ufficio.js` fa per le cartelle —
+     `--tono-sito` **è** `blu` (214). Due assi che oggi convivono: la cartella
+     dice di chi è un progetto, il modello dice di che tipo è. */
+  --tono-sito:214; --tono-app:168; --tono-marca:340;
+  --tono-ricerca:288; --tono-liberi:60;
+
+  /* La scala della tinta, come coppie «chiarezza croma». Si compone così:
+
+         .riga{ --h:var(--tono-sito); background:oklch(var(--gradino-velo) var(--h)); }
+
+     e **non** si può impacchettare come colore finito qui dentro: una custom
+     property risolve i suoi `var()` sull'elemento dove è dichiarata, quindi
+     `--gradino-velo:oklch(95% .035 var(--h))` prenderebbe la `--h` di `:root`
+     e la porterebbe uguale su tutte le righe. Provato, fa esattamente questo.
+     Tenendo qui solo «chiarezza croma» il grado resta libero, ed è la ragione
+     per cui la scala può stare nel sistema invece che sparsa nelle regole. */
+  --gradino-velo:95% .035;    /* la superficie di una riga tinta            */
+  --gradino-velo-su:96.5% .045; /* la stessa, al passaggio                  */
+  --gradino-riga:91% .025;    /* i separatori dentro la riga                */
+  --gradino-linea:88% .05;    /* il bordo della riga                        */
+  --gradino-orlo:72% .055;    /* il bordo di un controllo                   */
+  --gradino-orlo-forte:64% .08; /* il bordo del controllo grosso            */
+  --gradino-pieno:52% .12;    /* spuntato, e il pallino di ciò che è in corso */
+  --gradino-ink:46% .11;      /* il testo tinto                             */
+
+  /* I raggi, e sono tre più il tondo. Prima erano dodici valori scritti a
+     mano — 12, 11, 10, 9, 8, 7, 6, 5 — che non è una scala: è una serie di
+     decisioni prese una alla volta e mai riguardate insieme. */
+  --r-carta:14px;   /* i riquadri e le righe                     */
+  --r-campo:8px;    /* i campi, i bottoni, i bersagli            */
+  --r-min:5px;      /* le etichette minuscole                    */
+  --r-tondo:999px;  /* le pastiglie                              */
+
+  /* I caratteri. Sono i due di oggi, e stanno qui per un motivo pratico:
+     lo stack monospace era copiato a mano in tre punti del foglio, cioè tre
+     occasioni di scriverlo diverso. Il mockup prova Instrument Sans e Azeret
+     Mono; da qui è una riga. */
+  --font:-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-mono:ui-monospace, SFMono-Regular, Menlo, monospace;
+
   color-scheme:light;
 }
 @media (prefers-color-scheme: dark){
   :root{
-    --fondo:#100F0C; --carta:#1A1915; --carta-2:#24231E;
-    --ink:#F4F2E9; --ink-2:#C7C4B7; --tenue:#8C8A7E;
-    --linea:rgba(244,242,233,.10); --linea-forte:rgba(244,242,233,.19);
-    --acc:#EDE93C; --acc-ink:#E4DF66; --acc-tenue:rgba(237,233,60,.16);
-    --su-acc:#14140F; --acc-forte:#F5F158;
-    --male:#E3705F; --ok:#63B981;
+    /* Il mockup un tema scuro non ce l'ha: questo è dedotto da quello chiaro,
+       grado per grado. I `--tono-*`, i raggi e i caratteri non si ripetono —
+       non dipendono dalla luce. I `--gradino-*` sì: una scala di chiarezza
+       montata al contrario, o le righe tinte diventano lampade. */
+    --fondo:#17191B; --carta:#1E2124; --carta-2:#26292C;
+    --ink:#E6E8EA; --ink-2:#BFC3C7; --tenue:#8B9096; --tenue-2:#666B70;
+    --linea:#34373B; --linea-forte:#474B50;
+
+    --acc:#E8FF33; --acc-forte:#F0FF5E;
+    --acc-orlo:#B9CE1E; --acc-orlo-forte:#A8BC17;
+    --acc-ink:#D6E86A; --acc-tenue:rgba(232,255,51,.16); --su-acc:#2E3033;
+
+    --male:#E86A5E; --ok:#63B981;
+
+    --vetro:rgba(255,255,255,.06); --vetro-su:rgba(255,255,255,.10);
+    --velo:rgba(0,0,0,.55);
+
     --ombra-1:0 1px 2px rgba(0,0,0,.4);
     --ombra-2:0 1px 3px rgba(0,0,0,.5), 0 12px 30px -16px rgba(0,0,0,.8);
+
+    --gradino-velo:26% .045;
+    --gradino-velo-su:30% .055;
+    --gradino-riga:32% .03;
+    --gradino-linea:38% .06;
+    --gradino-orlo:50% .07;
+    --gradino-orlo-forte:58% .09;
+    --gradino-pieno:68% .13;
+    --gradino-ink:78% .12;
+
     color-scheme:dark;
   }
 }
